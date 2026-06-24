@@ -1,0 +1,24 @@
+# Build directories
+build/
+bin/
+lib/
+
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+_deps/
+
+# macOS files
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+
+# Test outputs
+tests/*.exe
+tests/*.o
+hello_output.txt
