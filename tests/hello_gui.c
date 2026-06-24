@@ -31,10 +31,7 @@ void __stdcall WinMainCRTStartup(void) {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
-    // 4. Message Box
-    MessageBoxA(NULL, "This is a native macOS message box invoked via Win32 MessageBoxA!", "MacWI GUI Test", MB_OK | MB_ICONINFORMATION);
-
-    // 5. Run the message loop
+    // 4. Run the message loop
     MSG msg = {0};
     while (GetMessageA(&msg, NULL, 0, 0) > 0) {
         TranslateMessage(&msg);

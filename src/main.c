@@ -19,6 +19,7 @@
 #include "win32/ntdll.h"
 #include "win32/user32.h"
 #include "macwi/cocoa_bridge.h"
+#include "macwi/gdi32.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -236,10 +237,16 @@ int main(int argc, char* argv[]) {
         return 3;
     }
 
+   // Temporary declarations for DLL initialization
+extern void macwi_kernel32_register_apis(void);
+extern void macwi_ntdll_register_apis(void);
+extern void macwi_user32_register_apis(void);
+extern void macwi_gdi32_register_apis(void);
     macwi_thunk_init_dispatcher(ctx);
     macwi_kernel32_register_apis();
     macwi_ntdll_register_apis();
     macwi_user32_register_apis();
+    macwi_gdi32_register_apis();
     printf("  [+] Registered APIs and Dispatcher\n");
 
     status = macwi_pe_resolve_imports(&image);

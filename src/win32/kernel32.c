@@ -227,6 +227,51 @@ static void win32_ExitProcess(EMU_CONTEXT* ctx) {
 }
 
 /* ============================================================================
+ * Threading & Synchronization APIs
+ * ============================================================================ */
+
+static void win32_CreateThread(EMU_CONTEXT* ctx) {
+    uint32_t lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags, lpThreadId;
+    macwi_thunk_read_param_32(ctx, 0, &lpThreadAttributes);
+    macwi_thunk_read_param_32(ctx, 1, &dwStackSize);
+    macwi_thunk_read_param_32(ctx, 2, &lpStartAddress);
+    macwi_thunk_read_param_32(ctx, 3, &lpParameter);
+    macwi_thunk_read_param_32(ctx, 4, &dwCreationFlags);
+    macwi_thunk_read_param_32(ctx, 5, &lpThreadId);
+
+    STUB_LOG("CreateThread(start=0x%08X, param=0x%08X)", lpStartAddress, lpParameter);
+    // For now, return a fake handle
+    macwi_emu_reg_write(ctx, 0, 0x1000); // Fake handle
+}
+
+static void win32_CreateMutexA(EMU_CONTEXT* ctx) {
+    uint32_t lpMutexAttributes, bInitialOwner, lpName;
+    macwi_thunk_read_param_32(ctx, 0, &lpMutexAttributes);
+    macwi_thunk_read_param_32(ctx, 1, &bInitialOwner);
+    macwi_thunk_read_param_32(ctx, 2, &lpName);
+
+    STUB_LOG("CreateMutexA(...)");
+    macwi_emu_reg_write(ctx, 0, 0x1001); // Fake handle
+}
+
+static void win32_WaitForSingleObject(EMU_CONTEXT* ctx) {
+    uint32_t hHandle, dwMilliseconds;
+    macwi_thunk_read_param_32(ctx, 0, &hHandle);
+    macwi_thunk_read_param_32(ctx, 1, &dwMilliseconds);
+
+    STUB_LOG("WaitForSingleObject(handle=0x%08X, ms=%u)", hHandle, dwMilliseconds);
+    macwi_emu_reg_write(ctx, 0, 0); // WAIT_OBJECT_0
+}
+
+static void win32_ReleaseMutex(EMU_CONTEXT* ctx) {
+    uint32_t hMutex;
+    macwi_thunk_read_param_32(ctx, 0, &hMutex);
+
+    STUB_LOG("ReleaseMutex(0x%08X)", hMutex);
+    macwi_emu_reg_write(ctx, 0, 1); // TRUE
+}
+
+/* ============================================================================
  * API Registration
  * ============================================================================ */
 
@@ -252,5 +297,9 @@ void macwi_kernel32_register_apis(void) {
     macwi_thunk_register_api("kernel32.dll", "VirtualFree", win32_VirtualFree, 3);
     macwi_thunk_register_api("kernel32.dll", "SetLastError", win32_SetLastError, 1);
     macwi_thunk_register_api("kernel32.dll", "GetModuleHandleA", win32_GetModuleHandleA, 1);
+    macwi_thunk_register_api("kernel32.dll", "CreateThread", win32_CreateThread, 6);
+    macwi_thunk_register_api("kernel32.dll", "CreateMutexA", win32_CreateMutexA, 3);
+    macwi_thunk_register_api("kernel32.dll", "WaitForSingleObject", win32_WaitForSingleObject, 2);
+    macwi_thunk_register_api("kernel32.dll", "ReleaseMutex", win32_ReleaseMutex, 1);
     macwi_thunk_register_api("kernel32.dll", "ExitProcess", win32_ExitProcess, 1);
 }

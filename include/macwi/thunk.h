@@ -78,6 +78,17 @@ macwi_status_t macwi_thunk_read_param_32(EMU_CONTEXT* ctx, int param_index, uint
 macwi_status_t macwi_thunk_read_guest_string(EMU_CONTEXT* ctx, uint32_t guest_addr, char* out_buf, size_t max_len);
 
 /**
+ * Write a null-terminated string from a host buffer to guest memory.
+ *
+ * @param ctx Emulation context.
+ * @param guest_addr The 32-bit guest pointer.
+ * @param in_str Host string to read from.
+ * @param max_len Maximum bytes to write (including null terminator).
+ * @return MACWI_SUCCESS on success.
+ */
+macwi_status_t macwi_thunk_string_out(EMU_CONTEXT* ctx, uint32_t guest_addr, const char* in_str, size_t max_len);
+
+/**
  * Clean up the guest stack after a stdcall API returns.
  * In stdcall, the callee cleans up the stack: `ret n`.
  *

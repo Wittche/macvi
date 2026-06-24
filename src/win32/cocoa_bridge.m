@@ -8,7 +8,45 @@
 #import <Cocoa/Cocoa.h>
 #include "macwi/cocoa_bridge.h"
 
-// Define a custom application delegate to handle app lifecycle
+/* ============================================================================
+ * MacWIView : Custom NSView for GDI rendering
+ * ============================================================================ */
+
+@interface MacWIView : NSView
+@end
+
+@implementation MacWIView
+
+- (void)drawRect:(NSRect)dirtyRect {
+    [super drawRect:dirtyRect];
+    
+    // For now, just draw a simple background to prove CoreGraphics works
+    CGContextRef context = [[NSGraphicsContext currentContext] CGContext];
+    
+    CGContextSetRGBFillColor(context, 0.2, 0.2, 0.3, 1.0); // Dark blue-gray
+    CGContextFillRect(context, dirtyRect);
+    
+    // Draw some text
+    NSDictionary *attributes = @{
+        NSFontAttributeName: [NSFont systemFontOfSize:24],
+        NSForegroundColorAttributeName: [NSColor whiteColor]
+    };
+    
+    NSString *text = @"MacWI GDI Rendering Surface";
+    NSSize textSize = [text sizeWithAttributes:attributes];
+    NSPoint textPoint = NSMakePoint(
+        (NSWidth(self.bounds) - textSize.width) / 2,
+        (NSHeight(self.bounds) - textSize.height) / 2
+    );
+    
+    [text drawAtPoint:textPoint withAttributes:attributes];
+}
+
+@end
+
+/* ============================================================================
+ * AppDelegate
+ * ============================================================================ */
 @interface MacWIAppDelegate : NSObject <NSApplicationDelegate>
 @end
 
@@ -91,6 +129,10 @@ macwi_window_t macwi_cocoa_create_window(const char* title, int x, int y, int wi
             
             NSString* nsTitle = [NSString stringWithUTF8String:title ? title : "MacWI Window"];
             [window setTitle:nsTitle];
+            
+            MacWIView *view = [[MacWIView alloc] initWithFrame:frame];
+            [window setContentView:view];
+            
             [window center];
         }
     });

@@ -33,19 +33,39 @@ macwi_status_t macwi_thunk_read_guest_string(EMU_CONTEXT* ctx, uint32_t guest_ad
         out_buf[0] = '\0';
         return MACWI_SUCCESS;
     }
-
-    size_t i = 0;
-    while (i < max_len - 1) {
-        char c;
-        macwi_status_t status = macwi_emu_read_memory(ctx, guest_addr + i, &c, 1);
-        if (status != MACWI_SUCCESS) return status;
-        
+    
+    for (size_t i = 0; i < max_len - 1; i++) {
+        uint8_t c;
+        if (macwi_emu_read_memory(ctx, guest_addr + i, &c, 1) != MACWI_SUCCESS) {
+            out_buf[i] = '\0';
+            return MACWI_ERROR_MEMORY;
+        }
         out_buf[i] = c;
-        if (c == '\0') break;
-        i++;
+        if (c == '\0') return MACWI_SUCCESS;
     }
-    out_buf[max_len - 1] = '\0'; // ensure null termination
+    
+    out_buf[max_len - 1] = '\0';
+    return MACWI_SUCCESS;
+}
 
+macwi_status_t macwi_thunk_string_out(EMU_CONTEXT* ctx, uint32_t guest_addr, const char* in_str, size_t max_len) {
+    if (!ctx || !in_str || max_len == 0) return MACWI_ERROR_INVALID_PARAM;
+    
+    size_t len = strlen(in_str);
+    if (len >= max_len) {
+        len = max_len - 1;
+    }
+    
+    if (macwi_emu_write_memory(ctx, guest_addr, in_str, len) != MACWI_SUCCESS) {
+        return MACWI_ERROR_MEMORY;
+    }
+    
+    // Null terminator
+    uint8_t zero = 0;
+    if (macwi_emu_write_memory(ctx, guest_addr + len, &zero, 1) != MACWI_SUCCESS) {
+        return MACWI_ERROR_MEMORY;
+    }
+    
     return MACWI_SUCCESS;
 }
 

@@ -7,6 +7,7 @@ add_library(macwi_win32 STATIC
     kernel32.c
     ntdll.c
     user32.c
+    gdi32.c
     cocoa_bridge.m
 )
 

@@ -8,6 +8,7 @@
 #include "macwi/types.h"
 #include "macwi/emu.h"
 #include "macwi/thunk.h"
+#include "macwi/win32_structs.h"
 #include "macwi/cocoa_bridge.h"
 
 #include <stdio.h>
@@ -41,12 +42,22 @@ static void win32_MessageBoxA(EMU_CONTEXT* ctx) {
 }
 
 static void win32_RegisterClassExA(EMU_CONTEXT* ctx) {
-    // Parameter is a pointer to WNDCLASSEXA
     uint32_t lpwcx;
     macwi_thunk_read_param_32(ctx, 0, &lpwcx);
     
-    // We just fake success for now
-    USER32_LOG("RegisterClassExA(0x%08X)", lpwcx);
+    if (lpwcx) {
+        WNDCLASSEXA_32 wc32;
+        macwi_emu_read_memory(ctx, lpwcx, &wc32, sizeof(WNDCLASSEXA_32));
+        
+        char class_name[256] = {0};
+        if (wc32.lpszClassName) {
+            macwi_thunk_read_guest_string(ctx, wc32.lpszClassName, class_name, sizeof(class_name));
+        }
+        USER32_LOG("RegisterClassExA('%s')", class_name);
+    } else {
+        USER32_LOG("RegisterClassExA(NULL)");
+    }
+    
     macwi_emu_reg_write(ctx, 0, 0x1234); // Pseudo ATOM
 }
 
@@ -115,10 +126,10 @@ static void win32_GetMessageA(EMU_CONTEXT* ctx) {
     usleep(10000); 
     
     // Fake a dummy message to keep loop going without crashing
-    // struct MSG { HWND hwnd; UINT message; WPARAM wParam; LPARAM lParam; DWORD time; POINT pt; }
-    // Size = 4+4+4+4+4+8 = 28 bytes
-    uint32_t dummy_msg[7] = { hWnd, 0 /* WM_NULL */, 0, 0, 0, 0, 0 };
-    macwi_emu_write_memory(ctx, lpMsg, dummy_msg, sizeof(dummy_msg));
+    MSG_32 dummy_msg = {0};
+    dummy_msg.hwnd = hWnd;
+    dummy_msg.message = 0; // WM_NULL
+    macwi_emu_write_memory(ctx, lpMsg, &dummy_msg, sizeof(MSG_32));
     
     macwi_emu_reg_write(ctx, 0, 1); // Return non-zero to keep loop going
 }
