@@ -131,9 +131,9 @@ HANDLE macwi_handle_create(HANDLE_TABLE* table, HANDLE_TYPE type, void* object) 
 
     pthread_mutex_lock(&table->mutex);
 
-    /* Find a free slot */
+    /* Find a free slot (start from 1 so we never return handle value 0) */
     uint32_t slot = UINT32_MAX;
-    for (uint32_t i = 0; i < table->capacity; i++) {
+    for (uint32_t i = 1; i < table->capacity; i++) {
         if (!table->entries[i].in_use) {
             slot = i;
             break;
@@ -150,7 +150,7 @@ HANDLE macwi_handle_create(HANDLE_TABLE* table, HANDLE_TYPE type, void* object) 
         /* The first newly allocated slot */
         slot = table->count;
         /* Search again to find the first free slot after growth */
-        for (uint32_t i = 0; i < table->capacity; i++) {
+        for (uint32_t i = 1; i < table->capacity; i++) {
             if (!table->entries[i].in_use) {
                 slot = i;
                 break;

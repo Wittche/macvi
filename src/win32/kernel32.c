@@ -8,12 +8,16 @@
 #include "macwi/types.h"
 #include "macwi/emu.h"
 #include "macwi/thunk.h"
+#include "macwi/vfs.h"
+#include "macwi/handle.h"
+#include "macwi/thread.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include <time.h>
 #include <errno.h>
 
@@ -57,13 +61,26 @@ static void win32_Sleep(EMU_CONTEXT* ctx) {
 }
 
 static void win32_OutputDebugStringA(EMU_CONTEXT* ctx) {
-    uint32_t str_ptr;
-    macwi_thunk_read_param_32(ctx, 0, &str_ptr);
-    
+    uint32_t lpOutputString;
+    macwi_thunk_read_param_32(ctx, 0, &lpOutputString);
     char buf[1024];
-    macwi_thunk_read_guest_string(ctx, str_ptr, buf, sizeof(buf));
+    macwi_thunk_read_guest_string(ctx, lpOutputString, buf, sizeof(buf));
     STUB_LOG("OutputDebugStringA: %s", buf);
     macwi_emu_reg_write(ctx, 0, 0);
+}
+
+static void win32_lstrlenA(EMU_CONTEXT* ctx) {
+    uint32_t lpString;
+    macwi_thunk_read_param_32(ctx, 0, &lpString);
+    if (!lpString) {
+        macwi_emu_reg_write(ctx, 0, 0);
+        return;
+    }
+    // We need to find the length of the string in guest memory.
+    // For now, read it into a host buffer up to 4096 chars and use strlen.
+    char buf[4096];
+    macwi_thunk_read_guest_string(ctx, lpString, buf, sizeof(buf));
+    macwi_emu_reg_write(ctx, 0, strlen(buf));
 }
 
 /* ============================================================================
@@ -85,7 +102,14 @@ static void win32_CreateFileA(EMU_CONTEXT* ctx) {
     char filename[256];
     macwi_thunk_read_guest_string(ctx, lpFileName, filename, sizeof(filename));
     
-    STUB_LOG("CreateFileA(\"%s\", access=0x%X)", filename, dwDesiredAccess);
+    char unix_path[MACWI_MAX_PATH];
+    if (macwi_vfs_dos_to_unix(filename, unix_path) != MACWI_SUCCESS) {
+        set_last_error(3); // ERROR_PATH_NOT_FOUND
+        macwi_emu_reg_write(ctx, 0, 0xFFFFFFFF);
+        return;
+    }
+    
+    STUB_LOG("CreateFileA(\"%s\" -> \"%s\", access=0x%X)", filename, unix_path, dwDesiredAccess);
 
     int flags = 0;
     if ((dwDesiredAccess & 0x80000000) && (dwDesiredAccess & 0x40000000)) flags = O_RDWR;
@@ -100,12 +124,16 @@ static void win32_CreateFileA(EMU_CONTEXT* ctx) {
         default: set_last_error(87); macwi_emu_reg_write(ctx, 0, 0xFFFFFFFF); return;
     }
 
-    int fd = open(filename, flags, 0644);
+    int fd = open(unix_path, flags, 0644);
     if (fd < 0) {
         set_last_error(2); /* ERROR_FILE_NOT_FOUND */
         macwi_emu_reg_write(ctx, 0, 0xFFFFFFFF);
     } else {
-        macwi_emu_reg_write(ctx, 0, (uint32_t)fd);
+        extern HANDLE_TABLE g_macwi_handle_table;
+        int* p_fd = malloc(sizeof(int));
+        *p_fd = fd;
+        HANDLE h = macwi_handle_create(&g_macwi_handle_table, HANDLE_TYPE_FILE, p_fd);
+        macwi_emu_reg_write(ctx, 0, (uint32_t)h);
     }
 }
 
@@ -117,7 +145,15 @@ static void win32_ReadFile(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_32(ctx, 3, &lpNumberOfBytesRead);
     macwi_thunk_read_param_32(ctx, 4, &lpOverlapped);
 
-    int fd = (int)hFile;
+    extern HANDLE_TABLE g_macwi_handle_table;
+    int* p_fd = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hFile, HANDLE_TYPE_FILE, (void**)&p_fd) != MACWI_SUCCESS) {
+        set_last_error(6); // ERROR_INVALID_HANDLE
+        macwi_emu_reg_write(ctx, 0, 0); // FALSE
+        return;
+    }
+
+    int fd = *p_fd;
     void* temp_buf = malloc(nNumberOfBytesToRead);
     
     ssize_t n = read(fd, temp_buf, nNumberOfBytesToRead);
@@ -143,7 +179,15 @@ static void win32_WriteFile(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_32(ctx, 3, &lpNumberOfBytesWritten);
     macwi_thunk_read_param_32(ctx, 4, &lpOverlapped);
 
-    int fd = (int)hFile;
+    extern HANDLE_TABLE g_macwi_handle_table;
+    int* p_fd = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hFile, HANDLE_TYPE_FILE, (void**)&p_fd) != MACWI_SUCCESS) {
+        set_last_error(6); // ERROR_INVALID_HANDLE
+        macwi_emu_reg_write(ctx, 0, 0); // FALSE
+        return;
+    }
+
+    int fd = *p_fd;
     void* temp_buf = malloc(nNumberOfBytesToWrite);
     macwi_emu_read_memory(ctx, lpBuffer, temp_buf, nNumberOfBytesToWrite);
     
@@ -164,10 +208,20 @@ static void win32_WriteFile(EMU_CONTEXT* ctx) {
 static void win32_CloseHandle(EMU_CONTEXT* ctx) {
     uint32_t hObject;
     macwi_thunk_read_param_32(ctx, 0, &hObject);
+    STUB_LOG("CloseHandle(0x%08X)", hObject);
+
+    extern HANDLE_TABLE g_macwi_handle_table;
     
-    int fd = (int)hObject;
-    if (fd >= 0) close(fd);
-    macwi_emu_reg_write(ctx, 0, 1); // TRUE
+    // First, check if it's a file descriptor we need to close
+    int* p_fd = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hObject, HANDLE_TYPE_FILE, (void**)&p_fd) == MACWI_SUCCESS) {
+        close(*p_fd);
+        free(p_fd);
+    }
+    
+    // Then just close the handle
+    macwi_status_t status = macwi_handle_close(&g_macwi_handle_table, (HANDLE)(uintptr_t)hObject);
+    macwi_emu_reg_write(ctx, 0, status == MACWI_SUCCESS ? 1 : 0);
 }
 
 /* ============================================================================
@@ -240,8 +294,18 @@ static void win32_CreateThread(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_32(ctx, 5, &lpThreadId);
 
     STUB_LOG("CreateThread(start=0x%08X, param=0x%08X)", lpStartAddress, lpParameter);
-    // For now, return a fake handle
-    macwi_emu_reg_write(ctx, 0, 0x1000); // Fake handle
+    
+    MacWIThread* th = NULL;
+    if (macwi_thread_create(ctx, lpStartAddress, lpParameter, &th) == MACWI_SUCCESS) {
+        extern HANDLE_TABLE g_macwi_handle_table;
+        HANDLE h = macwi_handle_create(&g_macwi_handle_table, HANDLE_TYPE_THREAD, th);
+        if (lpThreadId) {
+            macwi_emu_write_memory(ctx, lpThreadId, &th->thread_id, 4);
+        }
+        macwi_emu_reg_write(ctx, 0, (uint32_t)(uintptr_t)h);
+    } else {
+        macwi_emu_reg_write(ctx, 0, 0); // NULL
+    }
 }
 
 static void win32_CreateMutexA(EMU_CONTEXT* ctx) {
@@ -249,9 +313,18 @@ static void win32_CreateMutexA(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_32(ctx, 0, &lpMutexAttributes);
     macwi_thunk_read_param_32(ctx, 1, &bInitialOwner);
     macwi_thunk_read_param_32(ctx, 2, &lpName);
+    char name[256] = {0};
+    if (lpName) macwi_thunk_read_guest_string(ctx, lpName, name, sizeof(name));
 
-    STUB_LOG("CreateMutexA(...)");
-    macwi_emu_reg_write(ctx, 0, 0x1001); // Fake handle
+    STUB_LOG("CreateMutexA(name=\"%s\", initial=%d)", name, bInitialOwner);
+    
+    pthread_mutex_t* m = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
+    pthread_mutex_init(m, NULL);
+    if (bInitialOwner) pthread_mutex_lock(m);
+
+    extern HANDLE_TABLE g_macwi_handle_table;
+    HANDLE h = macwi_handle_create(&g_macwi_handle_table, HANDLE_TYPE_MUTEX, m);
+    macwi_emu_reg_write(ctx, 0, (uint32_t)(uintptr_t)h);
 }
 
 static void win32_WaitForSingleObject(EMU_CONTEXT* ctx) {
@@ -260,7 +333,26 @@ static void win32_WaitForSingleObject(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_32(ctx, 1, &dwMilliseconds);
 
     STUB_LOG("WaitForSingleObject(handle=0x%08X, ms=%u)", hHandle, dwMilliseconds);
-    macwi_emu_reg_write(ctx, 0, 0); // WAIT_OBJECT_0
+    
+    extern HANDLE_TABLE g_macwi_handle_table;
+    pthread_mutex_t* m = NULL;
+    MacWIThread* th = NULL;
+    
+    // Check if it's a Mutex
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hHandle, HANDLE_TYPE_MUTEX, (void**)&m) == MACWI_SUCCESS) {
+        pthread_mutex_lock(m);
+        macwi_emu_reg_write(ctx, 0, 0); // WAIT_OBJECT_0
+        return;
+    }
+    
+    // Check if it's a Thread
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hHandle, HANDLE_TYPE_THREAD, (void**)&th) == MACWI_SUCCESS) {
+        pthread_join(th->host_thread, NULL);
+        macwi_emu_reg_write(ctx, 0, 0); // WAIT_OBJECT_0
+        return;
+    }
+    
+    macwi_emu_reg_write(ctx, 0, 0xFFFFFFFF); // WAIT_FAILED
 }
 
 static void win32_ReleaseMutex(EMU_CONTEXT* ctx) {
@@ -268,7 +360,15 @@ static void win32_ReleaseMutex(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_32(ctx, 0, &hMutex);
 
     STUB_LOG("ReleaseMutex(0x%08X)", hMutex);
-    macwi_emu_reg_write(ctx, 0, 1); // TRUE
+    
+    extern HANDLE_TABLE g_macwi_handle_table;
+    pthread_mutex_t* m = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hMutex, HANDLE_TYPE_MUTEX, (void**)&m) == MACWI_SUCCESS) {
+        pthread_mutex_unlock(m);
+        macwi_emu_reg_write(ctx, 0, 1); // TRUE
+    } else {
+        macwi_emu_reg_write(ctx, 0, 0); // FALSE
+    }
 }
 
 /* ============================================================================
@@ -289,6 +389,7 @@ void macwi_kernel32_register_apis(void) {
     macwi_thunk_register_api("kernel32.dll", "GetTickCount", win32_GetTickCount, 0);
     macwi_thunk_register_api("kernel32.dll", "Sleep", win32_Sleep, 1);
     macwi_thunk_register_api("kernel32.dll", "OutputDebugStringA", win32_OutputDebugStringA, 1);
+    macwi_thunk_register_api("kernel32.dll", "lstrlenA", win32_lstrlenA, 1);
     macwi_thunk_register_api("kernel32.dll", "CreateFileA", win32_CreateFileA, 7);
     macwi_thunk_register_api("kernel32.dll", "ReadFile", win32_ReadFile, 5);
     macwi_thunk_register_api("kernel32.dll", "WriteFile", win32_WriteFile, 5);

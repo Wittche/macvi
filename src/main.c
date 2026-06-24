@@ -20,12 +20,17 @@
 #include "win32/user32.h"
 #include "macwi/cocoa_bridge.h"
 #include "macwi/gdi32.h"
+#include "macwi/vfs.h"
+#include "macwi/handle.h"
+#include "macwi/registry.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
 #include <pthread.h>
+
+HANDLE_TABLE g_macwi_handle_table;
 
 /* ============================================================================
  * Threading
@@ -237,16 +242,36 @@ int main(int argc, char* argv[]) {
         return 3;
     }
 
+    if (macwi_handle_table_init(&g_macwi_handle_table) != MACWI_SUCCESS) {
+        fprintf(stderr, "ERROR: Failed to initialize Handle Table\n");
+        return 4;
+    }
+
+    if (macwi_vfs_init() != MACWI_SUCCESS) {
+        fprintf(stderr, "ERROR: Failed to initialize VFS\n");
+        macwi_pe_free(&image);
+        return 5;
+    }
+
+    if (macwi_registry_init() != MACWI_SUCCESS) {
+        fprintf(stderr, "ERROR: Failed to initialize Registry\n");
+        macwi_pe_free(&image);
+        return 6;
+    }
+
    // Temporary declarations for DLL initialization
 extern void macwi_kernel32_register_apis(void);
 extern void macwi_ntdll_register_apis(void);
 extern void macwi_user32_register_apis(void);
 extern void macwi_gdi32_register_apis(void);
+extern void macwi_advapi32_register_apis(void);
+
     macwi_thunk_init_dispatcher(ctx);
     macwi_kernel32_register_apis();
     macwi_ntdll_register_apis();
     macwi_user32_register_apis();
     macwi_gdi32_register_apis();
+    macwi_advapi32_register_apis();
     printf("  [+] Registered APIs and Dispatcher\n");
 
     status = macwi_pe_resolve_imports(&image);

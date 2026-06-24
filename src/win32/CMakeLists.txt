@@ -9,6 +9,7 @@ add_library(macwi_win32 STATIC
     user32.c
     gdi32.c
     cocoa_bridge.m
+    advapi32.c
 )
 
 target_include_directories(macwi_win32 PUBLIC

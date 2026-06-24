@@ -5,6 +5,9 @@
 
 add_library(macwi_core STATIC
     handle.c
+    vfs.c
+    registry.c
+    thread.c
 )
 
 target_include_directories(macwi_core PUBLIC
