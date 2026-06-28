@@ -216,16 +216,17 @@ int main(int argc, char** argv) {
     args->rsp = rsp_top;
     args->image = image;
 
+    // Initialize Cocoa before launching the emulator thread
+    extern void macwi_cocoa_init(void);
+    macwi_cocoa_init();
+
     pthread_t thread;
     pthread_create(&thread, NULL, emu_thread_func, args);
 
     // Provide a simple loop to keep the main thread alive and optionally process GUI
     printf("[macwi] Emulator thread detached. Main thread idling...\n");
     fflush(stdout);
-    
-    // Initialize Cocoa and run the main event loop
-    extern void macwi_cocoa_init(void);
-    macwi_cocoa_init();
+
     
     // Cocoa requires the main thread to run its runloop
     // We can't include Cocoa headers directly in main.c (it's pure C), 
