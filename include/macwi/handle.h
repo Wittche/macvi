@@ -46,6 +46,7 @@ typedef enum {
     HANDLE_TYPE_EVENT         = 4, /**< Event synchronization object       */
     HANDLE_TYPE_SEMAPHORE     = 5, /**< Semaphore synchronization object   */
     HANDLE_TYPE_REGISTRY_KEY  = 6, /**< Registry key handle                */
+    HANDLE_TYPE_FIND_FILE     = 7, /**< FindFirstFile handle               */
 } HANDLE_TYPE;
 
 /* ============================================================================

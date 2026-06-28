@@ -29,8 +29,7 @@ target_link_libraries(test_emu_basic PRIVATE
 )
 add_test(NAME emu_basic_tests COMMAND test_emu_basic)
 
-# PE Generator
-add_executable(create_test_pe create_test_pe.c)
+
 
 # PE Emulation test
 add_executable(test_pe_emu test_pe_emu.c)
@@ -70,3 +69,12 @@ add_custom_command(
     COMMENT "Building advanced 32-bit Windows PE executable with MinGW"
 )
 add_custom_target(advanced_win32 ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/advanced_win32.exe)
+
+# Build fs_win32.exe using MinGW
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/fs_win32.exe
+    COMMAND i686-w64-mingw32-gcc ${CMAKE_CURRENT_SOURCE_DIR}/fs_win32.c -o ${CMAKE_CURRENT_BINARY_DIR}/fs_win32.exe -nostdlib -lkernel32 -Wl,-e,__start -Wl,--image-base,0x29000000
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/fs_win32.c
+    COMMENT "Building File System Test 32-bit Windows PE executable with MinGW"
+)
+add_custom_target(fs_win32 ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/fs_win32.exe)

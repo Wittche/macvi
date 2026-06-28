@@ -294,14 +294,10 @@ typedef struct macwi_dll_module {
 
 The implementation follows a demand-driven approach:
 
-1. **Phase 1 — Bootstrapping**: `kernel32` core (file I/O, memory, heap),
-   `ntdll` basics, `msvcrt` essentials. Enough to run simple console apps.
-2. **Phase 2 — Console Applications**: Full `kernel32`, `advapi32` registry
-   stubs, `ws2_32` networking.
-3. **Phase 3 — GUI Applications**: `user32` windowing + message pump, `gdi32`
-   basic rendering.
-4. **Phase 4 — Rich Applications**: COM runtime, shell integration, advanced
-   GDI, theming.
+1. **Phase 1 — Bootstrapping**: `kernel32` core (file I/O, memory, heap), `ntdll` basics, `msvcrt` essentials. Enough to run simple console apps. (✅ **Completed**)
+2. **Phase 2 — Console Applications**: Full `kernel32` (Threading, Mutexes, VFS), `advapi32` registry stubs, `ws2_32` networking. (⏳ **In Progress**)
+3. **Phase 3 — GUI Applications**: `user32` windowing + message pump, `gdi32` basic rendering.
+4. **Phase 4 — Rich Applications**: COM runtime, shell integration, advanced GDI, theming.
 
 ---
 

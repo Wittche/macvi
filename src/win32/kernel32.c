@@ -20,6 +20,7 @@
 #include <pthread.h>
 #include <time.h>
 #include <errno.h>
+#include <sys/stat.h>
 
 #define STUB_LOG(fmt, ...) fprintf(stderr, "[macwi:kernel32] " fmt "\n", ##__VA_ARGS__)
 
@@ -144,6 +145,209 @@ static void win32_CreateFileA(EMU_CONTEXT* ctx) {
     macwi_thunk_stdcall_return(ctx, 7);
 }
 
+static void win32_DeleteFileA(EMU_CONTEXT* ctx) {
+    uint64_t lpFileName;
+    macwi_thunk_read_param_64(ctx, 0, &lpFileName);
+    char filename[256];
+    macwi_thunk_read_guest_string(ctx, lpFileName, filename, sizeof(filename));
+    
+    char unix_path[MACWI_MAX_PATH];
+    macwi_vfs_dos_to_unix(filename, unix_path);
+    STUB_LOG("DeleteFileA(\"%s\")", filename);
+    
+    if (unlink(unix_path) == 0) {
+        macwi_emu_reg_write_64(ctx, 0, 1);
+    } else {
+        set_last_error(2); // ERROR_FILE_NOT_FOUND
+        macwi_emu_reg_write_64(ctx, 0, 0);
+    }
+    macwi_thunk_stdcall_return(ctx, 1);
+}
+
+static void win32_GetFileAttributesA(EMU_CONTEXT* ctx) {
+    uint64_t lpFileName;
+    macwi_thunk_read_param_64(ctx, 0, &lpFileName);
+    char filename[256];
+    macwi_thunk_read_guest_string(ctx, lpFileName, filename, sizeof(filename));
+    
+    char unix_path[MACWI_MAX_PATH];
+    macwi_vfs_dos_to_unix(filename, unix_path);
+    STUB_LOG("GetFileAttributesA(\"%s\")", filename);
+    
+    struct stat st;
+    if (stat(unix_path, &st) == 0) {
+        uint32_t attr = 0x80; // FILE_ATTRIBUTE_NORMAL
+        if (S_ISDIR(st.st_mode)) attr = 0x10; // FILE_ATTRIBUTE_DIRECTORY
+        macwi_emu_reg_write_64(ctx, 0, attr);
+    } else {
+        set_last_error(2); // ERROR_FILE_NOT_FOUND
+        macwi_emu_reg_write_64(ctx, 0, 0xFFFFFFFF); // INVALID_FILE_ATTRIBUTES
+    }
+    macwi_thunk_stdcall_return(ctx, 1);
+}
+
+static void win32_SetFileAttributesA(EMU_CONTEXT* ctx) {
+    uint64_t lpFileName, dwFileAttributes;
+    macwi_thunk_read_param_64(ctx, 0, &lpFileName);
+    macwi_thunk_read_param_64(ctx, 1, &dwFileAttributes);
+    STUB_LOG("SetFileAttributesA()");
+    // Stub implementation
+    macwi_emu_reg_write_64(ctx, 0, 1); // TRUE
+    macwi_thunk_stdcall_return(ctx, 2);
+}
+
+static void win32_GetSystemDirectoryA(EMU_CONTEXT* ctx) {
+    uint64_t lpBuffer, uSize;
+    macwi_thunk_read_param_64(ctx, 0, &lpBuffer);
+    macwi_thunk_read_param_64(ctx, 1, &uSize);
+    
+    const char* sysdir = "C:\\Windows\\System32";
+    size_t len = strlen(sysdir);
+    
+    STUB_LOG("GetSystemDirectoryA()");
+    if (uSize > len) {
+        macwi_emu_write_memory(ctx, lpBuffer, sysdir, len + 1);
+        macwi_emu_reg_write_64(ctx, 0, len);
+    } else {
+        macwi_emu_reg_write_64(ctx, 0, len + 1);
+    }
+    macwi_thunk_stdcall_return(ctx, 2);
+}
+
+static void win32_GetWindowsDirectoryA(EMU_CONTEXT* ctx) {
+    uint64_t lpBuffer, uSize;
+    macwi_thunk_read_param_64(ctx, 0, &lpBuffer);
+    macwi_thunk_read_param_64(ctx, 1, &uSize);
+    
+    const char* windir = "C:\\Windows";
+    size_t len = strlen(windir);
+    
+    STUB_LOG("GetWindowsDirectoryA()");
+    if (uSize > len) {
+        macwi_emu_write_memory(ctx, lpBuffer, windir, len + 1);
+        macwi_emu_reg_write_64(ctx, 0, len);
+    } else {
+        macwi_emu_reg_write_64(ctx, 0, len + 1);
+    }
+    macwi_thunk_stdcall_return(ctx, 2);
+}
+
+// WIN32_FIND_DATAA structure
+#pragma pack(push, 1)
+struct win32_find_data_a {
+    uint32_t dwFileAttributes;
+    uint32_t ftCreationTime[2];
+    uint32_t ftLastAccessTime[2];
+    uint32_t ftLastWriteTime[2];
+    uint32_t nFileSizeHigh;
+    uint32_t nFileSizeLow;
+    uint32_t dwReserved0;
+    uint32_t dwReserved1;
+    char cFileName[260];
+    char cAlternateFileName[14];
+};
+#pragma pack(pop)
+
+#include <dirent.h>
+
+static void win32_FindFirstFileA(EMU_CONTEXT* ctx) {
+    uint64_t lpFileName, lpFindFileData;
+    macwi_thunk_read_param_64(ctx, 0, &lpFileName);
+    macwi_thunk_read_param_64(ctx, 1, &lpFindFileData);
+    
+    char filename[256];
+    macwi_thunk_read_guest_string(ctx, lpFileName, filename, sizeof(filename));
+    STUB_LOG("FindFirstFileA(\"%s\")", filename);
+    
+    // We only support exact path or path + "*".
+    // For simplicity, strip trailing "\*" or "/*" to get the directory path.
+    char dirpath[256];
+    strncpy(dirpath, filename, sizeof(dirpath));
+    size_t len = strlen(dirpath);
+    if (len >= 2 && dirpath[len-1] == '*' && (dirpath[len-2] == '\\' || dirpath[len-2] == '/')) {
+        dirpath[len-2] = '\0';
+    }
+    
+    char unix_path[MACWI_MAX_PATH];
+    macwi_vfs_dos_to_unix(dirpath, unix_path);
+    
+    DIR* dir = opendir(unix_path);
+    if (!dir) {
+        set_last_error(2); // ERROR_FILE_NOT_FOUND
+        macwi_emu_reg_write_64(ctx, 0, 0xFFFFFFFFFFFFFFFFULL); // INVALID_HANDLE_VALUE
+        macwi_thunk_stdcall_return(ctx, 2);
+        return;
+    }
+    
+    struct dirent* ent = readdir(dir);
+    if (!ent) {
+        closedir(dir);
+        set_last_error(2); // ERROR_FILE_NOT_FOUND
+        macwi_emu_reg_write_64(ctx, 0, 0xFFFFFFFFFFFFFFFFULL); // INVALID_HANDLE_VALUE
+        macwi_thunk_stdcall_return(ctx, 2);
+        return;
+    }
+    
+    struct win32_find_data_a fd = {0};
+    fd.dwFileAttributes = (ent->d_type == DT_DIR) ? 0x10 : 0x80;
+    strncpy(fd.cFileName, ent->d_name, sizeof(fd.cFileName) - 1);
+    
+    macwi_emu_write_memory(ctx, lpFindFileData, &fd, sizeof(fd));
+    
+    extern HANDLE_TABLE g_macwi_handle_table;
+    HANDLE h = macwi_handle_create(&g_macwi_handle_table, HANDLE_TYPE_FIND_FILE, dir);
+    macwi_emu_reg_write_64(ctx, 0, (uint64_t)h);
+    macwi_thunk_stdcall_return(ctx, 2);
+}
+
+static void win32_FindNextFileA(EMU_CONTEXT* ctx) {
+    uint64_t hFindFile, lpFindFileData;
+    macwi_thunk_read_param_64(ctx, 0, &hFindFile);
+    macwi_thunk_read_param_64(ctx, 1, &lpFindFileData);
+    STUB_LOG("FindNextFileA()");
+    
+    extern HANDLE_TABLE g_macwi_handle_table;
+    DIR* dir = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hFindFile, HANDLE_TYPE_FIND_FILE, (void**)&dir) != MACWI_SUCCESS) {
+        set_last_error(6); // ERROR_INVALID_HANDLE
+        macwi_emu_reg_write_64(ctx, 0, 0); // FALSE
+        macwi_thunk_stdcall_return(ctx, 2);
+        return;
+    }
+    
+    struct dirent* ent = readdir(dir);
+    if (!ent) {
+        set_last_error(18); // ERROR_NO_MORE_FILES
+        macwi_emu_reg_write_64(ctx, 0, 0); // FALSE
+        macwi_thunk_stdcall_return(ctx, 2);
+        return;
+    }
+    
+    struct win32_find_data_a fd = {0};
+    fd.dwFileAttributes = (ent->d_type == DT_DIR) ? 0x10 : 0x80;
+    strncpy(fd.cFileName, ent->d_name, sizeof(fd.cFileName) - 1);
+    
+    macwi_emu_write_memory(ctx, lpFindFileData, &fd, sizeof(fd));
+    
+    macwi_emu_reg_write_64(ctx, 0, 1); // TRUE
+    macwi_thunk_stdcall_return(ctx, 2);
+}
+
+static void win32_FindClose(EMU_CONTEXT* ctx) {
+    uint64_t hFindFile;
+    macwi_thunk_read_param_64(ctx, 0, &hFindFile);
+    STUB_LOG("FindClose()");
+    
+    extern HANDLE_TABLE g_macwi_handle_table;
+    DIR* dir = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hFindFile, HANDLE_TYPE_FIND_FILE, (void**)&dir) == MACWI_SUCCESS) {
+        closedir(dir);
+    }
+    macwi_status_t status = macwi_handle_close(&g_macwi_handle_table, (HANDLE)(uintptr_t)hFindFile);
+    macwi_emu_reg_write_64(ctx, 0, status == MACWI_SUCCESS ? 1 : 0);
+    macwi_thunk_stdcall_return(ctx, 1);
+}
+
 /* ============================================================================
  * Console I/O
  * ============================================================================ */
@@ -152,6 +356,8 @@ static void win32_GetStdHandle(EMU_CONTEXT* ctx) {
     uint64_t nStdHandle;
     macwi_thunk_read_param_64(ctx, 0, &nStdHandle);
     uint32_t n32 = (uint32_t)nStdHandle;
+    
+    STUB_LOG("GetStdHandle(%d)", (int)n32);
     
     // STD_INPUT_HANDLE = -10 (0xFFFFFFF6)
     // STD_OUTPUT_HANDLE = -11 (0xFFFFFFF5)
@@ -173,6 +379,8 @@ static void win32_ReadFile(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_64(ctx, 2, &nNumberOfBytesToRead);
     macwi_thunk_read_param_64(ctx, 3, &lpNumberOfBytesRead);
     macwi_thunk_read_param_64(ctx, 4, &lpOverlapped);
+
+    STUB_LOG("ReadFile(handle=0x%X, bytes=%u)", (uint32_t)hFile, (uint32_t)nNumberOfBytesToRead);
 
     extern HANDLE_TABLE g_macwi_handle_table;
     int* p_fd = NULL;
@@ -209,6 +417,8 @@ static void win32_WriteFile(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_64(ctx, 2, &nNumberOfBytesToWrite);
     macwi_thunk_read_param_64(ctx, 3, &lpNumberOfBytesWritten);
     macwi_thunk_read_param_64(ctx, 4, &lpOverlapped);
+
+    STUB_LOG("WriteFile(handle=0x%X, bytes=%u)", (uint32_t)hFile, (uint32_t)nNumberOfBytesToWrite);
 
     uint32_t h32 = (uint32_t)hFile;
     int fd = -1;
@@ -522,6 +732,14 @@ void macwi_kernel32_register_apis(void) {
     macwi_thunk_register_api("kernel32.dll", "lstrlenA",           win32_lstrlenA, 1);
     macwi_thunk_register_api("kernel32.dll", "GetStdHandle",       win32_GetStdHandle, 1);
     macwi_thunk_register_api("kernel32.dll", "CreateFileA",        win32_CreateFileA, 7);
+    macwi_thunk_register_api("kernel32.dll", "DeleteFileA",        win32_DeleteFileA, 1);
+    macwi_thunk_register_api("kernel32.dll", "GetFileAttributesA", win32_GetFileAttributesA, 1);
+    macwi_thunk_register_api("kernel32.dll", "SetFileAttributesA", win32_SetFileAttributesA, 2);
+    macwi_thunk_register_api("kernel32.dll", "GetSystemDirectoryA",win32_GetSystemDirectoryA, 2);
+    macwi_thunk_register_api("kernel32.dll", "GetWindowsDirectoryA",win32_GetWindowsDirectoryA, 2);
+    macwi_thunk_register_api("kernel32.dll", "FindFirstFileA",     win32_FindFirstFileA, 2);
+    macwi_thunk_register_api("kernel32.dll", "FindNextFileA",      win32_FindNextFileA, 2);
+    macwi_thunk_register_api("kernel32.dll", "FindClose",          win32_FindClose, 1);
     macwi_thunk_register_api("kernel32.dll", "ReadFile",           win32_ReadFile, 5);
     macwi_thunk_register_api("kernel32.dll", "WriteFile",          win32_WriteFile, 5);
     macwi_thunk_register_api("kernel32.dll", "CloseHandle",        win32_CloseHandle, 1);

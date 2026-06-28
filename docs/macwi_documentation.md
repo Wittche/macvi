@@ -58,15 +58,24 @@ Projenin yol haritasında %100 başarıyla tamamlanan aşamalar şunlardır:
 * **Faz 5: PE & Emülatör Birleşimi:** Hafızaya map edilen bölümlerin emülatöre tanıtılması.
 * **Faz 6: FEXCore Geçişi:** Unicorn'un atılarak, FEXCore kaynak kodunun CMake ile projeye tam statik build olarak eklenmesi.
 * **Faz 7: FEXCore Stabilite Yamaları:** macOS üzerindeki 48-bit Virtual Address kısıtlamalarının aşılması, MAP_FIXED yerine native mmap fallback sisteminin kurulması.
-* **Faz 8: API Yüzeyi ve Thunk Kesmeleri (Güncel Başarı):** FEXCore `SyscallHandler` entegrasyonu, Trambolin (Trampoline) mimarisinin başarıyla çalıştırılması. Stack üzerinden 32-bit parametre okuma işlemlerinin senkronize edilmesi ve `test_thunk_dispatch.c` üzerinde kusursuz `int 0x80` testinin geçilmesi.
+* **Faz 8: API Yüzeyi ve Thunk Kesmeleri:** FEXCore `SyscallHandler` entegrasyonu, Trambolin (Trampoline) mimarisinin başarıyla çalıştırılması. Stack üzerinden 32-bit parametre okuma işlemlerinin senkronize edilmesi ve `test_thunk_dispatch.c` üzerinde kusursuz `int 0x80` testinin geçilmesi.
+* **Faz 9: End-to-End Win32 PE Çalıştırma:** Sıfırdan bir `hello_win32.exe` Windows programını loader ile yükleyip, `kernel32` importlarını trambolinlere bağlayıp, baştan sona eksiksiz bir şekilde çalıştırma aşaması başarıyla tamamlandı. `ExitProcess` çağrılarına kadar sistem sorunsuz test edildi.
+* **Faz 10: Sistem Çağrıları, Threading ve Registry:**
+  * `CreateThread`, `ExitThread` ve `GetCurrentThreadId` ile pthreads tabanlı Win32 Thread oluşturma altyapısı kuruldu (FEXCore TEB/PEB izolasyon yamaları yapıldı).
+  * `CreateMutexA`, `WaitForSingleObject` ve `ReleaseMutex` ile Multi-Threading senkronizasyonu tamamlandı.
+  * `RegCreateKeyExA`, `RegOpenKeyExA`, `RegSetValueExA`, `RegQueryValueExA`, `RegCloseKey` gibi fonksiyonlarla sanal (in-memory) Registry altyapısı kuruldu.
+  * Gelişmiş `advanced_win32.exe` test programı tüm bu bileşenleri sıfır hata ile tamamladı.
+* **Faz 11: Dosya Sistemi Sanallaştırma (VFS) ve Directory API (Güncel Başarı):**
+  * WoW64 mantığına uygun şekilde `C:\Windows\System32` gibi Windows dosya yollarını macOS içerisindeki sanal bir klasöre (`~/.macwi/drive_c/`) yönlendiren POSIX VFS (`macwi_vfs_dos_to_unix`) geliştirildi.
+  * `CreateFileA`, `ReadFile`, `WriteFile`, `DeleteFileA`, `GetFileAttributesA`, `SetFileAttributesA` gibi temel dosya operasyonları VFS'e entegre edildi.
+  * `FindFirstFileA`, `FindNextFileA` ve `FindClose` API'leri POSIX `opendir`/`readdir` fonksiyonlarıyla bağlanarak dizin döngüleri ve iterasyon desteklendi.
+  * `fs_win32.exe` programıyla tüm VFS operasyonları baştan sona test edildi ve hatasız tamamlandı. (Ek olarak FEXCore JIT hafıza çakışmaları çözülerek Image Base ayarları stabiliteye kavuşturuldu.)
 
 ## 5. Sıradaki Hedefler (Gelecek Aşamalar)
 
-Şu anki mimari tamamen ayakları yere basan ve kanıtlanmış (proven) bir temel haline gelmiştir. Önümüzdeki hedefler:
+Şu anki mimari Windows sisteminin kalbini (Dosya sistemi, Threading, Senkronizasyon, Memory, Registry) güvenilir şekilde çalıştırmaktadır. Önümüzdeki en büyük ve son temel altyapı hedefi Grafik ve Arayüzdür:
 
-* **Faz 9 (End-to-End Win32 PE Çalıştırma):** Sıfırdan bir `hello_win32.exe` Windows programını loader ile yükleyip, `kernel32` importlarını trambolinlere bağlayıp, baştan sona eksiksiz bir şekilde çalıştırmak.
-* **Faz 10:** Handle Management (Dosya, Thread, Mutex gibi Windows Handle yapılarının POSIX karşılıklarına bağlanması).
-* **Faz 11:** Kapsamlı Win32 API adaptasyonları (User32 GUI, GDI çizim apileri vb).
+* **Faz 12 (Grafik ve Windowing / User32 - GDI):** Gerçek bir GUI penceresi açabilmek için Metal veya Cocoa tabanlı bir arayüz köprüsü oluşturmak, `CreateWindowEx`, `RegisterClassEx`, `ShowWindow` ve `GetMessage` / `DispatchMessage` loop'unu sağlamak. İlk aşamada ekrana basit bir boş pencere çizebilmek amaçlanmaktadır.
 
 ---
-*Bu belge, projenin geldiği en güncel noktayı ve teknik temelini yansıtmaktadır.*
+*Bu belge, projenin geldiği en güncel noktayı (Faz 11 sonu) ve teknik temelini yansıtmaktadır.*
