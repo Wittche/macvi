@@ -171,8 +171,12 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    // 5. Initialize Win32 APIs and Thunking
+    // Register Win32 API Thunks
     macwi_kernel32_register_apis();
+    extern void macwi_user32_register_apis(void);
+    macwi_user32_register_apis();
+    extern void macwi_gdi32_register_apis(void);
+    macwi_gdi32_register_apis();
     macwi_ntdll_register_apis();
     macwi_advapi32_register_apis();
     macwi_thunk_init_dispatcher(ctx);
@@ -218,14 +222,15 @@ int main(int argc, char** argv) {
     printf("[macwi] Emulator thread detached. Main thread idling...\n");
     fflush(stdout);
     
-    // In a real GUI app, we'd start the Cocoa event loop here
-    while(1) {
-        sleep(1);
-    }
-
-    // Unreachable, emu thread calls exit()
-    macwi_pe_free(&image);
-    macwi_emu_free(ctx);
-    macwi_handle_table_destroy(&g_macwi_handle_table);
-    return EXIT_SUCCESS;
+    // Initialize Cocoa and run the main event loop
+    extern void macwi_cocoa_init(void);
+    macwi_cocoa_init();
+    
+    // Cocoa requires the main thread to run its runloop
+    // We can't include Cocoa headers directly in main.c (it's pure C), 
+    // so we'll just implement a macwi_cocoa_run_loop() in cocoa_window.m
+    extern void macwi_cocoa_run_loop(void);
+    macwi_cocoa_run_loop();
+    
+    return 0;
 }

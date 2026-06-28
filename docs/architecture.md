@@ -380,7 +380,13 @@ structure that many Windows applications depend on.
 
 ---
 
-### 3.7 File System Redirection (`vfs`) — _Future_
+### 3.7 Graphical Subsystem (User32/GDI32)
+  - Native Cocoa (AppKit) `NSWindow` bridging to emulated `HWND` handles.
+  - GUI calls from the background x86 emulator thread are dispatched synchronously (`dispatch_sync`) to the main thread where the Cocoa `NSRunLoop` processes them.
+  - Event loop integration via a custom thread-safe event queue (`NSMutableArray`) and `[NSApp nextEventMatchingMask:]` non-blocking polling.
+  - Emulation of Device Contexts (HDC) with translation to Cocoa `NSGraphicsContext` for primitives like `FillRect` and `TextOutA`.
+
+### 3.8 File System Redirection (`vfs`) — _Future_
 
 Maps Windows file paths to a virtual file system rooted under
 `~/.macwi/drive_c/`.

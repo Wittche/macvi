@@ -1,0 +1,49 @@
+#pragma once
+
+#include <stdint.h>
+#include <stdbool.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// A simple structure to hold MacWI UI events from Cocoa
+typedef enum {
+    MACWI_EVENT_NONE = 0,
+    MACWI_EVENT_CLOSE = 1,
+    MACWI_EVENT_PAINT = 2,
+    MACWI_EVENT_KEYDOWN = 3,
+    MACWI_EVENT_KEYUP = 4,
+    MACWI_EVENT_MOUSEDOWN = 5,
+    MACWI_EVENT_MOUSEUP = 6
+} macwi_event_type_t;
+
+typedef struct {
+    macwi_event_type_t type;
+    void* window;
+    uint32_t key_code;
+    int mouse_x;
+    int mouse_y;
+} macwi_event_t;
+
+// Initialize the Cocoa Application
+void macwi_cocoa_init(void);
+
+// Create a Native macOS Window
+void* macwi_cocoa_create_window(const char* title, int width, int height);
+
+// Show the Window
+void macwi_cocoa_show_window(void* window);
+
+// Process next event. Returns 1 if an event was retrieved, 0 if no events
+int macwi_cocoa_poll_event(macwi_event_t* out_event);
+
+// Draw a filled rectangle in the current context
+void macwi_cocoa_fill_rect(void* window, int x, int y, int w, int h, uint32_t argb);
+
+// Draw text in the current context
+void macwi_cocoa_draw_text(void* window, int x, int y, const char* text, uint32_t argb);
+
+#ifdef __cplusplus
+}
+#endif

@@ -6,21 +6,20 @@
 add_library(macwi_win32 STATIC
     kernel32.c
     ntdll.c
+    advapi32.c
     user32.c
     gdi32.c
-    cocoa_bridge.m
-    advapi32.c
+    cocoa_window.m
 )
 
-target_include_directories(macwi_win32 PUBLIC
-    ${CMAKE_SOURCE_DIR}/include
+target_include_directories(macwi_win32 PRIVATE 
+    ${CMAKE_SOURCE_DIR}/include 
+    ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_link_libraries(macwi_win32 PRIVATE
-    macwi_core
-)
+target_link_libraries(macwi_win32 PRIVATE macwi_core macwi_thunk)
+target_link_libraries(macwi_win32 PUBLIC "-framework Cocoa")
 
-# Enable Objective-C if needed implicitly, and link Cocoa
-set_source_files_properties(cocoa_bridge.m PROPERTIES LANGUAGE OBJC)
-target_link_options(macwi_win32 PUBLIC "-framework" "Cocoa")
+# Enable Objective-C for .m files
+set_source_files_properties(cocoa_window.m PROPERTIES LANGUAGE OBJC)

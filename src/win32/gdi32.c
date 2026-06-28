@@ -1,96 +1,92 @@
-/**
- * @file gdi32.c
- * @brief GDI32.dll emulation.
- *
- * SPDX-License-Identifier: MIT
- */
-
-#include "macwi/gdi32.h"
+#include "gdi32.h"
 #include "macwi/thunk.h"
-#include "macwi/emu.h"
+#include "macwi/handle.h"
+#include "cocoa_window.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+extern HANDLE_TABLE g_macwi_handle_table;
 
-#define GDI32_LOG(fmt, ...) fprintf(stderr, "[macwi:gdi32] " fmt "\n", ##__VA_ARGS__)
+static void win32_BeginPaint(EMU_CONTEXT* ctx) {
+    uint32_t hWnd, lpPaint;
+    macwi_thunk_read_param_32(ctx, 0, &hWnd);
+    macwi_thunk_read_param_32(ctx, 1, &lpPaint);
 
-/* ============================================================================
- * Stubs
- * ============================================================================ */
-
-static void win32_GetDeviceCaps(EMU_CONTEXT* ctx) {
-    uint64_t hdc, nIndex;
-    macwi_thunk_read_param_64(ctx, 0, &hdc);
-    macwi_thunk_read_param_64(ctx, 1, &nIndex);
-    
-    GDI32_LOG("GetDeviceCaps(hdc=0x%llX, index=%u)", hdc, (uint32_t)nIndex);
-    // 8 = BITSPIXEL, 12 = HORZRES, 10 = VERTRES
-    uint64_t result = 0;
-    if (nIndex == 8) result = 32; // 32 bits per pixel
-    else if (nIndex == 12) result = 800; // HORZRES
-    else if (nIndex == 10) result = 600; // VERTRES
-    macwi_emu_reg_write_64(ctx, 0, result);
+    void* cocoa_win = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hWnd, HANDLE_TYPE_EVENT, &cocoa_win) == MACWI_SUCCESS) {
+        PAINTSTRUCT_32 ps;
+        ps.hdc = hWnd; // Cheat: use hWnd as HDC
+        ps.fErase = 0;
+        ps.rcPaint_left = 0;
+        ps.rcPaint_top = 0;
+        ps.rcPaint_right = 800; // Hardcoded size
+        ps.rcPaint_bottom = 600;
+        macwi_emu_write_memory(ctx, lpPaint, &ps, sizeof(ps));
+        macwi_emu_reg_write_32(ctx, 0, ps.hdc);
+    } else {
+        macwi_emu_reg_write_32(ctx, 0, 0);
+    }
     macwi_thunk_stdcall_return(ctx, 2);
 }
 
-static void win32_CreateCompatibleDC(EMU_CONTEXT* ctx) {
-    uint64_t hdc;
-    macwi_thunk_read_param_64(ctx, 0, &hdc);
-    
-    GDI32_LOG("CreateCompatibleDC(0x%llX)", hdc);
-    macwi_emu_reg_write_64(ctx, 0, 0x2001); // Fake Memory DC
-    macwi_thunk_stdcall_return(ctx, 1);
-}
-
-static void win32_CreateDIBSection(EMU_CONTEXT* ctx) {
-    uint64_t hdc, pbmi, usage, ppvBits, hSection, offset;
-    macwi_thunk_read_param_64(ctx, 0, &hdc);
-    macwi_thunk_read_param_64(ctx, 1, &pbmi);
-    macwi_thunk_read_param_64(ctx, 2, &usage);
-    macwi_thunk_read_param_64(ctx, 3, &ppvBits);
-    macwi_thunk_read_param_64(ctx, 4, &hSection);
-    macwi_thunk_read_param_64(ctx, 5, &offset);
-
-    GDI32_LOG("CreateDIBSection(hdc=0x%llX, ...)", hdc);
-    macwi_emu_reg_write_64(ctx, 0, 0x2002); // Fake Bitmap Handle
-    macwi_thunk_stdcall_return(ctx, 6);
-}
-
-static void win32_SelectObject(EMU_CONTEXT* ctx) {
-    uint64_t hdc, hgdiobj;
-    macwi_thunk_read_param_64(ctx, 0, &hdc);
-    macwi_thunk_read_param_64(ctx, 1, &hgdiobj);
-    
-    GDI32_LOG("SelectObject(hdc=0x%llX, obj=0x%llX)", hdc, hgdiobj);
-    macwi_emu_reg_write_64(ctx, 0, 0x2003); // Fake Old Object Handle
+static void win32_EndPaint(EMU_CONTEXT* ctx) {
+    (void)ctx;
+    macwi_emu_reg_write_32(ctx, 0, 1);
     macwi_thunk_stdcall_return(ctx, 2);
 }
 
-static void win32_BitBlt(EMU_CONTEXT* ctx) {
-    uint64_t hdc, x, y, cx, cy, hdcSrc, x1, y1, rop;
-    macwi_thunk_read_param_64(ctx, 0, &hdc);
-    macwi_thunk_read_param_64(ctx, 1, &x);
-    macwi_thunk_read_param_64(ctx, 2, &y);
-    macwi_thunk_read_param_64(ctx, 3, &cx);
-    macwi_thunk_read_param_64(ctx, 4, &cy);
-    macwi_thunk_read_param_64(ctx, 5, &hdcSrc);
-    macwi_thunk_read_param_64(ctx, 6, &x1);
-    macwi_thunk_read_param_64(ctx, 7, &y1);
-    macwi_thunk_read_param_64(ctx, 8, &rop);
+static void win32_FillRect(EMU_CONTEXT* ctx) {
+    uint32_t hDC, lprc, hbr;
+    macwi_thunk_read_param_32(ctx, 0, &hDC);
+    macwi_thunk_read_param_32(ctx, 1, &lprc);
+    macwi_thunk_read_param_32(ctx, 2, &hbr);
 
-    GDI32_LOG("BitBlt(dst=0x%llX, src=0x%llX)", hdc, hdcSrc);
-    macwi_emu_reg_write_64(ctx, 0, 1); // TRUE
-    macwi_thunk_stdcall_return(ctx, 9);
+    void* cocoa_win = NULL;
+    // Cheat: hDC is hWnd
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hDC, HANDLE_TYPE_EVENT, &cocoa_win) == MACWI_SUCCESS) {
+        RECT_32 rect;
+        macwi_emu_read_memory(ctx, lprc, &rect, sizeof(rect));
+        
+        uint32_t color = 0xFFFF0000; // Red default
+        if (hbr == 1) color = 0xFFFFFFFF; // White
+        else if (hbr == 2) color = 0xFF000000; // Black
+        
+        macwi_cocoa_fill_rect(cocoa_win, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, color);
+        macwi_emu_reg_write_32(ctx, 0, 1);
+    } else {
+        macwi_emu_reg_write_32(ctx, 0, 0);
+    }
+    macwi_thunk_stdcall_return(ctx, 3);
 }
 
-/* ============================================================================
- * API Registration
- * ============================================================================ */
+static void win32_TextOutA(EMU_CONTEXT* ctx) {
+    uint32_t hdc;
+    int32_t x, y;
+    uint32_t lpString;
+    int32_t c;
+    macwi_thunk_read_param_32(ctx, 0, &hdc);
+    macwi_thunk_read_param_32(ctx, 1, (uint32_t*)&x);
+    macwi_thunk_read_param_32(ctx, 2, (uint32_t*)&y);
+    macwi_thunk_read_param_32(ctx, 3, &lpString);
+    macwi_thunk_read_param_32(ctx, 4, (uint32_t*)&c);
+
+    void* cocoa_win = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hdc, HANDLE_TYPE_EVENT, &cocoa_win) == MACWI_SUCCESS) {
+        char text[256];
+        macwi_thunk_read_guest_string(ctx, lpString, text, sizeof(text));
+        if (c < 256) text[c] = '\0';
+        
+        macwi_cocoa_draw_text(cocoa_win, x, y, text, 0xFF000000); // Black text
+        macwi_emu_reg_write_32(ctx, 0, 1);
+    } else {
+        macwi_emu_reg_write_32(ctx, 0, 0);
+    }
+    macwi_thunk_stdcall_return(ctx, 5);
+}
 
 void macwi_gdi32_register_apis(void) {
-    macwi_thunk_register_api("gdi32.dll", "GetDeviceCaps", win32_GetDeviceCaps, 2);
-    macwi_thunk_register_api("gdi32.dll", "CreateCompatibleDC", win32_CreateCompatibleDC, 1);
-    macwi_thunk_register_api("gdi32.dll", "CreateDIBSection", win32_CreateDIBSection, 6);
-    macwi_thunk_register_api("gdi32.dll", "SelectObject", win32_SelectObject, 2);
-    macwi_thunk_register_api("gdi32.dll", "BitBlt", win32_BitBlt, 9);
+    // Actually FillRect is in user32, but often grouped with GDI. We register it as user32 if needed.
+    // In Win32, FillRect is in user32.dll!
+    macwi_thunk_register_api("user32.dll", "BeginPaint", win32_BeginPaint, 2);
+    macwi_thunk_register_api("user32.dll", "EndPaint", win32_EndPaint, 2);
+    macwi_thunk_register_api("user32.dll", "FillRect", win32_FillRect, 3);
+    macwi_thunk_register_api("gdi32.dll", "TextOutA", win32_TextOutA, 5);
 }

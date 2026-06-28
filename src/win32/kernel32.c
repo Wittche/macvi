@@ -32,8 +32,13 @@ static _Thread_local uint32_t tls_last_error = 0;
 static void set_last_error(uint32_t err) { tls_last_error = err; }
 
 static void win32_GetLastError(EMU_CONTEXT* ctx) {
-    macwi_emu_reg_write_64(ctx, 0 /* RAX */, tls_last_error);
+    macwi_emu_reg_write_32(ctx, 0, tls_last_error);
     macwi_thunk_stdcall_return(ctx, 0);
+}
+
+static void win32_GetModuleHandleA(EMU_CONTEXT* ctx) {
+    macwi_emu_reg_write_32(ctx, 0, 0x28000000); // Hack for test GUI image base
+    macwi_thunk_stdcall_return(ctx, 1);
 }
 
 static void win32_SetLastError(EMU_CONTEXT* ctx) {
@@ -726,6 +731,7 @@ static void win32_ReleaseMutex(EMU_CONTEXT* ctx) {
 void macwi_kernel32_register_apis(void) {
     macwi_thunk_register_api("kernel32.dll", "GetLastError",       win32_GetLastError, 0);
     macwi_thunk_register_api("kernel32.dll", "SetLastError",       win32_SetLastError, 1);
+    macwi_thunk_register_api("kernel32.dll", "GetModuleHandleA",   win32_GetModuleHandleA, 1);
     macwi_thunk_register_api("kernel32.dll", "GetTickCount",       win32_GetTickCount, 0);
     macwi_thunk_register_api("kernel32.dll", "Sleep",              win32_Sleep, 1);
     macwi_thunk_register_api("kernel32.dll", "OutputDebugStringA", win32_OutputDebugStringA, 1);
