@@ -180,6 +180,7 @@ int main(int argc, char** argv) {
     macwi_ntdll_register_apis();
     macwi_advapi32_register_apis();
     macwi_thunk_init_dispatcher(ctx);
+    macwi_thunk_init_callbacks(ctx);
 
     // 6. Map PE into FEXCore Memory
     printf("[macwi] Mapping PE into Emulator Memory...\n");

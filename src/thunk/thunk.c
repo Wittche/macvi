@@ -179,3 +179,65 @@ macwi_status_t macwi_thunk_init_dispatcher(EMU_CONTEXT* ctx) {
     // Handled by FEXCore SyscallHandler natively. No action required here.
     return MACWI_SUCCESS;
 }
+
+/* ============================================================================
+ * Callback Infrastructure
+ * ============================================================================ */
+
+#define MAX_CALLBACK_DEPTH 16
+static __thread MACWI_CALLBACK_STATE g_callback_stack[MAX_CALLBACK_DEPTH];
+static __thread int g_callback_depth = 0;
+static uint64_t g_callback_trampoline_va = 0;
+
+static void internal_CallbackReturn(EMU_CONTEXT* ctx) {
+    if (g_callback_depth <= 0) {
+        fprintf(stderr, "[macwi:thunk] FATAL: CallbackReturn without active callback\n");
+        return;
+    }
+    g_callback_depth--;
+    MACWI_CALLBACK_STATE* state = &g_callback_stack[g_callback_depth];
+    
+    // EAX contains the return value from the guest WindowProc
+    uint32_t ret_val = macwi_emu_reg_read_32(ctx, 0);
+    
+    // Restore CPU state to exactly before the syscall that triggered the callback
+    macwi_emu_restore_state(ctx, state->cpu_state);
+    macwi_emu_free_state(state->cpu_state);
+    
+    // Simulate the return value of the API that triggered the callback (e.g., DispatchMessage)
+    macwi_emu_reg_write_32(ctx, 0, ret_val);
+}
+
+macwi_status_t macwi_thunk_init_callbacks(EMU_CONTEXT* ctx) {
+    if (g_callback_trampoline_va != 0) return MACWI_SUCCESS; // Already initialized
+    macwi_thunk_register_api("macwi_internal", "CallbackReturn", internal_CallbackReturn, 0);
+    g_callback_trampoline_va = macwi_thunk_get_trampoline(ctx, "macwi_internal", "CallbackReturn");
+    return MACWI_SUCCESS;
+}
+
+macwi_status_t macwi_thunk_invoke_callback(EMU_CONTEXT* ctx, uint32_t target_addr, uint32_t arg_count, const uint32_t* args, MACWI_CALLBACK_STATE* out_state) {
+    if (g_callback_depth >= MAX_CALLBACK_DEPTH) return MACWI_ERROR_MEMORY;
+    if (g_callback_trampoline_va == 0) return MACWI_ERROR_INVALID_PARAM;
+    
+    MACWI_CALLBACK_STATE* state = &g_callback_stack[g_callback_depth++];
+    macwi_emu_save_state(ctx, &state->cpu_state);
+    if (out_state) *out_state = *state;
+    
+    uint64_t sp = macwi_emu_get_sp(ctx);
+    
+    // Push args right-to-left
+    for (int i = arg_count - 1; i >= 0; i--) {
+        sp -= 4;
+        macwi_emu_write_memory(ctx, sp, &args[i], 4);
+    }
+    
+    // Push trampoline as return address
+    sp -= 4;
+    uint32_t ret_addr = (uint32_t)g_callback_trampoline_va;
+    macwi_emu_write_memory(ctx, sp, &ret_addr, 4);
+    
+    macwi_emu_set_sp(ctx, sp);
+    macwi_emu_set_pc(ctx, target_addr);
+    
+    return MACWI_SUCCESS;
+}

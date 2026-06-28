@@ -30,7 +30,7 @@ public:
         // EAX contains the API index
         uint32_t api_index = (uint32_t)Args->Argument[0];
         
-        fprintf(stderr, "[macwi:emu] HandleSyscall invoked for API index %u\n", api_index);
+        fprintf(stderr, "[macwi:emu] HandleSyscall invoked for API index %u at RIP=0x%llX\n", api_index, Frame->State.rip);
         fflush(stderr);
         
         // Dispatch to the native host implementation
@@ -142,7 +142,8 @@ macwi_status_t macwi_emu_init_windows_env(EMU_CONTEXT* ctx, uint64_t image_base,
     return MACWI_SUCCESS;
 }
 
-typedef struct {
+typedef struct EmuNewThreadArgs {
+    EMU_CONTEXT* parent_ctx;
     FEX_Context* fex_ctx;
     FEX_Thread* fex_thread;
     uint64_t entry_point;
@@ -159,7 +160,7 @@ static void* emu_new_thread_func(void* arg) {
     
     // stdcall: Push parameter, push dummy return address
     uint32_t param32 = (uint32_t)args->param;
-    uint32_t ret32 = 0x0;
+    uint32_t ret32 = (uint32_t)macwi_thunk_get_trampoline(args->parent_ctx, "kernel32.dll", "ExitThread");
     rsp -= 4;
     FEX_WriteMemory(args->fex_ctx, rsp, &param32, 4);
     rsp -= 4;
@@ -201,6 +202,7 @@ macwi_status_t macwi_emu_create_thread(EMU_CONTEXT* ctx, uint64_t entry_point, u
     }
     
     EmuNewThreadArgs* args = (EmuNewThreadArgs*)malloc(sizeof(EmuNewThreadArgs));
+    args->parent_ctx = ctx;
     args->fex_ctx = ctx->fex_ctx;
     args->fex_thread = new_fex_thread;
     args->entry_point = entry_point;
@@ -215,9 +217,9 @@ macwi_status_t macwi_emu_create_thread(EMU_CONTEXT* ctx, uint64_t entry_point, u
         free(args);
         return MACWI_ERROR_IO;
     }
-    pthread_detach(pt);
     
     if (out_thread_id) *out_thread_id = (uint64_t)pt;
+    fprintf(stderr, "[macwi:emu] Created thread with tid=%p\n", (void*)pt);
     return MACWI_SUCCESS;
 }
 
@@ -356,6 +358,24 @@ macwi_status_t macwi_emu_hook_unmapped(EMU_CONTEXT* ctx, macwi_emu_hook_cb cb, v
     // TODO: Connect this to FEX_HandleSIGBUS or FEX_SetSyscallHandler.
     // For now, FEXCore handles hooks differently. We might need a syscall handler.
     return MACWI_SUCCESS;
+}
+
+macwi_status_t macwi_emu_save_state(EMU_CONTEXT* ctx, void** out_state) {
+    if (!ctx || !ctx->current_frame || !out_state) return MACWI_ERROR_INVALID_PARAM;
+    FEXCore::Core::CPUState* state = new FEXCore::Core::CPUState();
+    memcpy(state, &ctx->current_frame->State, sizeof(FEXCore::Core::CPUState));
+    *out_state = state;
+    return MACWI_SUCCESS;
+}
+
+macwi_status_t macwi_emu_restore_state(EMU_CONTEXT* ctx, void* state) {
+    if (!ctx || !ctx->current_frame || !state) return MACWI_ERROR_INVALID_PARAM;
+    memcpy(&ctx->current_frame->State, state, sizeof(FEXCore::Core::CPUState));
+    return MACWI_SUCCESS;
+}
+
+void macwi_emu_free_state(void* state) {
+    if (state) delete (FEXCore::Core::CPUState*)state;
 }
 
 } // extern "C"

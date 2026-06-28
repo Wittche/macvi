@@ -2,8 +2,14 @@
 #import <objc/runtime.h>
 #include "cocoa_window.h"
 
+#import <pthread.h>
+
 // A queue to store translated events to feed into C GetMessage
 static NSMutableArray* g_eventQueue = nil;
+static pthread_mutex_t g_event_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t g_paint_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t g_paint_cond = PTHREAD_COND_INITIALIZER;
+static CGContextRef g_current_cg_context = NULL;
 
 @interface MacWIWindowDelegate : NSObject <NSWindowDelegate>
 @end
@@ -11,7 +17,11 @@ static NSMutableArray* g_eventQueue = nil;
 @implementation MacWIWindowDelegate
 
 - (BOOL)windowShouldClose:(NSWindow *)sender {
-    if (!g_eventQueue) return YES;
+    pthread_mutex_lock(&g_event_mutex);
+    if (!g_eventQueue) {
+        pthread_mutex_unlock(&g_event_mutex);
+        return YES;
+    }
     
     // Push close event
     macwi_event_t event;
@@ -23,6 +33,8 @@ static NSMutableArray* g_eventQueue = nil;
     
     NSValue* eventVal = [NSValue valueWithBytes:&event objCType:@encode(macwi_event_t)];
     [g_eventQueue addObject:eventVal];
+    pthread_mutex_unlock(&g_event_mutex);
+    
     return NO; // We don't close immediately, let Win32 DestroyWindow do it
 }
 
@@ -36,7 +48,14 @@ static NSMutableArray* g_eventQueue = nil;
 - (void)drawRect:(NSRect)dirtyRect {
     [super drawRect:dirtyRect];
     
-    if (!g_eventQueue) return;
+    g_current_cg_context = [[NSGraphicsContext currentContext] CGContext];
+    
+    pthread_mutex_lock(&g_event_mutex);
+    if (!g_eventQueue) {
+        pthread_mutex_unlock(&g_event_mutex);
+        g_current_cg_context = NULL;
+        return;
+    }
     
     // Push paint event
     macwi_event_t event;
@@ -48,6 +67,14 @@ static NSMutableArray* g_eventQueue = nil;
 
     NSValue* eventVal = [NSValue valueWithBytes:&event objCType:@encode(macwi_event_t)];
     [g_eventQueue addObject:eventVal];
+    pthread_mutex_unlock(&g_event_mutex);
+    
+    // Wait until FEXCore thread finishes painting (via EndPaint)
+    pthread_mutex_lock(&g_paint_mutex);
+    pthread_cond_wait(&g_paint_cond, &g_paint_mutex);
+    pthread_mutex_unlock(&g_paint_mutex);
+    
+    g_current_cg_context = NULL;
 }
 
 @end
@@ -96,48 +123,52 @@ void macwi_cocoa_show_window(void* window_ptr) {
 }
 
 int macwi_cocoa_poll_event(macwi_event_t* out_event) {
-    __block int result = 0;
-    __block macwi_event_t ev;
+    int result = 0;
     
+    // 1. Check custom queue without blocking main queue
+    pthread_mutex_lock(&g_event_mutex);
+    if (g_eventQueue && [g_eventQueue count] > 0) {
+        NSValue* val = [g_eventQueue firstObject];
+        [val getValue:out_event];
+        [g_eventQueue removeObjectAtIndex:0];
+        result = 1;
+    }
+    pthread_mutex_unlock(&g_event_mutex);
+    
+    if (result) return 1;
+    
+    // 2. Poll Cocoa events (non-blocking) on main thread
     dispatch_sync(dispatch_get_main_queue(), ^{
-        if (!g_eventQueue) return;
-        
-        // 1. First, drain our custom queue
-        if ([g_eventQueue count] > 0) {
-            NSValue* val = [g_eventQueue firstObject];
-            [val getValue:&ev];
-            [g_eventQueue removeObjectAtIndex:0];
-            result = 1;
-            return;
-        }
-        
-        // 2. Poll Cocoa events (non-blocking)
         NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny
                                             untilDate:[NSDate distantPast]
                                                inMode:NSDefaultRunLoopMode
                                               dequeue:YES];
-        
         if (event) {
             [NSApp sendEvent:event];
         }
-        
-        // Check custom queue again
-        if ([g_eventQueue count] > 0) {
-            NSValue* val = [g_eventQueue firstObject];
-            [val getValue:&ev];
-            [g_eventQueue removeObjectAtIndex:0];
-            result = 1;
-        }
     });
     
-    if (result) {
-        *out_event = ev;
+    // Check custom queue again
+    pthread_mutex_lock(&g_event_mutex);
+    if (g_eventQueue && [g_eventQueue count] > 0) {
+        NSValue* val = [g_eventQueue firstObject];
+        [val getValue:out_event];
+        [g_eventQueue removeObjectAtIndex:0];
+        result = 1;
     }
+    pthread_mutex_unlock(&g_event_mutex);
+    
     return result;
 }
 
+void macwi_cocoa_end_paint(void) {
+    pthread_mutex_lock(&g_paint_mutex);
+    pthread_cond_signal(&g_paint_cond);
+    pthread_mutex_unlock(&g_paint_mutex);
+}
+
 void macwi_cocoa_fill_rect(void* window_ptr, int x, int y, int w, int h, uint32_t argb) {
-    dispatch_sync(dispatch_get_main_queue(), ^{
+    void (^drawBlock)(void) = ^{
         NSWindow* window = (__bridge NSWindow*)window_ptr;
         NSView* view = [window contentView];
         
@@ -153,14 +184,26 @@ void macwi_cocoa_fill_rect(void* window_ptr, int x, int y, int w, int h, uint32_
         NSColor* color = [NSColor colorWithDeviceRed:r green:g blue:b alpha:a];
         
         [NSGraphicsContext saveGraphicsState];
+        if (g_current_cg_context) {
+            NSGraphicsContext* ctx = [NSGraphicsContext graphicsContextWithCGContext:g_current_cg_context flipped:NO];
+            [NSGraphicsContext setCurrentContext:ctx];
+        }
+        
         [color setFill];
         NSRectFill(rect);
+        
         [NSGraphicsContext restoreGraphicsState];
-    });
+    };
+    
+    if (g_current_cg_context) {
+        drawBlock();
+    } else {
+        dispatch_sync(dispatch_get_main_queue(), drawBlock);
+    }
 }
 
 void macwi_cocoa_draw_text(void* window_ptr, int x, int y, const char* text, uint32_t argb) {
-    dispatch_sync(dispatch_get_main_queue(), ^{
+    void (^drawBlock)(void) = ^{
         NSWindow* window = (__bridge NSWindow*)window_ptr;
         NSView* view = [window contentView];
         
@@ -182,6 +225,121 @@ void macwi_cocoa_draw_text(void* window_ptr, int x, int y, const char* text, uin
         NSSize size = [str sizeWithAttributes:attrs];
         NSPoint point = NSMakePoint(x, viewRect.size.height - y - size.height);
         
+        [NSGraphicsContext saveGraphicsState];
+        if (g_current_cg_context) {
+            NSGraphicsContext* ctx = [NSGraphicsContext graphicsContextWithCGContext:g_current_cg_context flipped:NO];
+            [NSGraphicsContext setCurrentContext:ctx];
+        }
+        
         [str drawAtPoint:point withAttributes:attrs];
+        
+        [NSGraphicsContext restoreGraphicsState];
+    };
+    
+    if (g_current_cg_context) {
+        drawBlock();
+    } else {
+        dispatch_sync(dispatch_get_main_queue(), drawBlock);
+    }
+}
+
+void macwi_cocoa_get_client_rect(void* window_ptr, int* out_w, int* out_h) {
+    if (!window_ptr) return;
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        NSWindow* window = (__bridge NSWindow*)window_ptr;
+        NSRect rect = [[window contentView] bounds];
+        if (out_w) *out_w = (int)rect.size.width;
+        if (out_h) *out_h = (int)rect.size.height;
     });
+}
+
+void macwi_cocoa_get_window_rect(void* window_ptr, int* out_x, int* out_y, int* out_w, int* out_h) {
+    if (!window_ptr) return;
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        NSWindow* window = (__bridge NSWindow*)window_ptr;
+        NSRect rect = [window frame];
+        if (out_x) *out_x = (int)rect.origin.x;
+        // Mac coordinates are bottom-left, Windows are top-left, approximate for now
+        if (out_y) *out_y = (int)([[NSScreen mainScreen] frame].size.height - rect.origin.y - rect.size.height);
+        if (out_w) *out_w = (int)rect.size.width;
+        if (out_h) *out_h = (int)rect.size.height;
+    });
+}
+
+void macwi_cocoa_set_text(void* window_ptr, const char* text) {
+    if (!window_ptr || !text) return;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSWindow* window = (__bridge NSWindow*)window_ptr;
+        [window setTitle:[NSString stringWithUTF8String:text]];
+    });
+}
+
+void macwi_cocoa_get_text(void* window_ptr, char* out_text, int max_len) {
+    if (!window_ptr || !out_text || max_len <= 0) return;
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        NSWindow* window = (__bridge NSWindow*)window_ptr;
+        NSString* title = [window title];
+        strncpy(out_text, [title UTF8String], max_len - 1);
+        out_text[max_len - 1] = '\0';
+    });
+}
+
+int macwi_cocoa_message_box(void* window_ptr, const char* text, const char* caption, uint32_t type) {
+    __block NSModalResponse response = 0;
+    
+    // Cannot block FEXCore directly, but we can wait since we're in a host syscall
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        NSAlert* alert = [[NSAlert alloc] init];
+        [alert setMessageText:[NSString stringWithUTF8String:caption ? caption : "Message"]];
+        [alert setInformativeText:[NSString stringWithUTF8String:text ? text : ""]];
+        
+        // Simple type handling: MB_OK (0), MB_OKCANCEL (1), MB_YESNO (4)
+        if ((type & 0xF) == 1) { // MB_OKCANCEL
+            [alert addButtonWithTitle:@"OK"];
+            [alert addButtonWithTitle:@"Cancel"];
+        } else if ((type & 0xF) == 4) { // MB_YESNO
+            [alert addButtonWithTitle:@"Yes"];
+            [alert addButtonWithTitle:@"No"];
+        } else { // Default to MB_OK
+            [alert addButtonWithTitle:@"OK"];
+        }
+        
+        if (window_ptr) {
+            NSWindow* window = (__bridge NSWindow*)window_ptr;
+            [alert beginSheetModalForWindow:window completionHandler:^(NSModalResponse res) {
+                // Not ideal since it's async, we actually need blocking here for Win32 semantics
+            }];
+        } else {
+            response = [alert runModal];
+        }
+    });
+    
+    // For blocking behavior with window, runModal is needed
+    if (window_ptr) {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+             NSAlert* alert = [[NSAlert alloc] init];
+             [alert setMessageText:[NSString stringWithUTF8String:caption ? caption : "Message"]];
+             [alert setInformativeText:[NSString stringWithUTF8String:text ? text : ""]];
+             
+             if ((type & 0xF) == 1) { // MB_OKCANCEL
+                 [alert addButtonWithTitle:@"OK"];
+                 [alert addButtonWithTitle:@"Cancel"];
+             } else if ((type & 0xF) == 4) { // MB_YESNO
+                 [alert addButtonWithTitle:@"Yes"];
+                 [alert addButtonWithTitle:@"No"];
+             } else { // Default to MB_OK
+                 [alert addButtonWithTitle:@"OK"];
+             }
+             
+             response = [alert runModal];
+        });
+    }
+    
+    // Map NSAlertFirstButtonReturn etc to IDOK (1), IDCANCEL (2), IDYES (6), IDNO (7)
+    if ((type & 0xF) == 1) {
+        return (response == NSAlertFirstButtonReturn) ? 1 : 2;
+    } else if ((type & 0xF) == 4) {
+        return (response == NSAlertFirstButtonReturn) ? 6 : 7;
+    }
+    return 1; // IDOK
 }

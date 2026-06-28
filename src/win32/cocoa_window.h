@@ -44,6 +44,14 @@ void macwi_cocoa_fill_rect(void* window, int x, int y, int w, int h, uint32_t ar
 // Draw text in the current context
 void macwi_cocoa_draw_text(void* window, int x, int y, const char* text, uint32_t argb);
 
+// Advanced GUI APIs
+void macwi_cocoa_get_client_rect(void* window, int* out_w, int* out_h);
+void macwi_cocoa_get_window_rect(void* window, int* out_x, int* out_y, int* out_w, int* out_h);
+void macwi_cocoa_set_text(void* window, const char* text);
+void macwi_cocoa_get_text(void* window, char* out_text, int max_len);
+int macwi_cocoa_message_box(void* window, const char* text, const char* caption, uint32_t type);
+void macwi_cocoa_end_paint(void);
+
 #ifdef __cplusplus
 }
 #endif

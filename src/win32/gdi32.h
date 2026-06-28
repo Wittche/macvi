@@ -9,6 +9,34 @@ extern "C" {
 // Register GDI32 APIs
 void macwi_gdi32_register_apis(void);
 
+// GDI constants
+#define WHITE_BRUSH         0
+#define LTGRAY_BRUSH        1
+#define GRAY_BRUSH          2
+#define DKGRAY_BRUSH        3
+#define BLACK_BRUSH         4
+#define NULL_BRUSH          5
+
+typedef enum {
+    GDI_OBJ_BRUSH = 1,
+    GDI_OBJ_FONT  = 2,
+    GDI_OBJ_PEN   = 3
+} MACWI_GDI_OBJ_TYPE;
+
+typedef struct {
+    MACWI_GDI_OBJ_TYPE type;
+    uint32_t argb;
+} MACWI_GDI_OBJ;
+
+typedef struct {
+    void* cocoa_window;
+    HANDLE current_brush;
+    HANDLE current_pen;
+    HANDLE current_font;
+    uint32_t text_color;
+    uint32_t bk_color;
+} MACWI_HDC_OBJ;
+
 typedef uint32_t HDC32;
 typedef uint32_t HBRUSH32;
 

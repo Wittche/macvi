@@ -47,6 +47,8 @@ typedef enum {
     HANDLE_TYPE_SEMAPHORE     = 5, /**< Semaphore synchronization object   */
     HANDLE_TYPE_REGISTRY_KEY  = 6, /**< Registry key handle                */
     HANDLE_TYPE_FIND_FILE     = 7, /**< FindFirstFile handle               */
+    HANDLE_TYPE_HDC           = 8, /**< GDI Device Context                 */
+    HANDLE_TYPE_GDI_OBJ       = 9, /**< GDI Object (Brush, Pen, Font)      */
 } HANDLE_TYPE;
 
 /* ============================================================================

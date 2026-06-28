@@ -172,6 +172,21 @@ typedef void (*macwi_emu_hook_cb)(EMU_CONTEXT* ctx, uint64_t address, void* user
  */
 macwi_status_t macwi_emu_hook_unmapped(EMU_CONTEXT* ctx, macwi_emu_hook_cb callback, void* user_data);
 
+/**
+ * @brief Save the current CPU state (registers, RIP, flags).
+ */
+macwi_status_t macwi_emu_save_state(EMU_CONTEXT* ctx, void** out_state);
+
+/**
+ * @brief Restore a previously saved CPU state.
+ */
+macwi_status_t macwi_emu_restore_state(EMU_CONTEXT* ctx, void* state);
+
+/**
+ * @brief Free a saved CPU state.
+ */
+void macwi_emu_free_state(void* state);
+
 #ifdef __cplusplus
 }
 #endif

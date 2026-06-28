@@ -61,15 +61,24 @@ uint64_t macwi_thunk_get_trampoline(EMU_CONTEXT* ctx, const char* dll_name, cons
  * @return MACWI_SUCCESS on success.
  */
 macwi_status_t macwi_thunk_handle_syscall(EMU_CONTEXT* ctx, uint32_t api_index);
+macwi_status_t macwi_thunk_init_dispatcher(EMU_CONTEXT* ctx);
 
 /**
- * Initialize the thunking dispatcher and register it with the emulator context.
- * This sets up the FEX hook or syscall handler.
- *
- * @param ctx The emulation context.
- * @return MACWI_SUCCESS on success.
+ * @brief Represents a saved callback state.
  */
-macwi_status_t macwi_thunk_init_dispatcher(EMU_CONTEXT* ctx);
+typedef struct {
+    void* cpu_state;
+} MACWI_CALLBACK_STATE;
+
+/**
+ * @brief Invoke a guest callback function from a host syscall handler.
+ */
+macwi_status_t macwi_thunk_invoke_callback(EMU_CONTEXT* ctx, uint32_t target_addr, uint32_t arg_count, const uint32_t* args, MACWI_CALLBACK_STATE* out_state);
+
+/**
+ * @brief Initialize callback infrastructure.
+ */
+macwi_status_t macwi_thunk_init_callbacks(EMU_CONTEXT* ctx);
 
 /* ============================================================================
  * Parameter Marshaling Helpers

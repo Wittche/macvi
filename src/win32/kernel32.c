@@ -608,10 +608,11 @@ static void win32_HeapFree(EMU_CONTEXT* ctx) {
  * ============================================================================ */
 
 static void win32_ExitProcess(EMU_CONTEXT* ctx) {
-    uint64_t uExitCode;
-    macwi_thunk_read_param_64(ctx, 0, &uExitCode);
-    STUB_LOG("ExitProcess(%u)", (uint32_t)uExitCode);
-    exit((int)uExitCode);
+    uint64_t dwExitCode;
+    macwi_thunk_read_param_64(ctx, 0, &dwExitCode);
+    STUB_LOG("ExitProcess(%u)", (uint32_t)dwExitCode);
+    macwi_emu_stop(ctx);
+    exit((int)dwExitCode);
 }
 
 /* ============================================================================
@@ -696,7 +697,13 @@ static void win32_WaitForSingleObject(EMU_CONTEXT* ctx) {
         macwi_emu_reg_write_64(ctx, 0, 0); // WAIT_OBJECT_0
     } else if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hHandle, HANDLE_TYPE_THREAD, &obj) == MACWI_SUCCESS) {
         pthread_t tid = (pthread_t)(uintptr_t)obj;
-        pthread_join(tid, NULL);
+        fprintf(stderr, "[macwi:kernel32] Joining thread with tid=%p\n", (void*)tid);
+        int ret = pthread_join(tid, NULL);
+        if (ret != 0) {
+            fprintf(stderr, "[macwi:kernel32] pthread_join failed with error %d\n", ret);
+        } else {
+            fprintf(stderr, "[macwi:kernel32] pthread_join succeeded!\n");
+        }
         macwi_emu_reg_write_64(ctx, 0, 0); // WAIT_OBJECT_0
     } else {
         set_last_error(6); // ERROR_INVALID_HANDLE

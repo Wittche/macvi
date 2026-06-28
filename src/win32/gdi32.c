@@ -2,6 +2,7 @@
 #include "macwi/thunk.h"
 #include "macwi/handle.h"
 #include "cocoa_window.h"
+#include <stdlib.h>
 
 extern HANDLE_TABLE g_macwi_handle_table;
 
@@ -12,13 +13,25 @@ static void win32_BeginPaint(EMU_CONTEXT* ctx) {
 
     void* cocoa_win = NULL;
     if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hWnd, HANDLE_TYPE_EVENT, &cocoa_win) == MACWI_SUCCESS) {
+        
+        MACWI_HDC_OBJ* hdc_obj = (MACWI_HDC_OBJ*)calloc(1, sizeof(MACWI_HDC_OBJ));
+        hdc_obj->cocoa_window = cocoa_win;
+        hdc_obj->text_color = 0xFF000000; // default black
+        hdc_obj->bk_color = 0xFFFFFFFF; // default white
+        
+        HANDLE hHdc = macwi_handle_create(&g_macwi_handle_table, HANDLE_TYPE_HDC, hdc_obj);
+        
         PAINTSTRUCT_32 ps;
-        ps.hdc = hWnd; // Cheat: use hWnd as HDC
+        ps.hdc = (uint32_t)(uintptr_t)hHdc;
         ps.fErase = 0;
         ps.rcPaint_left = 0;
         ps.rcPaint_top = 0;
-        ps.rcPaint_right = 800; // Hardcoded size
-        ps.rcPaint_bottom = 600;
+        
+        int w = 0, h = 0;
+        macwi_cocoa_get_client_rect(cocoa_win, &w, &h);
+        ps.rcPaint_right = w;
+        ps.rcPaint_bottom = h;
+        
         macwi_emu_write_memory(ctx, lpPaint, &ps, sizeof(ps));
         macwi_emu_reg_write_32(ctx, 0, ps.hdc);
     } else {
@@ -28,9 +41,113 @@ static void win32_BeginPaint(EMU_CONTEXT* ctx) {
 }
 
 static void win32_EndPaint(EMU_CONTEXT* ctx) {
-    (void)ctx;
-    macwi_emu_reg_write_32(ctx, 0, 1);
+    uint32_t hWnd, lpPaint;
+    macwi_thunk_read_param_32(ctx, 0, &hWnd);
+    macwi_thunk_read_param_32(ctx, 1, &lpPaint);
+
+    PAINTSTRUCT_32 ps;
+    macwi_emu_read_memory(ctx, lpPaint, &ps, sizeof(ps));
+    
+    HANDLE hHdc = (HANDLE)(uintptr_t)ps.hdc;
+    
+    MACWI_HDC_OBJ* hdc_obj = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, hHdc, HANDLE_TYPE_HDC, (void**)&hdc_obj) == MACWI_SUCCESS) {
+        free(hdc_obj);
+        macwi_handle_close(&g_macwi_handle_table, hHdc);
+        
+        // Unblock UI Thread
+        macwi_cocoa_end_paint();
+        macwi_emu_reg_write_32(ctx, 0, 1);
+    } else {
+        macwi_emu_reg_write_32(ctx, 0, 0);
+    }
+
     macwi_thunk_stdcall_return(ctx, 2);
+}
+
+static void win32_GetStockObject(EMU_CONTEXT* ctx) {
+    uint32_t fnObject;
+    macwi_thunk_read_param_32(ctx, 0, &fnObject);
+    
+    MACWI_GDI_OBJ* obj = (MACWI_GDI_OBJ*)calloc(1, sizeof(MACWI_GDI_OBJ));
+    obj->type = GDI_OBJ_BRUSH;
+    
+    switch (fnObject) {
+        case WHITE_BRUSH: obj->argb = 0xFFFFFFFF; break;
+        case LTGRAY_BRUSH: obj->argb = 0xFFC0C0C0; break;
+        case GRAY_BRUSH: obj->argb = 0xFF808080; break;
+        case DKGRAY_BRUSH: obj->argb = 0xFF404040; break;
+        case BLACK_BRUSH: obj->argb = 0xFF000000; break;
+        case NULL_BRUSH: obj->argb = 0x00000000; break;
+        default: obj->argb = 0xFF000000; break;
+    }
+    
+    HANDLE hObj = macwi_handle_create(&g_macwi_handle_table, HANDLE_TYPE_GDI_OBJ, obj);
+    macwi_emu_reg_write_32(ctx, 0, (uint32_t)(uintptr_t)hObj);
+    macwi_thunk_stdcall_return(ctx, 1);
+}
+
+static void win32_SelectObject(EMU_CONTEXT* ctx) {
+    uint32_t hdc, hgdiobj;
+    macwi_thunk_read_param_32(ctx, 0, &hdc);
+    macwi_thunk_read_param_32(ctx, 1, &hgdiobj);
+    
+    MACWI_HDC_OBJ* hdc_obj = NULL;
+    MACWI_GDI_OBJ* gdi_obj = NULL;
+    
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hdc, HANDLE_TYPE_HDC, (void**)&hdc_obj) == MACWI_SUCCESS &&
+        macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hgdiobj, HANDLE_TYPE_GDI_OBJ, (void**)&gdi_obj) == MACWI_SUCCESS) {
+        
+        HANDLE old_obj = 0;
+        if (gdi_obj->type == GDI_OBJ_BRUSH) {
+            old_obj = hdc_obj->current_brush;
+            hdc_obj->current_brush = (HANDLE)(uintptr_t)hgdiobj;
+        } else if (gdi_obj->type == GDI_OBJ_PEN) {
+            old_obj = hdc_obj->current_pen;
+            hdc_obj->current_pen = (HANDLE)(uintptr_t)hgdiobj;
+        } else if (gdi_obj->type == GDI_OBJ_FONT) {
+            old_obj = hdc_obj->current_font;
+            hdc_obj->current_font = (HANDLE)(uintptr_t)hgdiobj;
+        }
+        macwi_emu_reg_write_32(ctx, 0, (uint32_t)(uintptr_t)old_obj);
+    } else {
+        macwi_emu_reg_write_32(ctx, 0, 0);
+    }
+    macwi_thunk_stdcall_return(ctx, 2);
+}
+
+static void win32_CreateSolidBrush(EMU_CONTEXT* ctx) {
+    uint32_t color;
+    macwi_thunk_read_param_32(ctx, 0, &color);
+    
+    // Windows color is COLORREF: 0x00bbggrr
+    uint8_t r = color & 0xFF;
+    uint8_t g = (color >> 8) & 0xFF;
+    uint8_t b = (color >> 16) & 0xFF;
+    uint32_t argb = 0xFF000000 | (r << 16) | (g << 8) | b;
+    
+    MACWI_GDI_OBJ* obj = (MACWI_GDI_OBJ*)calloc(1, sizeof(MACWI_GDI_OBJ));
+    obj->type = GDI_OBJ_BRUSH;
+    obj->argb = argb;
+    
+    HANDLE hObj = macwi_handle_create(&g_macwi_handle_table, HANDLE_TYPE_GDI_OBJ, obj);
+    macwi_emu_reg_write_32(ctx, 0, (uint32_t)(uintptr_t)hObj);
+    macwi_thunk_stdcall_return(ctx, 1);
+}
+
+static void win32_DeleteObject(EMU_CONTEXT* ctx) {
+    uint32_t hObject;
+    macwi_thunk_read_param_32(ctx, 0, &hObject);
+    
+    MACWI_GDI_OBJ* obj = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hObject, HANDLE_TYPE_GDI_OBJ, (void**)&obj) == MACWI_SUCCESS) {
+        free(obj);
+        macwi_handle_close(&g_macwi_handle_table, (HANDLE)(uintptr_t)hObject);
+        macwi_emu_reg_write_32(ctx, 0, 1);
+    } else {
+        macwi_emu_reg_write_32(ctx, 0, 0);
+    }
+    macwi_thunk_stdcall_return(ctx, 1);
 }
 
 static void win32_FillRect(EMU_CONTEXT* ctx) {
@@ -39,22 +156,55 @@ static void win32_FillRect(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_32(ctx, 1, &lprc);
     macwi_thunk_read_param_32(ctx, 2, &hbr);
 
-    void* cocoa_win = NULL;
-    // Cheat: hDC is hWnd
-    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hDC, HANDLE_TYPE_EVENT, &cocoa_win) == MACWI_SUCCESS) {
+    MACWI_HDC_OBJ* hdc_obj = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hDC, HANDLE_TYPE_HDC, (void**)&hdc_obj) == MACWI_SUCCESS) {
         RECT_32 rect;
         macwi_emu_read_memory(ctx, lprc, &rect, sizeof(rect));
         
-        uint32_t color = 0xFFFF0000; // Red default
-        if (hbr == 1) color = 0xFFFFFFFF; // White
-        else if (hbr == 2) color = 0xFF000000; // Black
+        uint32_t color = 0xFFFFFFFF;
+        MACWI_GDI_OBJ* brush = NULL;
+        if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hbr, HANDLE_TYPE_GDI_OBJ, (void**)&brush) == MACWI_SUCCESS) {
+            color = brush->argb;
+        } else {
+            // It might be a system color index + 1
+            if (hbr == 1) color = 0xFFFFFFFF; // COLOR_WINDOW
+            else if (hbr == 2) color = 0xFF000000;
+        }
         
-        macwi_cocoa_fill_rect(cocoa_win, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, color);
+        macwi_cocoa_fill_rect(hdc_obj->cocoa_window, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, color);
         macwi_emu_reg_write_32(ctx, 0, 1);
     } else {
         macwi_emu_reg_write_32(ctx, 0, 0);
     }
     macwi_thunk_stdcall_return(ctx, 3);
+}
+
+static void win32_Rectangle(EMU_CONTEXT* ctx) {
+    uint32_t hdc;
+    int32_t left, top, right, bottom;
+    macwi_thunk_read_param_32(ctx, 0, &hdc);
+    macwi_thunk_read_param_32(ctx, 1, (uint32_t*)&left);
+    macwi_thunk_read_param_32(ctx, 2, (uint32_t*)&top);
+    macwi_thunk_read_param_32(ctx, 3, (uint32_t*)&right);
+    macwi_thunk_read_param_32(ctx, 4, (uint32_t*)&bottom);
+
+    MACWI_HDC_OBJ* hdc_obj = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hdc, HANDLE_TYPE_HDC, (void**)&hdc_obj) == MACWI_SUCCESS) {
+        uint32_t color = 0xFFFFFFFF; // default white
+        if (hdc_obj->current_brush) {
+            MACWI_GDI_OBJ* brush = NULL;
+            if (macwi_handle_get_object(&g_macwi_handle_table, hdc_obj->current_brush, HANDLE_TYPE_GDI_OBJ, (void**)&brush) == MACWI_SUCCESS) {
+                color = brush->argb;
+            }
+        }
+        // Fill rect
+        macwi_cocoa_fill_rect(hdc_obj->cocoa_window, left, top, right - left, bottom - top, color);
+        // Note: Real GDI draws an outline with the pen, but here we just fill for simplicity.
+        macwi_emu_reg_write_32(ctx, 0, 1);
+    } else {
+        macwi_emu_reg_write_32(ctx, 0, 0);
+    }
+    macwi_thunk_stdcall_return(ctx, 5);
 }
 
 static void win32_TextOutA(EMU_CONTEXT* ctx) {
@@ -68,13 +218,13 @@ static void win32_TextOutA(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_32(ctx, 3, &lpString);
     macwi_thunk_read_param_32(ctx, 4, (uint32_t*)&c);
 
-    void* cocoa_win = NULL;
-    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hdc, HANDLE_TYPE_EVENT, &cocoa_win) == MACWI_SUCCESS) {
+    MACWI_HDC_OBJ* hdc_obj = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hdc, HANDLE_TYPE_HDC, (void**)&hdc_obj) == MACWI_SUCCESS) {
         char text[256];
         macwi_thunk_read_guest_string(ctx, lpString, text, sizeof(text));
         if (c < 256) text[c] = '\0';
         
-        macwi_cocoa_draw_text(cocoa_win, x, y, text, 0xFF000000); // Black text
+        macwi_cocoa_draw_text(hdc_obj->cocoa_window, x, y, text, hdc_obj->text_color);
         macwi_emu_reg_write_32(ctx, 0, 1);
     } else {
         macwi_emu_reg_write_32(ctx, 0, 0);
@@ -83,10 +233,14 @@ static void win32_TextOutA(EMU_CONTEXT* ctx) {
 }
 
 void macwi_gdi32_register_apis(void) {
-    // Actually FillRect is in user32, but often grouped with GDI. We register it as user32 if needed.
-    // In Win32, FillRect is in user32.dll!
     macwi_thunk_register_api("user32.dll", "BeginPaint", win32_BeginPaint, 2);
     macwi_thunk_register_api("user32.dll", "EndPaint", win32_EndPaint, 2);
     macwi_thunk_register_api("user32.dll", "FillRect", win32_FillRect, 3);
+    
+    macwi_thunk_register_api("gdi32.dll", "GetStockObject", win32_GetStockObject, 1);
+    macwi_thunk_register_api("gdi32.dll", "SelectObject", win32_SelectObject, 2);
+    macwi_thunk_register_api("gdi32.dll", "CreateSolidBrush", win32_CreateSolidBrush, 1);
+    macwi_thunk_register_api("gdi32.dll", "DeleteObject", win32_DeleteObject, 1);
+    macwi_thunk_register_api("gdi32.dll", "Rectangle", win32_Rectangle, 5);
     macwi_thunk_register_api("gdi32.dll", "TextOutA", win32_TextOutA, 5);
 }

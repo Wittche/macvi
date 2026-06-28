@@ -31,6 +31,8 @@ add_test(NAME emu_basic_tests COMMAND test_emu_basic)
 
 
 
+
+
 # PE Emulation test
 add_executable(test_pe_emu test_pe_emu.c)
 target_link_libraries(test_pe_emu PRIVATE
@@ -88,6 +90,15 @@ add_custom_command(
 )
 add_custom_target(gui_win32 ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/gui_win32.exe)
 
+# Build advanced_gui_test.exe using MinGW
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/advanced_gui_test.exe
+    COMMAND i686-w64-mingw32-gcc ${CMAKE_CURRENT_SOURCE_DIR}/advanced_gui_test.c -o ${CMAKE_CURRENT_BINARY_DIR}/advanced_gui_test.exe -nostdlib -lkernel32 -luser32 -Wl,-e,__start -Wl,--image-base,0x2A000000
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/advanced_gui_test.c
+    COMMENT "Building Advanced GUI Test 32-bit Windows PE executable with MinGW"
+)
+add_custom_target(advanced_gui_test ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/advanced_gui_test.exe)
+
 # Build registry_test.exe using MinGW
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/registry_test.exe
@@ -105,3 +116,11 @@ add_custom_command(
     COMMENT "Building Thread Test 32-bit Windows PE executable with MinGW"
 )
 add_custom_target(thread_test ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/thread_test.exe)
+# Build gdi_test.exe using MinGW
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/gdi_test.exe
+    COMMAND i686-w64-mingw32-gcc ${CMAKE_CURRENT_SOURCE_DIR}/gdi_test.c -o ${CMAKE_CURRENT_BINARY_DIR}/gdi_test.exe -nostdlib -lkernel32 -luser32 -lgdi32 -Wl,-e,__start -Wl,--image-base,0x2A000000
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/gdi_test.c
+    COMMENT "Building GDI Test 32-bit Windows PE executable with MinGW"
+)
+add_custom_target(gdi_test ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/gdi_test.exe)
