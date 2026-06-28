@@ -1,11 +1,17 @@
 #include <windows.h>
 
-void __stdcall WinMainCRTStartup(void) {
+void _start(void) {
     const char* msg = "Hello from x86 Windows on ARM64 macOS!\n";
     DWORD written = 0;
     
     // OutputDebugStringA directly
     OutputDebugStringA("Starting Win32 Hello World...\n");
+    
+    // Test Console Output (GetStdHandle + WriteFile)
+    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hStdout != INVALID_HANDLE_VALUE) {
+        WriteFile(hStdout, "Hello from MacWI! (Console Output)\n", 35, &written, NULL);
+    }
     
     // Test CreateFileA and WriteFile
     HANDLE hFile = CreateFileA("hello_output.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);

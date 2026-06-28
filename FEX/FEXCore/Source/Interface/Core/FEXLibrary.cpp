@@ -1161,17 +1161,18 @@ FEX_DEFAULT_VISIBILITY FEX_Result FEX_InitWindowsEnvironment(FEX_Context* Ctx, F
     if (!ta) ta = (uintptr_t)FEX_MapMemory(Ctx, 0, 0x20000, FEX_MEM_READ | FEX_MEM_WRITE);
 
     if (ta) {
-        WinTEB* teb = (WinTEB*)ta; 
-        WinPEB* peb = (WinPEB*)(ta + 0x8000);
+        uintptr_t host_ta = ta + FEXCore::Utils::GlobalMemoryBase;
+        WinTEB* teb = (WinTEB*)host_ta; 
+        WinPEB* peb = (WinPEB*)(host_ta + 0x8000);
         g_win_globals_guest = ta + 0x10000;
-        WinGlobals* globals = (WinGlobals*)g_win_globals_guest;
+        WinGlobals* globals = (WinGlobals*)(host_ta + 0x10000);
 
-        memset((void*)ta, 0, 0x20000);
+        memset((void*)host_ta, 0, 0x20000);
 
         if (g_Is32Bit) {
             // 32-bit TEB (at ta):
-            *(uint32_t*)(ta + 0x18) = (uint32_t)ta; // Self pointer at 0x18
-            *(uint32_t*)(ta + 0x30) = (uint32_t)(uintptr_t)peb; // PEB pointer at 0x30
+            *(uint32_t*)(host_ta + 0x18) = (uint32_t)ta; // Self pointer at 0x18
+            *(uint32_t*)(host_ta + 0x30) = (uint32_t)(ta + 0x8000); // PEB pointer at 0x30
             
             // 32-bit PEB (at peb):
             *(uint32_t*)((uintptr_t)peb + 0x08) = (uint32_t)ImageBase; // ImageBase
@@ -1179,12 +1180,13 @@ FEX_DEFAULT_VISIBILITY FEX_Result FEX_InitWindowsEnvironment(FEX_Context* Ctx, F
 
             // 32-bit WinGlobals layout:
             // offset 0: argc, offset 4: argv_ptr, offset 8: cmd_line, offset 520: argv_array
-            *(uint32_t*)(g_win_globals_guest + 0) = argc;
-            strcpy((char*)(g_win_globals_guest + 8), "notepad.exe");
-            *(uint32_t*)(g_win_globals_guest + 520) = (uint32_t)(g_win_globals_guest + 8);
-            *(uint32_t*)(g_win_globals_guest + 4) = (uint32_t)(g_win_globals_guest + 520);
+            uintptr_t host_globals = host_ta + 0x10000;
+            *(uint32_t*)(host_globals + 0) = argc;
+            strcpy((char*)(host_globals + 8), "notepad.exe");
+            *(uint32_t*)(host_globals + 520) = (uint32_t)(g_win_globals_guest + 8);
+            *(uint32_t*)(host_globals + 4) = (uint32_t)(g_win_globals_guest + 520);
         } else {
-            teb->Self = ta; teb->ProcessEnvironmentBlock = (uint64_t)peb;
+            teb->Self = ta; teb->ProcessEnvironmentBlock = (uint64_t)(ta + 0x8000);
             peb->ImageBaseAddress = ImageBase; peb->OSMajorVersion = 10; peb->ProcessHeap = 0x1337BEEF;
 
             globals->argc = argc;
@@ -1198,11 +1200,11 @@ FEX_DEFAULT_VISIBILITY FEX_Result FEX_InitWindowsEnvironment(FEX_Context* Ctx, F
             Thread->Thread->CurrentFrame->State.fs_idx = (5 << 3) | 3;
             // Map 32-bit registers to correct entry values
             Thread->Thread->CurrentFrame->State.gregs[2] = ta; // EDX = TEB
-            Thread->Thread->CurrentFrame->State.gregs[3] = (uint64_t)peb; // EBX = PEB
+            Thread->Thread->CurrentFrame->State.gregs[3] = (uint64_t)(ta + 0x8000); // EBX = PEB
         } else {
             Thread->Thread->CurrentFrame->State.gs_cached = ta;
             Thread->Thread->CurrentFrame->State.gregs[2] = ta; 
-            Thread->Thread->CurrentFrame->State.gregs[3] = (uint64_t)peb; 
+            Thread->Thread->CurrentFrame->State.gregs[3] = (uint64_t)(ta + 0x8000); 
         }
 
         fprintf(stderr, "[FEXWindows] Ready. TEB: 0x%llx (Is32Bit: %d)\n", (unsigned long long)ta, (int)g_Is32Bit);
@@ -1260,20 +1262,26 @@ FEX_DEFAULT_VISIBILITY uint64_t FEX_MapMemory(FEX_Context* Ctx, uint64_t GuestAd
   if (GuestAddr) {
       // Convert guest address to host hint
       uint64_t hostHint = GuestAddr + FEXCore::Utils::GlobalMemoryBase;
-      int flags = MAP_PRIVATE | MAP_ANONYMOUS;
+      // Use MAP_FIXED to force the allocation at the specific guest address.
+      // Do NOT use MAP_JIT with MAP_FIXED because macOS blocks that combination.
+      // Since FEXCore only reads/writes this memory natively, PROT_EXEC is not strictly required
+      // for the native mmap call on Apple Silicon, FEX handles execution internally.
+      int flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED;
+      
+      int native_prot = prot;
 #if defined(__APPLE__) && defined(__aarch64__)
-      if (prot & PROT_EXEC) flags |= MAP_JIT;
+      // macOS forbids MAP_FIXED + MAP_JIT and MAP_FIXED + PROT_EXEC without MAP_JIT
+      native_prot &= ~PROT_EXEC;
 #endif
-      void* res = FEXCore::Allocator::mmap((void*)hostHint, Size, prot, flags, -1, 0);
+
+      // Use native ::mmap because FEXCore::Allocator::mmap might return Linux error codes instead of MAP_FAILED
+      void* res = ::mmap((void*)hostHint, Size, native_prot, flags, -1, 0);
       if (res != MAP_FAILED) {
-          if ((uint64_t)res == hostHint) {
-              fprintf(stderr, "[FEX-MapMem] fixed alloc: guest=0x%llx host=0x%llx size=0x%llx\n",
-                      (unsigned long long)GuestAddr, (unsigned long long)(uint64_t)res, (unsigned long long)Size);
-              return GuestAddr;
-          }
-          // Got something else, unmap
-          FEXCore::Allocator::munmap(res, Size);
-          return 0;
+          fprintf(stderr, "[FEX-MapMem] fixed alloc: guest=0x%llx host=0x%llx size=0x%llx\n",
+                  (unsigned long long)GuestAddr, (unsigned long long)(uint64_t)res, (unsigned long long)Size);
+          return GuestAddr;
+      } else {
+          perror("[FEX-MapMem] fixed mmap failed");
       }
       return 0;
   }

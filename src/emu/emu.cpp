@@ -30,6 +30,9 @@ public:
         // EAX contains the API index
         uint32_t api_index = (uint32_t)Args->Argument[0];
         
+        fprintf(stderr, "[macwi:emu] HandleSyscall invoked for API index %u\n", api_index);
+        fflush(stderr);
+        
         // Dispatch to the native host implementation
         macwi_thunk_handle_syscall(m_ctx, api_index);
         
@@ -90,7 +93,7 @@ void macwi_emu_free(EMU_CONTEXT* ctx) {
     free(ctx);
 }
 
-macwi_status_t macwi_emu_map_memory(EMU_CONTEXT* ctx, uint64_t address, size_t size, uint32_t perms, uint64_t* out_address) {
+macwi_status_t macwi_emu_map_memory(EMU_CONTEXT* ctx, uint64_t address, size_t size, int perms, uint64_t* out_address) {
     if (!ctx || !ctx->fex_ctx) return MACWI_ERROR_INVALID_PARAM;
     int fex_perms = 0;
     if (perms & MACWI_PROT_READ)  fex_perms |= FEX_MEM_READ;
@@ -98,26 +101,20 @@ macwi_status_t macwi_emu_map_memory(EMU_CONTEXT* ctx, uint64_t address, size_t s
     if (perms & MACWI_PROT_EXEC)  fex_perms |= FEX_MEM_EXEC;
 
     uint64_t mapped = FEX_MapMemory(ctx->fex_ctx, address, size, fex_perms);
-    // On macOS, if address is requested and not MAP_FIXED, FEX returns 0.
-    // If it failed and address != 0, try with MAP_FIXED via mmap ourselves.
-    if (mapped == 0 && address != 0) {
-        // Do NOT pass PROT_EXEC to native mmap, as macOS ARM64 blocks it without MAP_JIT,
-        // and MAP_JIT cannot be combined with MAP_FIXED. The emulator only needs READ/WRITE access natively.
-        int prot = PROT_READ | PROT_WRITE;
-        int flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED;
-        void* res = mmap((void*)address, size, prot, flags, -1, 0);
-        if (res != MAP_FAILED) {
-            mapped = (uint64_t)res;
-        } else {
-            perror("[macwi:emu] mmap failed");
-        }
-    }
 
     if (mapped == 0) {
         fprintf(stderr, "[macwi:emu] FEX_MapMemory failed at 0x%llX\n", address);
         return MACWI_ERROR_MEMORY;
     }
     if (out_address) *out_address = mapped;
+    return MACWI_SUCCESS;
+}
+
+macwi_status_t macwi_emu_unmap_memory(EMU_CONTEXT* ctx, uint64_t address, size_t size) {
+    if (!ctx || !ctx->fex_ctx) return MACWI_ERROR_INVALID_PARAM;
+    if (FEX_UnmapMemory(ctx->fex_ctx, address, size) != FEX_SUCCESS) {
+        return MACWI_ERROR_MEMORY;
+    }
     return MACWI_SUCCESS;
 }
 
@@ -134,6 +131,93 @@ macwi_status_t macwi_emu_read_memory(EMU_CONTEXT* ctx, uint64_t address, void* o
     if (FEX_ReadMemory(ctx->fex_ctx, address, out_data, size) != FEX_SUCCESS) {
         return MACWI_ERROR_MEMORY;
     }
+    return MACWI_SUCCESS;
+}
+
+macwi_status_t macwi_emu_init_windows_env(EMU_CONTEXT* ctx, uint64_t image_base, int argc, char** argv) {
+    if (!ctx || !ctx->fex_ctx || !ctx->fex_thread) return MACWI_ERROR_INVALID_PARAM;
+    if (FEX_InitWindowsEnvironment(ctx->fex_ctx, ctx->fex_thread, image_base, argc, argv) != 0) {
+        return MACWI_ERROR_IO;
+    }
+    return MACWI_SUCCESS;
+}
+
+typedef struct {
+    FEX_Context* fex_ctx;
+    FEX_Thread* fex_thread;
+    uint64_t entry_point;
+    uint64_t param;
+    uint64_t stack_base;
+    uint64_t stack_size;
+} EmuNewThreadArgs;
+
+static void* emu_new_thread_func(void* arg) {
+    EmuNewThreadArgs* args = (EmuNewThreadArgs*)arg;
+    
+    // Set SP
+    uint64_t rsp = args->stack_base + args->stack_size - 0x1000;
+    
+    // stdcall: Push parameter, push dummy return address
+    uint32_t param32 = (uint32_t)args->param;
+    uint32_t ret32 = 0x0;
+    rsp -= 4;
+    FEX_WriteMemory(args->fex_ctx, rsp, &param32, 4);
+    rsp -= 4;
+    FEX_WriteMemory(args->fex_ctx, rsp, &ret32, 4);
+    
+    // Set Registers
+    FEX_ThreadSetReg(args->fex_thread, "rsp", rsp);
+    FEX_ThreadSetReg(args->fex_thread, "rip", args->entry_point);
+    
+    // Execute
+    FEX_ThreadSetTLSBase(args->fex_thread, 0x40000000); // Share main TEB for now
+    
+    FEX_ThreadExecute(args->fex_thread);
+    
+    // Cleanup
+    FEX_UnmapMemory(args->fex_ctx, args->stack_base, args->stack_size);
+    FEX_ThreadDestroy(args->fex_thread);
+    free(args);
+    return NULL;
+}
+
+macwi_status_t macwi_emu_create_thread(EMU_CONTEXT* ctx, uint64_t entry_point, uint64_t param, uint64_t stack_size, uint64_t* out_thread_id) {
+    if (!ctx || !ctx->fex_ctx) return MACWI_ERROR_INVALID_PARAM;
+    if (stack_size == 0) stack_size = 1024 * 1024; // 1MB default
+    
+    // Allocate stack
+    static uint64_t next_thread_stack = 0x71000000;
+    uint64_t stack_base = next_thread_stack;
+    next_thread_stack += stack_size + 0x10000; // Plus guard page space
+    
+    if (FEX_MapMemory(ctx->fex_ctx, stack_base, stack_size, FEX_MEM_READ | FEX_MEM_WRITE) == 0) {
+        return MACWI_ERROR_MEMORY;
+    }
+    
+    FEX_Thread* new_fex_thread = FEX_ThreadCreate(ctx->fex_ctx, 0, 0);
+    if (!new_fex_thread) {
+        FEX_UnmapMemory(ctx->fex_ctx, stack_base, stack_size);
+        return MACWI_ERROR_MEMORY;
+    }
+    
+    EmuNewThreadArgs* args = (EmuNewThreadArgs*)malloc(sizeof(EmuNewThreadArgs));
+    args->fex_ctx = ctx->fex_ctx;
+    args->fex_thread = new_fex_thread;
+    args->entry_point = entry_point;
+    args->param = param;
+    args->stack_base = stack_base;
+    args->stack_size = stack_size;
+    
+    pthread_t pt;
+    if (pthread_create(&pt, NULL, emu_new_thread_func, args) != 0) {
+        FEX_UnmapMemory(ctx->fex_ctx, stack_base, stack_size);
+        FEX_ThreadDestroy(new_fex_thread);
+        free(args);
+        return MACWI_ERROR_IO;
+    }
+    pthread_detach(pt);
+    
+    if (out_thread_id) *out_thread_id = (uint64_t)pt;
     return MACWI_SUCCESS;
 }
 

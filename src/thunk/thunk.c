@@ -25,8 +25,15 @@ macwi_status_t macwi_thunk_read_param_32(EMU_CONTEXT* ctx, int param_index, uint
 }
 
 macwi_status_t macwi_thunk_read_param_64(EMU_CONTEXT* ctx, int param_index, uint64_t* out_val) {
-    // Left empty for now, as we only need 32-bit in Phase 8
-    return MACWI_ERROR_UNSUPPORTED;
+    if (!ctx || !out_val || param_index < 0) return MACWI_ERROR_INVALID_PARAM;
+    // In 32-bit mode, 64-bit parameters are often passed as two 32-bit parameters.
+    // For now, since most of our emulation assumes pointers are passed, we just read one 32-bit value and zero-extend it.
+    uint32_t val32;
+    macwi_status_t st = macwi_thunk_read_param_32(ctx, param_index, &val32);
+    if (st == MACWI_SUCCESS) {
+        *out_val = (uint64_t)val32;
+    }
+    return st;
 }
 
 macwi_status_t macwi_thunk_read_guest_string(EMU_CONTEXT* ctx, uint64_t guest_addr, char* out_buf, size_t max_len) {

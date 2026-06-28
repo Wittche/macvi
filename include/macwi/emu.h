@@ -46,16 +46,14 @@ void macwi_emu_free(EMU_CONTEXT* ctx);
 
 /**
  * Map a region of memory in the emulator's isolated address space.
- * 
- * Note: `address` and `size` must be page-aligned (typically 4KB).
- *
- * @param ctx Context handle.
- * @param address The virtual address in the guest to map.
- * @param size The size of the mapping.
- * @param perms Protection flags (MACWI_PROT_*).
- * @return MACWI_SUCCESS on success.
+ * @brief Map memory in the guest address space.
  */
-macwi_status_t macwi_emu_map_memory(EMU_CONTEXT* ctx, uint64_t address, size_t size, uint32_t perms, uint64_t* out_address);
+macwi_status_t macwi_emu_map_memory(EMU_CONTEXT* ctx, uint64_t address, size_t size, int perms, uint64_t* out_mapped_address);
+
+/**
+ * @brief Unmap memory from the guest address space.
+ */
+macwi_status_t macwi_emu_unmap_memory(EMU_CONTEXT* ctx, uint64_t address, size_t size);
 
 /**
  * Write data into the emulator's memory.
@@ -67,6 +65,13 @@ macwi_status_t macwi_emu_map_memory(EMU_CONTEXT* ctx, uint64_t address, size_t s
  * @return MACWI_SUCCESS on success.
  */
 macwi_status_t macwi_emu_write_memory(EMU_CONTEXT* ctx, uint64_t address, const void* data, size_t size);
+
+macwi_status_t macwi_emu_init_windows_env(EMU_CONTEXT* ctx, uint64_t image_base, int argc, char** argv);
+
+/**
+ * @brief Create a new emulated thread
+ */
+macwi_status_t macwi_emu_create_thread(EMU_CONTEXT* ctx, uint64_t entry_point, uint64_t param, uint64_t stack_size, uint64_t* out_thread_id);
 
 /**
  * Read data from the emulator's memory.

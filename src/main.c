@@ -16,6 +16,7 @@
 #include "macwi/thunk.h"
 #include "win32/kernel32.h"
 #include "win32/ntdll.h"
+#include "win32/advapi32.h"
 #include "macwi/vfs.h"
 #include "macwi/handle.h"
 #include "macwi/registry.h"
@@ -45,6 +46,7 @@ static void* emu_thread_func(void* arg) {
     EmuThreadArgs* args = (EmuThreadArgs*)arg;
     
     printf("\n>>> Starting execution at RIP = 0x%016llX <<<\n\n", args->entry_point);
+    fflush(stdout);
     macwi_emu_set_pc(args->ctx, args->entry_point);
     macwi_emu_set_sp(args->ctx, args->rsp);
 
@@ -55,9 +57,12 @@ static void* emu_thread_func(void* arg) {
     } else {
         printf("\n>>> Execution stopped (status=%d) <<<\n", status);
     }
+    fflush(stdout);
     
     // Cleanup and exit the whole process when emulation finishes
     macwi_emu_free(args->ctx);
+    printf("emu_thread_func exiting with 0\n");
+    fflush(stdout);
     exit(0);
     return NULL;
 }
@@ -160,9 +165,16 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
+    printf("[macwi] Initializing Windows TEB and PEB...\n");
+    if (macwi_emu_init_windows_env(ctx, image.image_base, argc, argv) != MACWI_SUCCESS) {
+        fprintf(stderr, "[macwi] Failed to initialize Windows Environment\n");
+        return EXIT_FAILURE;
+    }
+
     // 5. Initialize Win32 APIs and Thunking
     macwi_kernel32_register_apis();
     macwi_ntdll_register_apis();
+    macwi_advapi32_register_apis();
     macwi_thunk_init_dispatcher(ctx);
 
     // 6. Map PE into FEXCore Memory
@@ -171,13 +183,19 @@ int main(int argc, char** argv) {
         fprintf(stderr, "[macwi] Failed to map PE base memory\n");
         return EXIT_FAILURE;
     }
+    
+    printf("[macwi] Resolving Imports (IAT Patching)...\n");
+    if (macwi_pe_resolve_imports(&image, ctx) != MACWI_SUCCESS) {
+        fprintf(stderr, "[macwi] Warning: Failed to resolve all imports\n");
+    }
+
     if (macwi_emu_write_memory(ctx, image.image_base, image.mapped_base, image.size_of_image) != MACWI_SUCCESS) {
         fprintf(stderr, "[macwi] Failed to write PE sections to Emulator Memory\n");
         return EXIT_FAILURE;
     }
 
     // 7. Allocate Guest Stack (2MB)
-    uint64_t stack_base = 0x7FFF00000000ULL;
+    uint64_t stack_base = 0x70000000ULL;
     uint32_t stack_size = 2 * 1024 * 1024;
     printf("[macwi] Allocating Guest Stack (2MB) at 0x%016llX...\n", stack_base);
     if (macwi_emu_map_memory(ctx, stack_base, stack_size, MACWI_PROT_READ | MACWI_PROT_WRITE, NULL) != MACWI_SUCCESS) {
@@ -198,6 +216,7 @@ int main(int argc, char** argv) {
 
     // Provide a simple loop to keep the main thread alive and optionally process GUI
     printf("[macwi] Emulator thread detached. Main thread idling...\n");
+    fflush(stdout);
     
     // In a real GUI app, we'd start the Cocoa event loop here
     while(1) {
