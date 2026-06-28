@@ -1,0 +1,151 @@
+--- FEX/Source/Tools/MacOSEmulation/MacOSSyscalls.cpp
++++ FEX/Source/Tools/MacOSEmulation/MacOSSyscalls.cpp
+@@ -30,13 +30,8 @@
+     }
+ 
+-    uint32_t syscall_class = 0;
+-    uint32_t syscall_index = 0;
+-
+-    // Check if this is a Windows DLL STUB syscall (classes 1 to 4)
+-    if (sys_num >= 0x1000 && sys_num < 0x5000) {
+-        syscall_class = sys_num >> 12;
+-        syscall_index = sys_num & 0xFFF;
+-        
++    if (stub_name) {
+         uint64_t ret = 0;
+         bool is64Bit = true; 
+         uint64_t args_buf[12] = {0};
+         
+         if (is64Bit) {
+             args_buf[0] = Frame->State.gregs[FEXCore::X86State::REG_R10];
+@@ -57,113 +52,109 @@
+         }
+ 
+-        if (stub_name) {
+-            // ucrtbase.dll & msvcrt.dll
+-            if (strstr(stub_name, "__p___argc")) {
+-                static int dummy_argc = 1;
+-                ret = (uint64_t)&dummy_argc;
+-            } else if (strstr(stub_name, "__p___argv") || strstr(stub_name, "__p___wargv")) {
+-                static const char* dummy_argv[] = {"notepad.exe", nullptr};
+-                static const char** p_dummy_argv = dummy_argv;
+-                ret = (uint64_t)&p_dummy_argv;
+-            } else if (strstr(stub_name, "_set_app_type")) {
+-                ret = 0;
+-            } else if (strstr(stub_name, "_configure_narrow_argv") || strstr(stub_name, "_initialize_narrow_environment") || strstr(stub_name, "_configure_wide_argv") || strstr(stub_name, "_initialize_wide_environment")) {
+-                ret = 0;
+-            } else if (strstr(stub_name, "_get_initial_narrow_environment") || strstr(stub_name, "_get_initial_wide_environment")) {
+-                static char* dummy_env[] = {nullptr};
+-                ret = (uint64_t)dummy_env;
+-            } else if (strstr(stub_name, "_initterm")) {
+-                ret = 0;
+-            }
+-            // kernel32.dll
+-            else if (strstr(stub_name, "IsWow64Process")) {
+-                uint32_t* Wow64Process = (uint32_t*)args_buf[1]; // PBOOL is 2nd arg
+-                if (Wow64Process) *Wow64Process = 0; // FALSE (we are 64-bit native)
+-                ret = 1; // TRUE (Success)
+-            } else if (strstr(stub_name, "GetCommandLineW")) {
+-                static const char16_t cmdline[] = u"C:\\Windows\\notepad.exe";
+-                ret = (uint64_t)cmdline;
+-            } else if (strstr(stub_name, "GetCommandLineA")) {
+-                static const char cmdline[] = "C:\\Windows\\notepad.exe";
+-                ret = (uint64_t)cmdline;
+-            } else if (strstr(stub_name, "GetModuleHandle")) {
+-                ret = 0x140000000;
+-            } else if (strstr(stub_name, "GetProcAddress")) {
+-                ret = 0;
+-            } else if (strstr(stub_name, "ExitProcess")) {
+-                FEX_CleanExit((int)args_buf[0]);
+-            }
+-            // advapi32.dll
+-            else if (strstr(stub_name, "RegCreateKey") || strstr(stub_name, "RegOpenKey") || strstr(stub_name, "RegQueryValue")) {
+-                ret = 2; // ERROR_FILE_NOT_FOUND (forces caller to handle error instead of reading invalid handle)
+-            }
+-            // user32.dll (GUI Native Bridge)
+-            else if (strstr(stub_name, "CreateWindowEx")) {
+-                ret = Metal_CreateWindow(nullptr, (int)args_buf[4], (int)args_buf[5], (int)args_buf[6], (int)args_buf[7]);
+-            } else if (strstr(stub_name, "ShowWindow") || strstr(stub_name, "UpdateWindow") || strstr(stub_name, "TranslateMessage")) {
+-                ret = 1;
+-            } else if (strstr(stub_name, "GetMessage")) {
+-                ret = Metal_GetMessage((struct WinMSG*)args_buf[0]);
+-            } else if (strstr(stub_name, "DispatchMessage") || strstr(stub_name, "DefWindowProc") || strstr(stub_name, "PostQuitMessage")) {
+-                ret = 0;
+-            } else if (strstr(stub_name, "RegisterWindowMessage")) {
+-                ret = 0xC001;
+-            } else if (strstr(stub_name, "IsDebuggerPresent")) {
+-                ret = 0;
+-            }
+-            // d3d11.dll
+-            else if (strstr(stub_name, "D3D11CreateDeviceAndSwapChain")) {
+-                ret = Metal_D3D11CreateDeviceAndSwapChain((void*)args_buf[0], args_buf[1], (void*)args_buf[2], args_buf[3], (void*)args_buf[4], args_buf[5], args_buf[6], (void*)args_buf[7], (void**)args_buf[8], (void**)args_buf[9], (void*)args_buf[10], (void**)args_buf[11]);
+-            }
+-            else if (strstr(stub_name, "D3D11CreateDevice")) {
+-                ret = Metal_D3D11CreateDevice((void*)args_buf[0], args_buf[1], (void*)args_buf[2], args_buf[3], (void*)args_buf[4], args_buf[5], args_buf[6], (void**)args_buf[7], (void*)args_buf[8], (void**)args_buf[9]);
+-            }
++        // ucrtbase.dll & msvcrt.dll
++        if (strstr(stub_name, "__p___argc")) {
++            static int dummy_argc = 1;
++            ret = (uint64_t)&dummy_argc;
++        } else if (strstr(stub_name, "__p___argv") || strstr(stub_name, "__p___wargv")) {
++            static const char* dummy_argv[] = {"notepad.exe", nullptr};
++            static const char** p_dummy_argv = dummy_argv;
++            ret = (uint64_t)&p_dummy_argv;
++        } else if (strstr(stub_name, "_set_app_type")) {
++            ret = 0;
++        } else if (strstr(stub_name, "_configure_narrow_argv") || strstr(stub_name, "_initialize_narrow_environment") || strstr(stub_name, "_configure_wide_argv") || strstr(stub_name, "_initialize_wide_environment")) {
++            ret = 0;
++        } else if (strstr(stub_name, "_get_initial_narrow_environment") || strstr(stub_name, "_get_initial_wide_environment")) {
++            static char* dummy_env[] = {nullptr};
++            ret = (uint64_t)dummy_env;
++        } else if (strstr(stub_name, "_initterm")) {
++            ret = 0;
+         }
++        // kernel32.dll
++        else if (strstr(stub_name, "IsWow64Process")) {
++            uint32_t* Wow64Process = (uint32_t*)args_buf[1]; // PBOOL is 2nd arg
++            if (Wow64Process) *Wow64Process = 0; // FALSE (we are 64-bit native)
++            ret = 1; // TRUE (Success)
++        } else if (strstr(stub_name, "GetCommandLineW")) {
++            static const char16_t cmdline[] = u"C:\\Windows\\notepad.exe";
++            ret = (uint64_t)cmdline;
++        } else if (strstr(stub_name, "GetCommandLineA")) {
++            static const char cmdline[] = "C:\\Windows\\notepad.exe";
++            ret = (uint64_t)cmdline;
++        } else if (strstr(stub_name, "GetModuleHandle")) {
++            ret = 0x140000000;
++        } else if (strstr(stub_name, "GetProcAddress")) {
++            ret = 0;
++        } else if (strstr(stub_name, "ExitProcess")) {
++            FEX_CleanExit((int)args_buf[0]);
++        }
++        // advapi32.dll
++        else if (strstr(stub_name, "RegCreateKey") || strstr(stub_name, "RegOpenKey") || strstr(stub_name, "RegQueryValue")) {
++            ret = 2; // ERROR_FILE_NOT_FOUND
++        }
++        // user32.dll (GUI Native Bridge)
++        else if (strstr(stub_name, "CreateWindowEx")) {
++            ret = Metal_CreateWindow(nullptr, (int)args_buf[4], (int)args_buf[5], (int)args_buf[6], (int)args_buf[7]);
++        } else if (strstr(stub_name, "ShowWindow") || strstr(stub_name, "UpdateWindow") || strstr(stub_name, "TranslateMessage")) {
++            ret = 1;
++        } else if (strstr(stub_name, "GetMessage")) {
++            ret = Metal_GetMessage((struct WinMSG*)args_buf[0]);
++        } else if (strstr(stub_name, "DispatchMessage") || strstr(stub_name, "DefWindowProc") || strstr(stub_name, "PostQuitMessage")) {
++            ret = 0;
++        } else if (strstr(stub_name, "RegisterWindowMessage")) {
++            ret = 0xC001;
++        } else if (strstr(stub_name, "IsDebuggerPresent")) {
++            ret = 0;
++        }
++        // d3d11.dll
++        else if (strstr(stub_name, "D3D11CreateDeviceAndSwapChain")) {
++            ret = Metal_D3D11CreateDeviceAndSwapChain((void*)args_buf[0], args_buf[1], (void*)args_buf[2], args_buf[3], (void*)args_buf[4], args_buf[5], args_buf[6], (void*)args_buf[7], (void**)args_buf[8], (void**)args_buf[9], (void*)args_buf[10], (void**)args_buf[11]);
++        }
++        else if (strstr(stub_name, "D3D11CreateDevice")) {
++            ret = Metal_D3D11CreateDevice((void*)args_buf[0], args_buf[1], (void*)args_buf[2], args_buf[3], (void*)args_buf[4], args_buf[5], args_buf[6], (void**)args_buf[7], (void*)args_buf[8], (void**)args_buf[9]);
++        }
+         
+         Frame->State.gregs[FEXCore::X86State::REG_RAX] = ret;
+         fprintf(stderr, "[MacOSSyscalls] !!! EXITING HANDLE SYSCALL !!! RAX=0x%llx RET=0x%llx\n", sys_num, ret);
+         return ret;
+     }

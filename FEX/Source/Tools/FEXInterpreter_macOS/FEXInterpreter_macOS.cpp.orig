@@ -1,0 +1,170 @@
+// FEXInterpreter_macOS - Custom Wine Native Loader
+// This replaces the old HLE (High Level Emulation) PE loader and acts directly
+// as the native macOS loader for Wine. It initializes the Advanced Crash handler
+// and loads ntdll.so directly.
+
+#include <iostream>
+#include <string>
+#include <vector>
+#include <sys/mman.h>
+#include <unistd.h>
+#include <dlfcn.h>
+#include <limits.h>
+
+#define _XOPEN_SOURCE 1
+#include <signal.h>
+#include <ucontext.h>
+
+// FEX Advanced Crash System Headers
+static struct sigaction old_sa;
+
+void sigsegv_handler(int sig, siginfo_t *info, void *ucontext) {
+    if (info && info->si_addr) {
+        uint64_t addr = (uint64_t)info->si_addr;
+        // The advanced commpage emulation handler
+        if (addr >= 0x7fffffe00000ULL && addr < 0x7fffffe01000ULL) {
+            ucontext_t *uc = (ucontext_t *)ucontext;
+#if defined(__aarch64__)
+            // For now, log the commpage access. Real commpage read logic is in fex_wine_cpu.
+            uc->uc_mcontext->__ss.__pc += 4;
+            return;
+#endif
+        }
+        
+        if ((old_sa.sa_flags & SA_SIGINFO) && old_sa.sa_sigaction != nullptr) {
+            old_sa.sa_sigaction(sig, info, ucontext);
+            return;
+        } else if (old_sa.sa_handler != SIG_DFL && old_sa.sa_handler != SIG_IGN && old_sa.sa_handler != nullptr) {
+            old_sa.sa_handler(sig);
+            return;
+        }
+        
+        std::cerr << "\n=======================================================\n";
+        std::cerr << "[FEX-CrashSys] FATAL EXCEPTION CAUGHT BY ADVANCED HANDLER\n";
+        std::cerr << "Signal: " << std::dec << sig 
+                  << ", Fault Address: 0x" << std::hex << addr << std::endl;
+        
+        if (ucontext) {
+            ucontext_t *uc = (ucontext_t *)ucontext;
+#if defined(__aarch64__)
+            std::cerr << "Host ARM64 Registers:\n";
+            std::cerr << " PC:  0x" << std::hex << uc->uc_mcontext->__ss.__pc 
+                      << "   SP:  0x" << uc->uc_mcontext->__ss.__sp << std::endl;
+            for (int i = 0; i < 31; ++i) {
+                std::cerr << " X" << std::dec << i << ": 0x" << std::hex << uc->uc_mcontext->__ss.__x[i] << std::endl;
+            }
+#elif defined(__x86_64__)
+            std::cerr << " PC: 0x" << std::hex << uc->uc_mcontext->__ss.__rip << std::endl;
+#endif
+        }
+        std::cerr << "=======================================================\n\n";
+    }
+    exit(137);
+}
+
+
+/* Wine Reserved Areas for dyld (Required by Wine on macOS) */
+__asm__(".zerofill WINE_RESERVE,WINE_RESERVE");
+static char __wine_reserve[0x1ffffc000] __attribute__((section("WINE_RESERVE, WINE_RESERVE")));
+
+__asm__(".zerofill WINE_TOP_DOWN,WINE_TOP_DOWN");
+static char __wine_top_down[0x001ff0000] __attribute__((section("WINE_TOP_DOWN, WINE_TOP_DOWN")));
+
+struct wine_preload_info {
+    void  *addr;
+    size_t size;
+};
+
+static const struct wine_preload_info preload_info[] =
+{
+    { __wine_reserve,  sizeof(__wine_reserve)  },
+    { __wine_top_down, sizeof(__wine_top_down) },
+    { 0, 0 }
+};
+
+const __attribute((visibility("default"))) struct wine_preload_info *wine_main_preload_info = preload_info;
+
+static void init_reserved_areas(void)
+{
+    for (int i = 0; wine_main_preload_info[i].size != 0; i++)
+    {
+        mmap(wine_main_preload_info[i].addr, wine_main_preload_info[i].size, PROT_NONE,
+             MAP_FIXED | MAP_NORESERVE | MAP_PRIVATE | MAP_ANON, -1, 0);
+    }
+}
+
+// macOS helper to find ntdll.so next to the current executable
+#include <mach-o/dyld.h>
+static void *try_dlopen_ntdll()
+{
+    char path[PATH_MAX];
+    uint32_t size = sizeof(path);
+    if (_NSGetExecutablePath(path, &size) == 0) {
+        char *p = strrchr(path, '/');
+        if (p) {
+            *p = '\0';
+            std::string ntdll_path = std::string(path) + "/dlls/ntdll/ntdll.so";
+            void* handle = dlopen(ntdll_path.c_str(), RTLD_NOW);
+            if (handle) return handle;
+            
+            ntdll_path = std::string(path) + "/../dlls/ntdll/ntdll.so";
+            void* handle = dlopen(ntdll_path.c_str(), RTLD_NOW);
+            if (handle) return handle;
+            
+            // Try standard lib wine path
+            ntdll_path = std::string(path) + "/ntdll.so";
+            handle = dlopen(ntdll_path.c_str(), RTLD_NOW);
+            if (handle) return handle;
+        }
+    }
+    
+    // Fallback: search in DYLD_LIBRARY_PATH
+    return dlopen("ntdll.so", RTLD_NOW);
+}
+
+int main(int argc, char** argv, char** const envp) {
+    std::cout << "[FEXInterpreter_macOS] Initializing Native Wine Loader..." << std::endl;
+
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " <wine executable> [args...]" << std::endl;
+        return 1;
+    }
+
+    // 1. Setup Advanced Crash Handler
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_flags = SA_SIGINFO | SA_NODEFER;
+    sa.sa_sigaction = sigsegv_handler;
+    sigaction(SIGSEGV, nullptr, &old_sa);
+    sigaction(SIGSEGV, &sa, nullptr);
+    sigaction(SIGILL, &sa, nullptr);
+    sigaction(SIGBUS, &sa, nullptr);
+
+    // 2. Initialize Wine Reserved memory mapping for dyld compatibility
+    init_reserved_areas();
+
+    // 3. Load native ntdll.so
+    void *handle = try_dlopen_ntdll();
+    if (!handle) {
+        std::cerr << "[FEXInterpreter_macOS] FATAL: could not load ntdll.so: " << dlerror() << std::endl;
+        return 1;
+    }
+
+    // 4. Find __wine_main
+    void (*wine_main)(int, char **, char **) = (void (*)(int, char **, char **))dlsym(handle, "__wine_main");
+    if (!wine_main) {
+        std::cerr << "[FEXInterpreter_macOS] FATAL: __wine_main function not found in ntdll.so" << std::endl;
+        return 1;
+    }
+
+    std::cout << "[FEXInterpreter_macOS] Handing execution to Wine Native ARM64 Core..." << std::endl;
+    
+    // Set the CPU Backend override for Wine to load our FEX cpu backend
+    setenv("WINE_CPU_BACKEND", "fex_wine_cpu.dylib", 1);
+    
+    // 5. Jump to Wine
+    wine_main(argc, argv, envp);
+
+    // wine_main never returns
+    return 0;
+}

@@ -1,0 +1,44 @@
+{
+  "app_name": "eb6f87ce571445c087a872366efc70d3",
+  "namespace": "0c6aee83b9b64372bf44a043001325f2",
+  "catalog_item_id": "95a8c84d4b12484cbee3c4307a230c72",
+  "title": "NARAKA: BLADEPOINT",
+  "description": "NARAKA: BLADEPOINT",
+  "categories": [
+    "games",
+    "applications"
+  ],
+  "developer": "24 Entertainment - NetEase Interactive Entertainment",
+  "custom_attributes": {
+    "CanRunOffline": "true",
+    "CanSkipKoreanIdVerification": "true",
+    "FolderName": "NARAKABLADEPOINT",
+    "MonitorPresence": "false",
+    "PresenceId": "0c6aee83b9b64372bf44a043001325f2",
+    "RequirementsJson": "[]",
+    "UseAccessControl": "false"
+  },
+  "key_images": [
+    {
+      "type": "DieselGameBox",
+      "url": "https://cdn1.epicgames.com/spt-assets/ba1b7bb6f5934749bdfb358ef4a458d4/naraka-bladepoint-1ouzh.jpg"
+    },
+    {
+      "type": "DieselGameBoxTall",
+      "url": "https://cdn1.epicgames.com/spt-assets/ba1b7bb6f5934749bdfb358ef4a458d4/naraka-bladepoint-18s98.jpg"
+    }
+  ],
+  "asset_infos": {
+    "Windows": {
+      "appName": "eb6f87ce571445c087a872366efc70d3",
+      "namespace": "0c6aee83b9b64372bf44a043001325f2",
+      "catalogItemId": "95a8c84d4b12484cbee3c4307a230c72",
+      "buildVersion": "2026-06-05-19-00",
+      "labelName": "Live-Windows",
+      "assetId": "eb6f87ce571445c087a872366efc70d3"
+    }
+  },
+  "base_urls": [],
+  "raw_catalog_item_json": "{\"ageGatings\":{},\"applicationId\":\"fghi4567QYyPwcxF9MO0dgIJbMV7bRWh\",\"categories\":[{\"path\":\"games\"},{\"path\":\"applications\"}],\"creationDate\":\"2024-04-15T06:52:46.571Z\",\"customAttributes\":{\"CanRunOffline\":{\"type\":\"STRING\",\"value\":\"true\"},\"CanSkipKoreanIdVerification\":{\"type\":\"STRING\",\"value\":\"true\"},\"FolderName\":{\"type\":\"STRING\",\"value\":\"NARAKABLADEPOINT\"},\"MonitorPresence\":{\"type\":\"STRING\",\"value\":\"false\"},\"PresenceId\":{\"type\":\"STRING\",\"value\":\"0c6aee83b9b64372bf44a043001325f2\"},\"RequirementsJson\":{\"type\":\"STRING\",\"value\":\"[]\"},\"UseAccessControl\":{\"type\":\"STRING\",\"value\":\"false\"}},\"description\":\"NARAKA: BLADEPOINT\",\"developer\":\"24 Entertainment - NetEase Interactive Entertainment\",\"developerId\":\"o-beyxdhaj7hnasgm2y5w2y34b3rz77k\",\"endOfSupport\":false,\"entitlementName\":\"95a8c84d4b12484cbee3c4307a230c72\",\"entitlementType\":\"EXECUTABLE\",\"eulaIds\":[\"egstore\"],\"id\":\"95a8c84d4b12484cbee3c4307a230c72\",\"itemType\":\"DURABLE\",\"keyImages\":[{\"alt\":\"NARAKA: BLADEPOINT Offer\",\"height\":1440,\"md5\":\"4019ff9a120874091e0f1ad102563c54\",\"size\":895943,\"type\":\"DieselGameBox\",\"uploadedDate\":\"2024-04-09T06:35:22.606Z\",\"url\":\"https://cdn1.epicgames.com/spt-assets/ba1b7bb6f5934749bdfb358ef4a458d4/naraka-bladepoint-1ouzh.jpg\",\"width\":2560},{\"alt\":\"Download NARAKA: BLADEPOINT Offer\",\"height\":1600,\"md5\":\"045aa98a58e15470b5b1bcb69eba7ca9\",\"size\":860948,\"type\":\"DieselGameBoxTall\",\"uploadedDate\":\"2024-04-09T06:35:28.886Z\",\"url\":\"https://cdn1.epicgames.com/spt-assets/ba1b7bb6f5934749bdfb358ef4a458d4/naraka-bladepoint-18s98.jpg\",\"width\":1200}],\"lastModifiedDate\":\"2024-04-18T02:50:51.539Z\",\"mainGameItemList\":[],\"namespace\":\"0c6aee83b9b64372bf44a043001325f2\",\"releaseInfo\":[{\"appId\":\"eb6f87ce571445c087a872366efc70d3\",\"id\":\"1b65f2fcfb1a4750affa9be796d512d3\",\"platform\":[\"Win32\",\"Windows\"]}],\"requiresSecureAccount\":false,\"status\":\"ACTIVE\",\"title\":\"NARAKA: BLADEPOINT\",\"unsearchable\":true}",
+  "fetched_at": 1781303344
+}

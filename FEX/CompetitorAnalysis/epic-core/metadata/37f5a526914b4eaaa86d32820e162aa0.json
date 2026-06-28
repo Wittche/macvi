@@ -1,0 +1,49 @@
+{
+  "app_name": "37f5a526914b4eaaa86d32820e162aa0",
+  "namespace": "109a4631336a475ca4e4a8a51cc6fe69",
+  "catalog_item_id": "527156be25ad44289bc3b30e98ef9e7d",
+  "title": "Figment 2: Creed Valley",
+  "description": "Figment 2: Creed Valley is an action-adventure game set in the human mind. Nightmares are spreading chaos and have overrun once-peaceful lands. Join Dusty, The Mind’s courage, as you make your way through puzzles, musical boss fights and unique environments.",
+  "categories": [
+    "public",
+    "games",
+    "applications"
+  ],
+  "developer": "Bedtime Digital Games ApS",
+  "custom_attributes": {
+    "CanRunOffline": "true",
+    "CanSkipKoreanIdVerification": "true",
+    "FolderName": "Figment2CreedValley",
+    "MonitorPresence": "false",
+    "PresenceId": "109a4631336a475ca4e4a8a51cc6fe69",
+    "RequirementsJson": "[]",
+    "UseAccessControl": "false"
+  },
+  "key_images": [
+    {
+      "type": "DieselGameBox",
+      "url": "https://cdn1.epicgames.com/item/109a4631336a475ca4e4a8a51cc6fe69/figment2_wide_2560x1440-c799fc78fe47bda5cf8a1bb205ca134f"
+    },
+    {
+      "type": "DieselGameBoxTall",
+      "url": "https://cdn1.epicgames.com/item/109a4631336a475ca4e4a8a51cc6fe69/Figment2_Tall_1200x1600-aee3edb65954908fbacadc5dbbfbed4e"
+    }
+  ],
+  "asset_infos": {
+    "Windows": {
+      "appName": "37f5a526914b4eaaa86d32820e162aa0",
+      "namespace": "109a4631336a475ca4e4a8a51cc6fe69",
+      "catalogItemId": "527156be25ad44289bc3b30e98ef9e7d",
+      "buildVersion": "1.1.2c",
+      "labelName": "Live-Windows",
+      "assetId": "37f5a526914b4eaaa86d32820e162aa0"
+    }
+  },
+  "base_urls": [
+    "https://egdownload.fastly-edge.com/Builds/Org/o-bdq65kgy9hhkz5n4gkjlyt3uju86hw/dd3cd36c07864e8398375e00372711cd/default?f_token=1781307523_10fa3bf841d7f327f33ba8285caff2d41ec33b91",
+    "https://egs-cloudfront-chunks.epicgamescdn.com/Builds/Org/o-bdq65kgy9hhkz5n4gkjlyt3uju86hw/dd3cd36c07864e8398375e00372711cd/default?cf_token=1781307523_456b84b92359a3650fb5618194b64b3b704e373a",
+    "https://epicgames-download1.akamaized.net/Builds/Org/o-bdq65kgy9hhkz5n4gkjlyt3uju86hw/dd3cd36c07864e8398375e00372711cd/default?ak_token=exp=1781307523~hmac=8bc8dca992e3e84a9db38213805fb272b24598710937a3bb3da0736a136763c9"
+  ],
+  "raw_catalog_item_json": "{\"ageGatings\":{},\"applicationId\":\"fghi4567JzQkCTC4qV7MrjbeOeyqduOF\",\"categories\":[{\"path\":\"public\"},{\"path\":\"games\"},{\"path\":\"applications\"}],\"creationDate\":\"2024-03-04T19:07:26.213Z\",\"customAttributes\":{\"CanRunOffline\":{\"type\":\"STRING\",\"value\":\"true\"},\"CanSkipKoreanIdVerification\":{\"type\":\"STRING\",\"value\":\"true\"},\"FolderName\":{\"type\":\"STRING\",\"value\":\"Figment2CreedValley\"},\"MonitorPresence\":{\"type\":\"STRING\",\"value\":\"false\"},\"PresenceId\":{\"type\":\"STRING\",\"value\":\"109a4631336a475ca4e4a8a51cc6fe69\"},\"RequirementsJson\":{\"type\":\"STRING\",\"value\":\"[]\"},\"UseAccessControl\":{\"type\":\"STRING\",\"value\":\"false\"}},\"description\":\"Figment 2: Creed Valley is an action-adventure game set in the human mind. Nightmares are spreading chaos and have overrun once-peaceful lands. Join Dusty, The Mind’s courage, as you make your way through puzzles, musical boss fights and unique environments.\",\"developer\":\"Bedtime Digital Games ApS\",\"developerId\":\"o-bdq65kgy9hhkz5n4gkjlyt3uju86hw\",\"endOfSupport\":false,\"entitlementName\":\"527156be25ad44289bc3b30e98ef9e7d\",\"entitlementType\":\"EXECUTABLE\",\"eulaIds\":[\"egstore\"],\"id\":\"527156be25ad44289bc3b30e98ef9e7d\",\"itemType\":\"DURABLE\",\"keyImages\":[{\"height\":1440,\"md5\":\"c799fc78fe47bda5cf8a1bb205ca134f\",\"size\":979105,\"type\":\"DieselGameBox\",\"uploadedDate\":\"2021-12-15T22:19:24.680Z\",\"url\":\"https://cdn1.epicgames.com/item/109a4631336a475ca4e4a8a51cc6fe69/figment2_wide_2560x1440-c799fc78fe47bda5cf8a1bb205ca134f\",\"width\":2560},{\"height\":1600,\"md5\":\"aee3edb65954908fbacadc5dbbfbed4e\",\"size\":989076,\"type\":\"DieselGameBoxTall\",\"uploadedDate\":\"2021-12-15T22:19:30.072Z\",\"url\":\"https://cdn1.epicgames.com/item/109a4631336a475ca4e4a8a51cc6fe69/Figment2_Tall_1200x1600-aee3edb65954908fbacadc5dbbfbed4e\",\"width\":1200}],\"lastModifiedDate\":\"2025-06-23T17:27:19.264Z\",\"mainGameItemList\":[],\"namespace\":\"109a4631336a475ca4e4a8a51cc6fe69\",\"releaseInfo\":[{\"appId\":\"37f5a526914b4eaaa86d32820e162aa0\",\"id\":\"fdf805ed41854e37a7a5e2a163286ece\",\"platform\":[\"Windows\"]}],\"requiresSecureAccount\":false,\"status\":\"ACTIVE\",\"title\":\"Figment 2: Creed Valley\",\"unsearchable\":true}",
+  "fetched_at": 1781307217
+}

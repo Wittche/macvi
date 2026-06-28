@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "entries": {
+    "37f5a526914b4eaaa86d32820e162aa0|windows|live": {
+      "fingerprint": {
+        "app_name": "37f5a526914b4eaaa86d32820e162aa0",
+        "platform": "Windows",
+        "label": "Live",
+        "build_version": "1.1.2c",
+        "asset_id": "37f5a526914b4eaaa86d32820e162aa0",
+        "catalog_item_id": "527156be25ad44289bc3b30e98ef9e7d"
+      },
+      "requested_app_name": "37f5a526914b4eaaa86d32820e162aa0",
+      "resolved_app_name": "37f5a526914b4eaaa86d32820e162aa0",
+      "manifest_sha1": "79d5340b5e6a214f5d39a44de835e9c666dafaf4",
+      "manifest_url": "https://egdownload.fastly-edge.com/Builds/Org/o-bdq65kgy9hhkz5n4gkjlyt3uju86hw/dd3cd36c07864e8398375e00372711cd/default/L1SYJSUdopqCzJmh_kixgZzQctzEbQ.manifest?f_token=1781307523_10fa3bf841d7f327f33ba8285caff2d41ec33b91",
+      "base_urls": [
+        "https://egdownload.fastly-edge.com/Builds/Org/o-bdq65kgy9hhkz5n4gkjlyt3uju86hw/dd3cd36c07864e8398375e00372711cd/default?f_token=1781307523_10fa3bf841d7f327f33ba8285caff2d41ec33b91",
+        "https://egs-cloudfront-chunks.epicgamescdn.com/Builds/Org/o-bdq65kgy9hhkz5n4gkjlyt3uju86hw/dd3cd36c07864e8398375e00372711cd/default?cf_token=1781307523_456b84b92359a3650fb5618194b64b3b704e373a",
+        "https://epicgames-download1.akamaized.net/Builds/Org/o-bdq65kgy9hhkz5n4gkjlyt3uju86hw/dd3cd36c07864e8398375e00372711cd/default?ak_token=exp=1781307523~hmac=8bc8dca992e3e84a9db38213805fb272b24598710937a3bb3da0736a136763c9"
+      ],
+      "fetched_at": 1781307223
+    }
+  }
+}

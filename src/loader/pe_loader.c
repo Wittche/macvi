@@ -1,26 +1,22 @@
 /**
  * @file pe_loader.c
- * @brief PE file loader — file I/O and section mapping.
+ * @brief PE file loader — file I/O and section mapping for PE32/PE32+.
  *
  * SPDX-License-Identifier: MIT
  */
 
 #include "macwi/pe.h"
 #include "macwi/emu.h"
+#include "macwi/pe.h"
 #include "macwi/thunk.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
-#include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <errno.h>
-
-/* ============================================================================
- * macwi_pe_load_file
- * ============================================================================ */
 
 macwi_status_t macwi_pe_load_file(const char* path, PE_IMAGE* out_image) {
     if (!path || !out_image) return MACWI_ERROR_INVALID_PARAM;
@@ -67,7 +63,17 @@ macwi_status_t macwi_pe_load_file(const char* path, PE_IMAGE* out_image) {
         return status;
     }
 
-    uint32_t image_size = out_image->nt_headers->OptionalHeader.SizeOfImage;
+    uint32_t image_size = out_image->size_of_image;
+    // Align to 4KB (0x1000)
+    image_size = (image_size + 0xFFF) & ~0xFFF;
+    
+    // Use mmap so FEX can easily access it if needed, or we just malloc. 
+    // FEX might require it to be mapped in guest address space, but FEX handles memory via FEX_MapMemory.
+    // For now, we malloc and will copy to FEX via macwi_emu_write_memory. Wait!
+    // If we use FEX_MapMemory, we don't need to malloc here.
+    // However, macwi_pe_load_file does NOT map into emu. `main.c` does that by calling `macwi_emu_map_memory`!
+    // So this `image_base` is just host backing store before it gets mapped into EMU_CONTEXT.
+    
     void* image_base = malloc(image_size);
     if (!image_base) {
         free(file_data);
@@ -76,104 +82,48 @@ macwi_status_t macwi_pe_load_file(const char* path, PE_IMAGE* out_image) {
     }
     memset(image_base, 0, image_size);
 
-    /* Copy headers */
-    uint32_t headers_size = out_image->nt_headers->OptionalHeader.SizeOfHeaders;
+    uint32_t SizeOfHeaders = out_image->is_64bit ? 
+        out_image->optional_header.opt_64->SizeOfHeaders : 
+        out_image->optional_header.opt_32->SizeOfHeaders;
+
+    uint32_t headers_size = SizeOfHeaders;
     if (headers_size > total_read) headers_size = (uint32_t)total_read;
     memcpy(image_base, file_data, headers_size);
 
-    /* Copy sections */
-    size_t pe_off = out_image->dos_header->e_lfanew;
-    const PE_SECTION_HEADER* sec = (const PE_SECTION_HEADER*)(
-        file_data + pe_off + sizeof(DWORD) + sizeof(PE_FILE_HEADER) + 
-        out_image->nt_headers->FileHeader.SizeOfOptionalHeader);
-
-    for (int i = 0; i < out_image->nt_headers->FileHeader.NumberOfSections; i++) {
-        if (sec[i].SizeOfRawData == 0) continue;
-        uint32_t sec_rva = sec[i].VirtualAddress;
-        uint32_t raw_size = sec[i].SizeOfRawData;
-        uint32_t raw_ptr = sec[i].PointerToRawData;
+    for (int i = 0; i < out_image->num_sections; i++) {
+        const PE_SECTION_HEADER* sec = &out_image->section_headers[i];
+        if (sec->SizeOfRawData == 0) continue;
+        uint32_t sec_rva = sec->VirtualAddress;
+        uint32_t raw_size = sec->SizeOfRawData;
+        uint32_t raw_ptr = sec->PointerToRawData;
         uint32_t copy_size = raw_size;
         
-        if (sec[i].VirtualSize > 0 && raw_size > sec[i].VirtualSize) {
-            copy_size = sec[i].VirtualSize;
+        if (sec->VirtualSize > 0 && raw_size > sec->VirtualSize) {
+            copy_size = sec->VirtualSize;
         }
 
-        if (raw_ptr + copy_size <= file_size && sec_rva + copy_size <= image_size) {
+        if (raw_ptr + copy_size <= total_read && sec_rva + copy_size <= image_size) {
             memcpy((uint8_t*)image_base + sec_rva, file_data + raw_ptr, copy_size);
         }
     }
 
-    out_image->mapped_base = image_base;
+    out_image->mapped_base = (uint8_t*)image_base;
     out_image->mapped_size = image_size;
-    out_image->is_loaded = true;
     out_image->file_path = strdup(path);
 
-    /* Update pointers */
-    out_image->dos_header = (const DOS_HEADER*)image_base;
-    out_image->nt_headers = (const IMAGE_NT_HEADERS_32*)((uint8_t*)image_base + pe_off);
-    out_image->section_headers = (const PE_SECTION_HEADER*)(
-        (uint8_t*)image_base + pe_off + sizeof(DWORD) +
-        sizeof(PE_FILE_HEADER) + out_image->nt_headers->FileHeader.SizeOfOptionalHeader);
-
-    free(file_data);
-    return MACWI_SUCCESS;
-}
-
-uint32_t macwi_pe_get_entry_point(const PE_IMAGE* image) {
-    if (!image || !image->nt_headers) return 0;
-    return image->nt_headers->OptionalHeader.ImageBase +
-           image->nt_headers->OptionalHeader.AddressOfEntryPoint;
-}
-
-macwi_status_t macwi_pe_resolve_imports(PE_IMAGE* image) {
-    if (!image || !image->is_loaded) return MACWI_ERROR_INVALID_PARAM;
-
-    uint32_t import_va = image->nt_headers->OptionalHeader.DataDirectory[1].VirtualAddress; // IMAGE_DIRECTORY_ENTRY_IMPORT
-    if (import_va == 0) return MACWI_SUCCESS; // No imports
-
-    PE_IMPORT_DESCRIPTOR* import_desc = (PE_IMPORT_DESCRIPTOR*)((uint8_t*)image->mapped_base + import_va);
-
-    while (import_desc->Name != 0) {
-        char* dll_name = (char*)image->mapped_base + import_desc->Name;
-        
-        uint32_t thunk_rva = import_desc->FirstThunk;
-        uint32_t orig_thunk_rva = import_desc->OriginalFirstThunk;
-        if (orig_thunk_rva == 0) orig_thunk_rva = thunk_rva; // Borland compiler sometimes does this
-
-        uint32_t* thunk = (uint32_t*)((uint8_t*)image->mapped_base + thunk_rva);
-        uint32_t* orig_thunk = (uint32_t*)((uint8_t*)image->mapped_base + orig_thunk_rva);
-
-        while (*orig_thunk != 0) {
-            if (*orig_thunk & 0x80000000) {
-                // Ordinal import
-                // fprintf(stderr, "Ordinal import not supported yet\n");
-            } else {
-                // Name import
-                // *orig_thunk is an RVA to an IMAGE_IMPORT_BY_NAME struct (Hint: WORD, Name: ASCIIZ)
-                char* func_name = (char*)image->mapped_base + *orig_thunk + 2;
-                
-                // Get Magic VA for this API
-                uint32_t magic_va = macwi_thunk_get_magic_va(dll_name, func_name);
-                if (magic_va == 0) {
-                    fprintf(stderr, "[macwi_loader] WARNING: Unresolved import %s!%s\n", dll_name, func_name);
-                    // Just write a breakpoint (0xCC) or keep original
-                } else {
-                    // Overwrite the IAT entry with our magic VA
-                    *thunk = magic_va;
-                }
-            }
-            thunk++;
-            orig_thunk++;
-        }
-        import_desc++;
-    }
-
-    return MACWI_SUCCESS;
+    // Update pointers to point to new image_base
+    size_t pe_offset = out_image->dos_header->e_lfanew;
+    const DOS_HEADER* dos = (const DOS_HEADER*)image_base;
+    out_image->dos_header = dos;
+    
+    // Re-parse from the mapped base to get valid pointers
+    free(file_data); // Free the raw file data since we copied it into image_base
+    return macwi_pe_parse_headers((const uint8_t*)image_base, image_size, out_image);
 }
 
 void macwi_pe_free(PE_IMAGE* image) {
     if (!image) return;
-    if (image->is_loaded && image->mapped_base) {
+    if (image->mapped_base) {
         free(image->mapped_base);
     }
     if (image->file_path) {
@@ -182,17 +132,50 @@ void macwi_pe_free(PE_IMAGE* image) {
     memset(image, 0, sizeof(PE_IMAGE));
 }
 
-macwi_status_t macwi_pe_map_to_emu(const PE_IMAGE* image, EMU_CONTEXT* emu_ctx) {
-    if (!image || !image->is_loaded || !emu_ctx) return MACWI_ERROR_INVALID_PARAM;
+uint64_t macwi_pe_get_entry_point(const PE_IMAGE* image) {
+    if (!image) return 0;
+    return image->entry_point;
+}
 
-    uint32_t image_base = image->nt_headers->OptionalHeader.ImageBase;
-    uint32_t image_size = image->nt_headers->OptionalHeader.SizeOfImage;
-
-    macwi_status_t status = macwi_emu_map_memory(emu_ctx, image_base, image_size, MACWI_PROT_ALL);
-    if (status != MACWI_SUCCESS) return status;
-
-    status = macwi_emu_write_memory(emu_ctx, image_base, image->mapped_base, image_size);
-    if (status != MACWI_SUCCESS) return status;
-
+macwi_status_t macwi_pe_resolve_imports(PE_IMAGE* image, struct EMU_CONTEXT* ctx) {
+    if (!image || !image->mapped_base || !ctx) return MACWI_ERROR_INVALID_PARAM;
+    
+    IMAGE_NT_HEADERS_32* nt_headers = (IMAGE_NT_HEADERS_32*)((uint8_t*)image->mapped_base + image->dos_header->e_lfanew);
+    PE_DATA_DIRECTORY* import_dir = &nt_headers->OptionalHeader.DataDirectory[1]; // IMAGE_DIRECTORY_ENTRY_IMPORT
+    
+    if (import_dir->VirtualAddress == 0 || import_dir->Size == 0) {
+        return MACWI_SUCCESS; // No imports
+    }
+    
+    PE_IMPORT_DESCRIPTOR* import_desc = (PE_IMPORT_DESCRIPTOR*)((uint8_t*)image->mapped_base + import_dir->VirtualAddress);
+    
+    while (import_desc->Name != 0) {
+        const char* dll_name = (const char*)((uint8_t*)image->mapped_base + import_desc->Name);
+        
+        uint32_t thunk_rva = import_desc->FirstThunk;
+        uint32_t orig_thunk_rva = import_desc->OriginalFirstThunk;
+        if (orig_thunk_rva == 0) orig_thunk_rva = thunk_rva;
+        
+        uint32_t* thunk = (uint32_t*)((uint8_t*)image->mapped_base + thunk_rva);
+        uint32_t* orig_thunk = (uint32_t*)((uint8_t*)image->mapped_base + orig_thunk_rva);
+        
+        while (*orig_thunk != 0) {
+            if (!(*orig_thunk & 0x80000000)) { // Not ordinal
+                uint32_t name_rva = *orig_thunk;
+                const char* func_name = (const char*)((uint8_t*)image->mapped_base + name_rva + 2);
+                
+                uint64_t tramp_va = macwi_thunk_get_trampoline(ctx, dll_name, func_name);
+                if (tramp_va != 0) {
+                    *thunk = (uint32_t)tramp_va;
+                } else {
+                    fprintf(stderr, "[macwi:loader] Warning: Unresolved import %s!%s\n", dll_name, func_name);
+                }
+            }
+            thunk++;
+            orig_thunk++;
+        }
+        import_desc++;
+    }
+    
     return MACWI_SUCCESS;
 }

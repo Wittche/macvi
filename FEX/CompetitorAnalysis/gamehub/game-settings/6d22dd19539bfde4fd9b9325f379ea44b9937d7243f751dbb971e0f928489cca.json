@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "key": {
+    "kind": "local",
+    "local_game_id": "local_e0498f7e-5efb-462e-a049-019ebedd5351",
+    "game_id": null
+  },
+  "stable_game_key_hash": "6d22dd19539bfde4fd9b9325f379ea44b9937d7243f751dbb971e0f928489cca",
+  "binding_id": 1,
+  "settings": {
+    "language": "system",
+    "start_parameters": "",
+    "compatibility_layer": "10000073",
+    "compatibility_layer_config": {
+      "display_name": "wine-proton_11.0",
+      "framework": "X64",
+      "framework_type": "proton",
+      "id": 10000073,
+      "is_steam": 1,
+      "name": "wine-proton_11.0",
+      "parts": null,
+      "task_state": "downloaded",
+      "version": "1.0.2",
+      "version_code": 15
+    },
+    "sync_mode": "msync",
+    "bypass_av_decode": false,
+    "avx_enabled": false,
+    "gamepad_compat_mode": false,
+    "retina_mode": false,
+    "metal_hud_enabled": true,
+    "metal4_enabled": true,
+    "graphics_stack": {
+      "kind": "gptk",
+      "component_id": "10000166",
+      "component_config": {
+        "base_type": 0,
+        "custum_data": "compoment:10000166,version:1.0.0",
+        "display_name": "gptk-4.0-1",
+        "id": 10000166,
+        "is_base": 0,
+        "is_ui": 1,
+        "name": "gptk-4.0-1",
+        "task_id": [
+          "component_1781322270423_s4i00hl0"
+        ],
+        "task_info": [
+          {
+            "bytes_downloaded": 17566546,
+            "bytes_total": 17566546,
+            "custom_data": "compoment:10000166,version:1.0.0",
+            "message": "complete",
+            "percent": 100,
+            "status": "completed",
+            "task_id": "component_1781322270423_s4i00hl0"
+          }
+        ],
+        "task_state": "installing",
+        "type": 4,
+        "version": "1.0.0",
+        "version_code": 1
+      }
+    },
+    "dlss_mode": "enabled",
+    "ray_tracing_mode": "auto",
+    "dxmt_experimental_dx12_support": false,
+    "molten_vk": "10000076",
+    "steam": {
+      "steam_version": "",
+      "offline_mode": false,
+      "auto_sync_cloud_archive": false,
+      "steam_input": false,
+      "network_accelerate": false,
+      "open_startup_window": true
+    },
+    "component_ids": [
+      10000074
+    ],
+    "directx_panel": 1,
+    "auto_sync_cloud_archive": false,
+    "updated_at": 1781322378
+  },
+  "created_at": 1781318637,
+  "updated_at": 1781322378
+}

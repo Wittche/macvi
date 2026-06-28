@@ -13,10 +13,13 @@ add_subdirectory(win32)
 # Build the main executable
 add_executable(macwi main.c)
 
-target_link_libraries(macwi PRIVATE
+target_link_libraries(macwi
+    PRIVATE
     macwi_loader
     macwi_thunk
     macwi_win32
-    macwi_emu
     macwi_core
+    macwi_emu
+    FEXCore
+    JemallocLibs
 )

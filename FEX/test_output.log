@@ -1,0 +1,223 @@
+[FEXMacOS] Target binary detected as 64-bit (PE32+)
+FEXCore::Config::Initialize: Starting
+FEXCore::Config::Initialize: Layer added
+FEXCore::Config::Initialize: Meta assigned: 0x110000080
+[Registry] Initializing Emulator...
+[Registry] Loaded 9 values from registry.txt
+[VFS] Mapped C: to /Users/firataktug/Desktop/FEX/drive_c
+[VFS] Mapped Z: to /
+[VFS] Wine DLL search path set to: /Users/firataktug/Desktop/FEX/wine11.9/wine-install/lib/wine/x86_64-windows
+[Registry] OpenKey: HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion
+[FEXMacOS-Verify] Initial ProductName read from registry: 'Windows 11 Pro'
+[Registry] SetValue: handle=0x1000, name='ProductName', type=1, size=15
+[Registry] Saved registry state to registry.txt
+[FEXMacOS-Verify] Set ProductName to 'Windows 11 Pro'
+[Dispatcher] Constructor: CTX=0x105aefcc0, Buffer=0x1054e8000, Size=0x4000
+[FEX] D: Dispatcher: Starting emission...
+[FEX] D: Dispatcher: Emission finished.
+[FEXMacOS] Native Bridge Mode: Loading ./wine11.9/wine-install/lib/wine/x86_64-windows/clock.exe
+[MacOSEmulation] Loading Mach-O binary: ./wine11.9/wine-install/lib/wine/x86_64-windows/clock.exe
+[FEXMacOS] Calling PELoader::Load for ./wine11.9/wine-install/lib/wine/x86_64-windows/clock.exe...
+[PELoader] Detected 64-bit PE binary (PE32+)
+[PELoader] Mapped image at 0x140000000 (Preferred: 0x140000000), Entry: 0x140002db0
+[PELoader] Import Directory: VA=0x8000, Size=0xcfc
+[PELoader] Resolving imports for comctl32.dll
+[PELoader]   - comctl32.dll!InitCommonControls -> OK
+[PELoader] Resolved comctl32.dll!InitCommonControls -> 0x1054f0000
+[PELoader] Finished resolving imports for comctl32.dll
+[PELoader] Resolving imports for comdlg32.dll
+[PELoader]   - comdlg32.dll!ChooseFontW -> STUB
+[PELoader] Resolved comdlg32.dll!ChooseFontW -> 0x1054f4000
+[PELoader] Finished resolving imports for comdlg32.dll
+[PELoader] Resolving imports for gdi32.dll
+[PELoader]   - gdi32.dll!BitBlt -> STUB
+[PELoader] Resolved gdi32.dll!BitBlt -> 0x1054f8000
+[PELoader]   - gdi32.dll!CreateCompatibleBitmap -> STUB
+[PELoader] Resolved gdi32.dll!CreateCompatibleBitmap -> 0x10557c000
+[PELoader]   - gdi32.dll!CreateCompatibleDC -> STUB
+[PELoader] Resolved gdi32.dll!CreateCompatibleDC -> 0x105580000
+[PELoader]   - gdi32.dll!CreateEllipticRgn -> STUB
+[PELoader] Resolved gdi32.dll!CreateEllipticRgn -> 0x105584000
+[PELoader]   - gdi32.dll!CreateFontIndirectW -> STUB
+[PELoader] Resolved gdi32.dll!CreateFontIndirectW -> 0x105588000
+[PELoader]   - gdi32.dll!CreatePen -> STUB
+[PELoader] Resolved gdi32.dll!CreatePen -> 0x10558c000
+[PELoader]   - gdi32.dll!DeleteDC -> STUB
+[PELoader] Resolved gdi32.dll!DeleteDC -> 0x105590000
+[PELoader]   - gdi32.dll!DeleteObject -> OK
+[PELoader] Resolved gdi32.dll!DeleteObject -> 0x105594000
+[PELoader]   - gdi32.dll!Ellipse -> STUB
+[PELoader] Resolved gdi32.dll!Ellipse -> 0x105598000
+[PELoader]   - gdi32.dll!GetStockObject -> STUB
+[PELoader] Resolved gdi32.dll!GetStockObject -> 0x10559c000
+[PELoader]   - gdi32.dll!GetTextExtentPointW -> STUB
+[PELoader] Resolved gdi32.dll!GetTextExtentPointW -> 0x1055a0000
+[PELoader]   - gdi32.dll!LineTo -> STUB
+[PELoader] Resolved gdi32.dll!LineTo -> 0x1055a4000
+[PELoader]   - gdi32.dll!MoveToEx -> STUB
+[PELoader] Resolved gdi32.dll!MoveToEx -> 0x1055a8000
+[PELoader]   - gdi32.dll!OffsetRgn -> STUB
+[PELoader] Resolved gdi32.dll!OffsetRgn -> 0x1055ac000
+[PELoader]   - gdi32.dll!OffsetWindowOrgEx -> STUB
+[PELoader] Resolved gdi32.dll!OffsetWindowOrgEx -> 0x1055b0000
+[PELoader]   - gdi32.dll!SelectObject -> STUB
+[PELoader] Resolved gdi32.dll!SelectObject -> 0x1055b4000
+[PELoader]   - gdi32.dll!SetBkColor -> STUB
+[PELoader] Resolved gdi32.dll!SetBkColor -> 0x1055b8000
+[PELoader]   - gdi32.dll!SetBkMode -> STUB
+[PELoader] Resolved gdi32.dll!SetBkMode -> 0x1055bc000
+[PELoader]   - gdi32.dll!SetTextColor -> STUB
+[PELoader] Resolved gdi32.dll!SetTextColor -> 0x1055c0000
+[PELoader]   - gdi32.dll!SetViewportOrgEx -> STUB
+[PELoader] Resolved gdi32.dll!SetViewportOrgEx -> 0x1055c4000
+[PELoader]   - gdi32.dll!TextOutW -> STUB
+[PELoader] Resolved gdi32.dll!TextOutW -> 0x1055c8000
+[PELoader] Finished resolving imports for gdi32.dll
+[PELoader] Resolving imports for kernel32.dll
+[PELoader]   - kernel32.dll!GetCommandLineA -> OK
+[PELoader] Resolved kernel32.dll!GetCommandLineA -> 0x1055cc000
+[PELoader]   - kernel32.dll!GetDateFormatW -> STUB
+[PELoader] Resolved kernel32.dll!GetDateFormatW -> 0x1055d0000
+[PELoader]   - kernel32.dll!GetLocalTime -> STUB
+[PELoader] Resolved kernel32.dll!GetLocalTime -> 0x1055d4000
+[PELoader]   - kernel32.dll!GetModuleHandleA -> OK
+[PELoader] Resolved kernel32.dll!GetModuleHandleA -> 0x1055d8000
+[PELoader]   - kernel32.dll!GetStartupInfoA -> STUB
+[PELoader] Resolved kernel32.dll!GetStartupInfoA -> 0x1055dc000
+[PELoader]   - kernel32.dll!GetTimeFormatW -> STUB
+[PELoader] Resolved kernel32.dll!GetTimeFormatW -> 0x1055e0000
+[PELoader] Finished resolving imports for kernel32.dll
+[PELoader] Resolving imports for shell32.dll
+[PELoader]   - shell32.dll!ShellAboutW -> STUB
+[PELoader] Resolved shell32.dll!ShellAboutW -> 0x1055e4000
+[PELoader] Finished resolving imports for shell32.dll
+[PELoader] Resolving imports for ucrtbase.dll
+[PELoader]   - ucrtbase.dll!__p___argc -> OK
+[PELoader] Resolved ucrtbase.dll!__p___argc -> 0x1055e8000
+[PELoader]   - ucrtbase.dll!__p___argv -> OK
+[PELoader] Resolved ucrtbase.dll!__p___argv -> 0x1055ec000
+[PELoader]   - ucrtbase.dll!_configure_narrow_argv -> OK
+[PELoader] Resolved ucrtbase.dll!_configure_narrow_argv -> 0x1055f0000
+[PELoader]   - ucrtbase.dll!_crt_atexit -> STUB
+[PELoader] Resolved ucrtbase.dll!_crt_atexit -> 0x1055f4000
+[PELoader]   - ucrtbase.dll!_get_initial_narrow_environment -> OK
+[PELoader] Resolved ucrtbase.dll!_get_initial_narrow_environment -> 0x1055f8000
+[PELoader]   - ucrtbase.dll!_initialize_narrow_environment -> OK
+[PELoader] Resolved ucrtbase.dll!_initialize_narrow_environment -> 0x105600000
+[PELoader]   - ucrtbase.dll!_initterm -> OK
+[PELoader] Resolved ucrtbase.dll!_initterm -> 0x105604000
+[PELoader]   - ucrtbase.dll!_initterm_e -> OK
+[PELoader] Resolved ucrtbase.dll!_initterm_e -> 0x105608000
+[PELoader]   - ucrtbase.dll!_set_app_type -> OK
+[PELoader] Resolved ucrtbase.dll!_set_app_type -> 0x10560c000
+[PELoader]   - ucrtbase.dll!cos -> STUB
+[PELoader] Resolved ucrtbase.dll!cos -> 0x105610000
+[PELoader]   - ucrtbase.dll!cosf -> STUB
+[PELoader] Resolved ucrtbase.dll!cosf -> 0x105614000
+[PELoader]   - ucrtbase.dll!exit -> STUB
+[PELoader] Resolved ucrtbase.dll!exit -> 0x105618000
+[PELoader]   - ucrtbase.dll!sin -> STUB
+[PELoader] Resolved ucrtbase.dll!sin -> 0x10561c000
+[PELoader]   - ucrtbase.dll!sinf -> STUB
+[PELoader] Resolved ucrtbase.dll!sinf -> 0x105770000
+[PELoader] Finished resolving imports for ucrtbase.dll
+[PELoader] Resolving imports for user32.dll
+[PELoader]   - user32.dll!BeginPaint -> STUB
+[PELoader] Resolved user32.dll!BeginPaint -> 0x105774000
+[PELoader]   - user32.dll!CheckMenuItem -> STUB
+[PELoader] Resolved user32.dll!CheckMenuItem -> 0x105778000
+[PELoader]   - user32.dll!CheckMenuRadioItem -> STUB
+[PELoader] Resolved user32.dll!CheckMenuRadioItem -> 0x10577c000
+[PELoader]   - user32.dll!CreateWindowExW -> OK
+[PELoader] Resolved user32.dll!CreateWindowExW -> 0x105780000
+[PELoader]   - user32.dll!DefWindowProcW -> OK
+[PELoader] Resolved user32.dll!DefWindowProcW -> 0x105788000
+[PELoader]   - user32.dll!DispatchMessageW -> OK
+[PELoader] Resolved user32.dll!DispatchMessageW -> 0x10578c000
+[PELoader]   - user32.dll!EnableMenuItem -> STUB
+[PELoader] Resolved user32.dll!EnableMenuItem -> 0x105790000
+[PELoader]   - user32.dll!EndPaint -> STUB
+[PELoader] Resolved user32.dll!EndPaint -> 0x105794000
+[PELoader]   - user32.dll!FillRect -> STUB
+[PELoader] Resolved user32.dll!FillRect -> 0x105798000
+[PELoader]   - user32.dll!GetDC -> OK
+[PELoader] Resolved user32.dll!GetDC -> 0x10579c000
+[PELoader]   - user32.dll!GetMessageW -> OK
+[PELoader] Resolved user32.dll!GetMessageW -> 0x1057a0000
+[PELoader]   - user32.dll!GetSubMenu -> STUB
+[PELoader] Resolved user32.dll!GetSubMenu -> 0x1057a4000
+[PELoader]   - user32.dll!GetSysColor -> STUB
+[PELoader] Resolved user32.dll!GetSysColor -> 0x1057a8000
+[PELoader]   - user32.dll!GetSysColorBrush -> STUB
+[PELoader] Resolved user32.dll!GetSysColorBrush -> 0x129f5c000
+[PELoader]   - user32.dll!GetWindowLongW -> STUB
+[PELoader] Resolved user32.dll!GetWindowLongW -> 0x129f60000
+[PELoader]   - user32.dll!GetWindowRect -> STUB
+[PELoader] Resolved user32.dll!GetWindowRect -> 0x129f64000
+[PELoader]   - user32.dll!InvalidateRect -> STUB
+[PELoader] Resolved user32.dll!InvalidateRect -> 0x129f68000
+[PELoader]   - user32.dll!KillTimer -> STUB
+[PELoader] Resolved user32.dll!KillTimer -> 0x129f6c000
+[PELoader]   - user32.dll!LoadCursorW -> STUB
+[PELoader] Resolved user32.dll!LoadCursorW -> 0x129f70000
+[PELoader]   - user32.dll!LoadIconW -> STUB
+[PELoader] Resolved user32.dll!LoadIconW -> 0x129f74000
+[PELoader]   - user32.dll!LoadMenuW -> STUB
+[PELoader] Resolved user32.dll!LoadMenuW -> 0x129f78000
+[PELoader]   - user32.dll!LoadStringW -> STUB
+[PELoader] Resolved user32.dll!LoadStringW -> 0x129f7c000
+[PELoader]   - user32.dll!MapWindowPoints -> STUB
+[PELoader] Resolved user32.dll!MapWindowPoints -> 0x129f80000
+[PELoader]   - user32.dll!MessageBoxW -> STUB
+[PELoader] Resolved user32.dll!MessageBoxW -> 0x129f84000
+[PELoader]   - user32.dll!PostQuitMessage -> OK
+[PELoader] Resolved user32.dll!PostQuitMessage -> 0x129f88000
+[PELoader]   - user32.dll!RegisterClassW -> OK
+[PELoader] Resolved user32.dll!RegisterClassW -> 0x129f8c000
+[PELoader]   - user32.dll!ReleaseDC -> OK
+[PELoader] Resolved user32.dll!ReleaseDC -> 0x129f90000
+[PELoader]   - user32.dll!SetMenu -> STUB
+[PELoader] Resolved user32.dll!SetMenu -> 0x129f94000
+[PELoader]   - user32.dll!SetTimer -> STUB
+[PELoader] Resolved user32.dll!SetTimer -> 0x129f98000
+[PELoader]   - user32.dll!SetWindowLongW -> STUB
+[PELoader] Resolved user32.dll!SetWindowLongW -> 0x129f9c000
+[PELoader]   - user32.dll!SetWindowPos -> STUB
+[PELoader] Resolved user32.dll!SetWindowPos -> 0x129fa0000
+[PELoader]   - user32.dll!SetWindowRgn -> STUB
+[PELoader] Resolved user32.dll!SetWindowRgn -> 0x129fa4000
+[PELoader]   - user32.dll!SetWindowTextW -> OK
+[PELoader] Resolved user32.dll!SetWindowTextW -> 0x129fa8000
+[PELoader]   - user32.dll!ShowWindow -> OK
+[PELoader] Resolved user32.dll!ShowWindow -> 0x129fac000
+[PELoader]   - user32.dll!TranslateMessage -> OK
+[PELoader] Resolved user32.dll!TranslateMessage -> 0x129fb0000
+[PELoader]   - user32.dll!UpdateWindow -> OK
+[PELoader] Resolved user32.dll!UpdateWindow -> 0x129fb4000
+[PELoader] Finished resolving imports for user32.dll
+[PELoader] ALL imports resolved successfully.
+[PELoader] WARNING: mprotect failed for section .text at 0x140001000 (aligned 0x140000000), size 0x4000, prot 7
+[PELoader] SUCCESS: Loaded clock.exe at 0x140000000
+[FEXMacOS] PELoader::Load completed successfully.
+[FEXMacOS] Successfully loaded Windows PE binary
+FEXDBG_DISPATCHER: InitThreadPointers DispatcherLoopTop=0x1054e80a0 SignalReturnHandler=0x1054e83b0 SignalReturnHandlerRT=0x1054e83b4 ThunkCallbackRet=0x0 GuestSignal_SIGSEGV=0x1054e8460 GlobalMemoryBase=0x0
+[FEX] E: Failed to mprotect last page of code buffer.
+[FEXLibrary] Thread created. GDT: 0x788d40c900, CS: 0xb, RIP: 0x140002db0, RSP: 0x12a7b7000
+[FEXWindows] Ready. TEB: 0x13c7c4000 (Is32Bit: 0)
+[FEXMacOS] JIT Starting at 0x140002db0 (RSP: 0x12a7b7000, TLS: 0x13c7c0000)
+[FEXMacOS] Calling FEX_ThreadExecute...
+[FEX-JIT] Entering RIP: 0x140002db0 (RSP: 0x12a7b7000)
+[FEX-JIT] Calling Ctx->ExecuteThread...
+FEXDBG_CORE: ExecuteThread RIP=0x140002db0 RSP=0x12a7b7000 ThunkCallbackRet=0x0 SignalReturnHandler=0x1054e83b0 SignalReturnHandlerRT=0x1054e83b4 GlobalMemoryBase=0x0
+
+[FEXMacOS-Signal] SIGNAL 11 received!
+[FEXMacOS-Signal] Fault Address: 0xc
+[FEXMacOS-Signal] Host Register State:
+   PC:  0x0000000104cbbe94
+   LR:  0x0000000104cbbe88
+   SP:  0x000000016b251f60
+   X0:  0x0000000000000008
+   X1:  0x000000000000000b
+   X28: 0x0000007000001140 (STATE)
+
+[FEXCore] L1Pointer = 0x13a7bc000, PageMemory = 0x1327bc000

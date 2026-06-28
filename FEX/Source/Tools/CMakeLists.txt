@@ -1,0 +1,45 @@
+add_subdirectory(CommonTools)
+
+if (NOT MINGW)
+  if (NOT APPLE)
+    if (BUILD_FEXCONFIG)
+      find_package(Qt6 COMPONENTS Qml Quick Widgets QUIET)
+      if (NOT Qt6_FOUND)
+        find_package(Qt5 COMPONENTS Qml Quick Widgets REQUIRED)
+      endif()
+
+      add_subdirectory(FEXConfig/)
+    endif()
+
+    if (ENABLE_GDB_SYMBOLS)
+      add_subdirectory(FEXGDBReader/)
+    endif()
+
+    if (NOT BUILD_STEAM_SUPPORT)
+      add_subdirectory(FEXRootFSFetcher/)
+    endif()
+
+    add_subdirectory(FEXGetConfig/)
+    add_subdirectory(FEXServer/)
+    add_subdirectory(FEXBash/)
+    add_subdirectory(FEXOfflineCompiler/)
+    add_subdirectory(LinuxEmulation/)
+    add_subdirectory(FEXInterpreter/)
+    add_subdirectory(pidof/)
+    if (BUILD_TESTING)
+      add_subdirectory(TestHarnessRunner/)
+    endif()
+  endif()
+
+  add_subdirectory(CodeSizeValidation/)
+  if (APPLE)
+    add_subdirectory(MacOSEmulation/)
+    add_subdirectory(FEXMacOS/)
+  endif()
+
+  if (NOT APPLE)
+    add_subdirectory(FEXInterpreter/)
+  endif()
+endif()
+
+add_subdirectory(FEXInterpreter_macOS)

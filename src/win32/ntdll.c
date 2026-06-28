@@ -1,6 +1,6 @@
 /**
  * @file ntdll.c
- * @brief Win32 ntdll.dll stub implementations using the EMU_CONTEXT dispatcher.
+ * @brief Win32 ntdll.dll stub implementations for PE32+ (64-bit).
  *
  * SPDX-License-Identifier: MIT
  */
@@ -21,44 +21,52 @@
 
 static void ntdll_NtCreateFile(EMU_CONTEXT* ctx) {
     NT_STUB_LOG("NtCreateFile stubbed");
-    macwi_emu_reg_write(ctx, 0, STATUS_NOT_IMPLEMENTED);
+    macwi_emu_reg_write_64(ctx, 0, STATUS_NOT_IMPLEMENTED);
+    macwi_thunk_stdcall_return(ctx, 11);
 }
 
 static void ntdll_NtClose(EMU_CONTEXT* ctx) {
-    uint32_t handle;
-    macwi_thunk_read_param_32(ctx, 0, &handle);
-    NT_STUB_LOG("NtClose(0x%X) stubbed", handle);
-    macwi_emu_reg_write(ctx, 0, STATUS_SUCCESS);
+    uint64_t handle;
+    macwi_thunk_read_param_64(ctx, 0, &handle);
+    NT_STUB_LOG("NtClose(0x%llX) stubbed", handle);
+    macwi_emu_reg_write_64(ctx, 0, STATUS_SUCCESS);
+    macwi_thunk_stdcall_return(ctx, 1);
 }
 
 static void ntdll_NtReadFile(EMU_CONTEXT* ctx) {
     NT_STUB_LOG("NtReadFile stubbed");
-    macwi_emu_reg_write(ctx, 0, STATUS_NOT_IMPLEMENTED);
+    macwi_emu_reg_write_64(ctx, 0, STATUS_NOT_IMPLEMENTED);
+    macwi_thunk_stdcall_return(ctx, 9);
 }
 
 static void ntdll_NtWriteFile(EMU_CONTEXT* ctx) {
     NT_STUB_LOG("NtWriteFile stubbed");
-    macwi_emu_reg_write(ctx, 0, STATUS_NOT_IMPLEMENTED);
+    macwi_emu_reg_write_64(ctx, 0, STATUS_NOT_IMPLEMENTED);
+    macwi_thunk_stdcall_return(ctx, 9);
 }
 
 static void ntdll_NtAllocateVirtualMemory(EMU_CONTEXT* ctx) {
     NT_STUB_LOG("NtAllocateVirtualMemory stubbed");
-    macwi_emu_reg_write(ctx, 0, STATUS_NOT_IMPLEMENTED);
+    macwi_emu_reg_write_64(ctx, 0, STATUS_NOT_IMPLEMENTED);
+    macwi_thunk_stdcall_return(ctx, 6);
 }
 
 static void ntdll_NtFreeVirtualMemory(EMU_CONTEXT* ctx) {
     NT_STUB_LOG("NtFreeVirtualMemory stubbed");
-    macwi_emu_reg_write(ctx, 0, STATUS_NOT_IMPLEMENTED);
+    macwi_emu_reg_write_64(ctx, 0, STATUS_NOT_IMPLEMENTED);
+    macwi_thunk_stdcall_return(ctx, 4);
 }
 
 static void ntdll_RtlInitUnicodeString(EMU_CONTEXT* ctx) {
     NT_STUB_LOG("RtlInitUnicodeString stubbed");
-    macwi_emu_reg_write(ctx, 0, 0); // void function usually
+    macwi_emu_reg_write_64(ctx, 0, 0); // void function usually
+    macwi_thunk_stdcall_return(ctx, 2);
 }
 
 static void ntdll_RtlFreeUnicodeString(EMU_CONTEXT* ctx) {
     NT_STUB_LOG("RtlFreeUnicodeString stubbed");
-    macwi_emu_reg_write(ctx, 0, 0);
+    macwi_emu_reg_write_64(ctx, 0, 0);
+    macwi_thunk_stdcall_return(ctx, 1);
 }
 
 /* ============================================================================

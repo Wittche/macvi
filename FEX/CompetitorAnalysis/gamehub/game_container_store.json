@@ -1,0 +1,41 @@
+{
+  "schema_version": 2,
+  "wine_base_bindings": [
+    {
+      "wine_installation_id": "10000033",
+      "base_container_id": "1"
+    },
+    {
+      "wine_installation_id": "10000073",
+      "base_container_id": "2"
+    }
+  ],
+  "bindings": [
+    {
+      "id": 1,
+      "game_id": null,
+      "game_name": "NetCAD 8.5.5.1077",
+      "platform": "local",
+      "platform_app_id": null,
+      "local_game_id": "local_e0498f7e-5efb-462e-a049-019ebedd5351",
+      "game_path": "/Users/firataktug/Documents/windows/NetCad8.5.5/NetCAD 8.5.5.1077.exe",
+      "virtual_container_id": "1",
+      "base_container_id": "2",
+      "created_at": 1781318637,
+      "updated_at": 1781319457
+    },
+    {
+      "id": 2,
+      "game_id": null,
+      "game_name": "Nc32",
+      "platform": "local",
+      "platform_app_id": null,
+      "local_game_id": "local_e8d1d17c-985c-4267-a8d1-019ebee7c8ad",
+      "game_path": "/Users/firataktug/Library/Application Support/com.gamemac.www/wine-engine/containers/virtual_containers/1/drive_c/NetCAD855/Nc32.exe",
+      "virtual_container_id": "2",
+      "base_container_id": "1",
+      "created_at": 1781319321,
+      "updated_at": 1781319334
+    }
+  ]
+}

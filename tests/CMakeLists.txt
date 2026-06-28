@@ -20,6 +20,7 @@ add_executable(test_emu_basic test_emu_basic.c)
 target_link_libraries(test_emu_basic PRIVATE
     macwi_emu
     macwi_core
+    JemallocLibs
 )
 add_test(NAME emu_basic_tests COMMAND test_emu_basic)
 
@@ -32,6 +33,7 @@ target_link_libraries(test_pe_emu PRIVATE
     macwi_loader
     macwi_emu
     macwi_core
+    JemallocLibs
 )
 add_test(NAME pe_emu_tests COMMAND test_pe_emu)
 
@@ -41,5 +43,6 @@ target_link_libraries(test_thunk_dispatch PRIVATE
     macwi_thunk
     macwi_emu
     macwi_core
+    JemallocLibs
 )
 add_test(NAME thunk_dispatch_tests COMMAND test_thunk_dispatch)

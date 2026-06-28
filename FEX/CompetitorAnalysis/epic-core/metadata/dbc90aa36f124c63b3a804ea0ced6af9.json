@@ -1,0 +1,40 @@
+{
+  "app_name": "dbc90aa36f124c63b3a804ea0ced6af9",
+  "namespace": "43c0da4f8c774c23a76a213fb8dfe59b",
+  "catalog_item_id": "424d9c4cc908464cbfabec6f10430f85",
+  "title": "Sky Racket",
+  "description": "Sky Racket",
+  "categories": [
+    "games",
+    "applications"
+  ],
+  "developer": "Double Dash Studios",
+  "custom_attributes": {
+    "CanSkipKoreanIdVerification": "true",
+    "FolderName": "SkyRacket",
+    "productGeneration": "SPT"
+  },
+  "key_images": [
+    {
+      "type": "DieselGameBox",
+      "url": "https://cdn1.epicgames.com/spt/510899e3-0f97-4b72-9e10-6841fb343464/sky-racket-offer-30e7f1bd.jpg"
+    },
+    {
+      "type": "DieselGameBoxTall",
+      "url": "https://cdn1.epicgames.com/spt/99344b86-9ed3-45ee-a712-645dfdc69a04/download-sky-racket-offer-fa9be0e.jpg"
+    }
+  ],
+  "asset_infos": {
+    "Windows": {
+      "appName": "dbc90aa36f124c63b3a804ea0ced6af9",
+      "namespace": "43c0da4f8c774c23a76a213fb8dfe59b",
+      "catalogItemId": "424d9c4cc908464cbfabec6f10430f85",
+      "buildVersion": "1.0.230.2021.08.16",
+      "labelName": "Live-Windows",
+      "assetId": "dbc90aa36f124c63b3a804ea0ced6af9"
+    }
+  },
+  "base_urls": [],
+  "raw_catalog_item_json": "{\"ageGatings\":{},\"applicationId\":\"\",\"categories\":[{\"path\":\"games\"},{\"path\":\"applications\"}],\"creationDate\":\"2021-06-28T15:36:37.390Z\",\"customAttributes\":{\"CanSkipKoreanIdVerification\":{\"type\":\"STRING\",\"value\":\"true\"},\"FolderName\":{\"type\":\"STRING\",\"value\":\"SkyRacket\"},\"productGeneration\":{\"type\":\"STRING\",\"value\":\"SPT\"}},\"description\":\"Sky Racket\",\"developer\":\"Double Dash Studios\",\"developerId\":\"o-84xx6qzw5df9a6vbtdrw3e2stctzzu\",\"endOfSupport\":false,\"entitlementName\":\"424d9c4cc908464cbfabec6f10430f85\",\"entitlementType\":\"EXECUTABLE\",\"eulaIds\":[],\"id\":\"424d9c4cc908464cbfabec6f10430f85\",\"itemType\":\"DURABLE\",\"keyImages\":[{\"alt\":\"Sky Racket Offer\",\"height\":1440,\"md5\":\"098f6bcd4621d373cade4e832627b4f6\",\"size\":1865184,\"type\":\"DieselGameBox\",\"uploadedDate\":\"2021-06-30T22:16:23.903Z\",\"url\":\"https://cdn1.epicgames.com/spt/510899e3-0f97-4b72-9e10-6841fb343464/sky-racket-offer-30e7f1bd.jpg\",\"width\":2560},{\"alt\":\"Download Sky Racket Offer\",\"height\":1600,\"md5\":\"098f6bcd4621d373cade4e832627b4f6\",\"size\":1110071,\"type\":\"DieselGameBoxTall\",\"uploadedDate\":\"2021-06-30T18:41:51.711Z\",\"url\":\"https://cdn1.epicgames.com/spt/99344b86-9ed3-45ee-a712-645dfdc69a04/download-sky-racket-offer-fa9be0e.jpg\",\"width\":1200}],\"lastModifiedDate\":\"2022-02-18T09:17:38.082Z\",\"mainGameItemList\":[],\"namespace\":\"43c0da4f8c774c23a76a213fb8dfe59b\",\"releaseInfo\":[{\"appId\":\"dbc90aa36f124c63b3a804ea0ced6af9\",\"id\":\"6cbca06c56c940de8e25b36b1970bd0e\",\"platform\":[\"Windows\"]}],\"requiresSecureAccount\":false,\"status\":\"ACTIVE\",\"title\":\"Sky Racket\",\"unsearchable\":false}",
+  "fetched_at": 1781303344
+}

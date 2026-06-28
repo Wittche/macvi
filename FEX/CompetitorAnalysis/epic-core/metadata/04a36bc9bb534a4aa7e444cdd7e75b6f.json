@@ -1,0 +1,46 @@
+{
+  "app_name": "04a36bc9bb534a4aa7e444cdd7e75b6f",
+  "namespace": "c2594740866d4be69d38fcf08ef0176d",
+  "catalog_item_id": "a9c6d2e3b62a4953aca02af6310cd006",
+  "title": "Football Manager 2021 Demo",
+  "description": "Football Manager 2021 Demo",
+  "categories": [
+    "public",
+    "games",
+    "applications"
+  ],
+  "developer": "SEGA of Europe",
+  "custom_attributes": {
+    "CanRunOffline": "true",
+    "CanSkipKoreanIdVerification": "true",
+    "FolderName": "FM21Demo",
+    "MonitorPresence": "true",
+    "OwnershipToken": "true",
+    "PresenceId": "c2594740866d4be69d38fcf08ef0176d",
+    "RequirementsJson": "[]",
+    "UseAccessControl": "false"
+  },
+  "key_images": [
+    {
+      "type": "DieselGameBox",
+      "url": "https://cdn1.epicgames.com/c2594740866d4be69d38fcf08ef0176d/item/EGS_FootballManager2021Demo_SportsInteractive_Demo_S1-2560x1440-21f4343c45a407dc4093b911ddc4d792.jpg"
+    },
+    {
+      "type": "DieselGameBoxTall",
+      "url": "https://cdn1.epicgames.com/c2594740866d4be69d38fcf08ef0176d/item/EGS_FootballManager2021Demo_SportsInteractive_Demo_S2-1200x1600-cec283ebf8ed01e535606201721115d5.jpg"
+    }
+  ],
+  "asset_infos": {
+    "Windows": {
+      "appName": "04a36bc9bb534a4aa7e444cdd7e75b6f",
+      "namespace": "c2594740866d4be69d38fcf08ef0176d",
+      "catalogItemId": "a9c6d2e3b62a4953aca02af6310cd006",
+      "buildVersion": "1529028-win",
+      "labelName": "Live-Windows",
+      "assetId": "04a36bc9bb534a4aa7e444cdd7e75b6f"
+    }
+  },
+  "base_urls": [],
+  "raw_catalog_item_json": "{\"ageGatings\":{},\"applicationId\":\"fghi4567UKBeGSyltb1mZTeHWMqRu9Zv\",\"categories\":[{\"path\":\"public\"},{\"path\":\"games\"},{\"path\":\"applications\"}],\"creationDate\":\"2020-10-19T14:47:54.564Z\",\"customAttributes\":{\"CanRunOffline\":{\"type\":\"STRING\",\"value\":\"true\"},\"CanSkipKoreanIdVerification\":{\"type\":\"STRING\",\"value\":\"true\"},\"FolderName\":{\"type\":\"STRING\",\"value\":\"FM21Demo\"},\"MonitorPresence\":{\"type\":\"STRING\",\"value\":\"true\"},\"OwnershipToken\":{\"type\":\"STRING\",\"value\":\"true\"},\"PresenceId\":{\"type\":\"STRING\",\"value\":\"c2594740866d4be69d38fcf08ef0176d\"},\"RequirementsJson\":{\"type\":\"STRING\",\"value\":\"[]\"},\"UseAccessControl\":{\"type\":\"STRING\",\"value\":\"false\"}},\"description\":\"Football Manager 2021 Demo\",\"developer\":\"SEGA of Europe\",\"developerId\":\"o-q3zwbk8kbbbgar9ql3x7d43rjj8bjl\",\"endOfSupport\":false,\"entitlementName\":\"a9c6d2e3b62a4953aca02af6310cd006\",\"entitlementType\":\"EXECUTABLE\",\"eulaIds\":[\"egstore\"],\"id\":\"a9c6d2e3b62a4953aca02af6310cd006\",\"itemType\":\"DURABLE\",\"keyImages\":[{\"height\":1440,\"md5\":\"21f4343c45a407dc4093b911ddc4d792\",\"size\":943795,\"type\":\"DieselGameBox\",\"uploadedDate\":\"2020-11-23T20:53:53.701Z\",\"url\":\"https://cdn1.epicgames.com/c2594740866d4be69d38fcf08ef0176d/item/EGS_FootballManager2021Demo_SportsInteractive_Demo_S1-2560x1440-21f4343c45a407dc4093b911ddc4d792.jpg\",\"width\":2560},{\"height\":1600,\"md5\":\"cec283ebf8ed01e535606201721115d5\",\"size\":681646,\"type\":\"DieselGameBoxTall\",\"uploadedDate\":\"2020-11-23T20:54:17.450Z\",\"url\":\"https://cdn1.epicgames.com/c2594740866d4be69d38fcf08ef0176d/item/EGS_FootballManager2021Demo_SportsInteractive_Demo_S2-1200x1600-cec283ebf8ed01e535606201721115d5.jpg\",\"width\":1200}],\"lastModifiedDate\":\"2020-11-23T21:49:14.545Z\",\"longDescription\":\"Football Manager 2021 Demo\",\"mainGameItemList\":[],\"namespace\":\"c2594740866d4be69d38fcf08ef0176d\",\"releaseInfo\":[{\"appId\":\"04a36bc9bb534a4aa7e444cdd7e75b6f\",\"dateAdded\":\"2020-05-04T00:00:00.000Z\",\"id\":\"6bf11d641d274d63b6dc5ddf1834b530\",\"platform\":[\"Windows\",\"Mac\"]}],\"status\":\"ACTIVE\",\"title\":\"Football Manager 2021 Demo\",\"unsearchable\":true}",
+  "fetched_at": 1781303319
+}

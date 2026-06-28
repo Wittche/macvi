@@ -1,0 +1,37 @@
+{
+  "app_name": "UE_5.4",
+  "namespace": "ue",
+  "catalog_item_id": "5e7c497460f64ae19e6c3aaef8b421cc",
+  "title": "Unreal Engine",
+  "description": "Unreal Engine",
+  "categories": [
+    "engines/ue5",
+    "engines"
+  ],
+  "developer": "Epic Games",
+  "custom_attributes": {
+    "AllowMultipleInstances": "true",
+    "CanSkipCabinedWarning": "true",
+    "NotarizedAndSigned": "true",
+    "UE_5.4:RequirementsJson": "{\"Requirements\": {\"Windows\": { \"MinMajorVersion\": 6, \"MinMinorVersion\": 1, \"MinServicePackVersion\": 1 },\"MacOS\": { \"MinMajorVersion\": 12, \"MinMinorVersion\": 5, \"MinRevision\": 0 }}} "
+  },
+  "key_images": [
+    {
+      "type": "DieselGameBoxTall",
+      "url": "https://cdn1.epicgames.com/item/ue/ue_tall_1200x1600-bde65bd99ba98e9bf0c9aed33e92ffd5"
+    }
+  ],
+  "asset_infos": {
+    "Windows": {
+      "appName": "UE_5.4",
+      "namespace": "ue",
+      "catalogItemId": "5e7c497460f64ae19e6c3aaef8b421cc",
+      "buildVersion": "5.4.4-35576357+++UE5+Release-5.4-Windows",
+      "labelName": "Live-Windows",
+      "assetId": "UE"
+    }
+  },
+  "base_urls": [],
+  "raw_catalog_item_json": "{\"ageGatings\":{},\"applicationId\":\"\",\"categories\":[{\"path\":\"engines/ue5\"},{\"path\":\"engines\"}],\"creationDate\":\"2024-01-25T23:49:03.834Z\",\"customAttributes\":{\"AllowMultipleInstances\":{\"type\":\"STRING\",\"value\":\"true\"},\"CanSkipCabinedWarning\":{\"type\":\"STRING\",\"value\":\"true\"},\"NotarizedAndSigned\":{\"type\":\"STRING\",\"value\":\"true\"},\"UE_5.4:RequirementsJson\":{\"type\":\"STRING\",\"value\":\"{\\\"Requirements\\\": {\\\"Windows\\\": { \\\"MinMajorVersion\\\": 6, \\\"MinMinorVersion\\\": 1, \\\"MinServicePackVersion\\\": 1 },\\\"MacOS\\\": { \\\"MinMajorVersion\\\": 12, \\\"MinMinorVersion\\\": 5, \\\"MinRevision\\\": 0 }}} \"}},\"description\":\"Unreal Engine\",\"developer\":\"Epic Games\",\"developerId\":\"o-aa83a0a9bc45e98c80c1b1c9d92e9e\",\"endOfSupport\":false,\"entitlementName\":\"UE5_Release-5.4\",\"entitlementType\":\"EXECUTABLE\",\"eulaIds\":[\"unreal_engine2\"],\"id\":\"5e7c497460f64ae19e6c3aaef8b421cc\",\"itemType\":\"DURABLE\",\"keyImages\":[{\"height\":1600,\"md5\":\"bde65bd99ba98e9bf0c9aed33e92ffd5\",\"size\":455570,\"type\":\"DieselGameBoxTall\",\"uploadedDate\":\"2024-10-18T16:12:25.211Z\",\"url\":\"https://cdn1.epicgames.com/item/ue/ue_tall_1200x1600-bde65bd99ba98e9bf0c9aed33e92ffd5\",\"width\":1200}],\"lastModifiedDate\":\"2024-10-18T16:12:28.643Z\",\"longDescription\":\"\",\"mainGameItemList\":[],\"namespace\":\"ue\",\"releaseInfo\":[{\"appId\":\"UE_5.4\",\"compatibleApps\":[],\"dateAdded\":\"2022-04-04T14:17:00.000Z\",\"id\":\"eaa3054def4849c185df6c9ceeff22e4\",\"platform\":[\"Windows\",\"Mac\"]}],\"requiresSecureAccount\":false,\"status\":\"ACTIVE\",\"title\":\"Unreal Engine\",\"unsearchable\":false}",
+  "fetched_at": 1781303337
+}

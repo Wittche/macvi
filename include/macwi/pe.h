@@ -164,6 +164,47 @@ typedef struct __attribute__((packed)) {
 } PE_OPTIONAL_HEADER_32;
 
 /**
+ * PE32+ Optional Header — contains critical fields for loading a 64-bit image.
+ */
+typedef struct __attribute__((packed)) {
+    /* Standard fields */
+    WORD  Magic;                    /**< PE32PLUS_MAGIC (0x020B)                   */
+    BYTE  MajorLinkerVersion;
+    BYTE  MinorLinkerVersion;
+    DWORD SizeOfCode;
+    DWORD SizeOfInitializedData;
+    DWORD SizeOfUninitializedData;
+    DWORD AddressOfEntryPoint;      /**< RVA of the entry point                    */
+    DWORD BaseOfCode;
+
+    /* NT-specific fields */
+    uint64_t ImageBase;             /**< Preferred load address                    */
+    DWORD SectionAlignment;         /**< Alignment of sections in memory (bytes)   */
+    DWORD FileAlignment;            /**< Alignment of sections on disk (bytes)     */
+    WORD  MajorOperatingSystemVersion;
+    WORD  MinorOperatingSystemVersion;
+    WORD  MajorImageVersion;
+    WORD  MinorImageVersion;
+    WORD  MajorSubsystemVersion;
+    WORD  MinorSubsystemVersion;
+    DWORD Win32VersionValue;
+    DWORD SizeOfImage;              /**< Total size of the image in memory         */
+    DWORD SizeOfHeaders;            /**< Size of all headers + section table       */
+    DWORD CheckSum;
+    WORD  Subsystem;                /**< Required subsystem (GUI, console, …)      */
+    WORD  DllCharacteristics;
+    uint64_t SizeOfStackReserve;
+    uint64_t SizeOfStackCommit;
+    uint64_t SizeOfHeapReserve;
+    uint64_t SizeOfHeapCommit;
+    DWORD LoaderFlags;
+    DWORD NumberOfRvaAndSizes;      /**< Number of data directory entries           */
+
+    /** Data directory array — up to PE_MAX_DATA_DIRECTORIES entries. */
+    PE_DATA_DIRECTORY DataDirectory[PE_MAX_DATA_DIRECTORIES];
+} PE_OPTIONAL_HEADER_64;
+
+/**
  * PE Section Header — describes one section (.text, .data, .rdata, …).
  */
 typedef struct __attribute__((packed)) {
@@ -188,6 +229,12 @@ typedef struct __attribute__((packed)) {
     PE_FILE_HEADER      FileHeader;
     PE_OPTIONAL_HEADER_32 OptionalHeader;
 } IMAGE_NT_HEADERS_32;
+
+typedef struct __attribute__((packed)) {
+    DWORD               Signature;
+    PE_FILE_HEADER      FileHeader;
+    PE_OPTIONAL_HEADER_64 OptionalHeader;
+} IMAGE_NT_HEADERS_64;
 
 /**
  * PE Import Descriptor — one entry per imported DLL in the import table.
@@ -232,13 +279,22 @@ typedef struct {
     uint8_t*              mapped_base;     /**< Base of the memory-mapped image        */
     size_t                mapped_size;     /**< Total size of the mapped region         */
 
+    bool                  is_64bit;
     const DOS_HEADER*           dos_header;      /**< Pointer into mapped_base          */
-    const IMAGE_NT_HEADERS_32*  nt_headers;      /**< Pointer into mapped_base          */
+    const PE_FILE_HEADER*       file_header;
+    union {
+        const IMAGE_NT_HEADERS_32*  nt_headers_32;
+        const IMAGE_NT_HEADERS_64*  nt_headers_64;
+    };
+    union {
+        const PE_OPTIONAL_HEADER_32* opt_32;
+        const PE_OPTIONAL_HEADER_64* opt_64;
+    } optional_header;
     const PE_SECTION_HEADER*    section_headers; /**< Array of section headers           */
     uint16_t                    num_sections;    /**< Number of sections                  */
 
-    uint32_t              entry_point;     /**< Absolute VA of the entry point          */
-    uint32_t              image_base;      /**< Preferred image base from opt header    */
+    uint64_t              entry_point;     /**< Absolute VA of the entry point          */
+    uint64_t              image_base;      /**< Preferred image base from opt header    */
     uint32_t              size_of_image;   /**< Total virtual size of the image         */
 
     bool                  is_loaded;       /**< True if sections are memory-mapped      */
@@ -277,18 +333,10 @@ macwi_status_t macwi_pe_parse_headers(const uint8_t* data, size_t size,
  * Resolve the imports of a loaded PE image by patching the IAT.
  *
  * @param image  A PE_IMAGE that has been loaded via macwi_pe_load_file().
+ * @param ctx    The emulator context used to generate trampolines.
  * @return MACWI_SUCCESS if all imports were resolved.
  */
-macwi_status_t macwi_pe_resolve_imports(PE_IMAGE* image);
-
-/**
- * Map a loaded PE image into an emulation context.
- *
- * @param image The loaded PE image.
- * @param emu_ctx The emulation context to map into.
- * @return MACWI_SUCCESS on success.
- */
-macwi_status_t macwi_pe_map_to_emu(const PE_IMAGE* image, struct EMU_CONTEXT* emu_ctx);
+macwi_status_t macwi_pe_resolve_imports(PE_IMAGE* image, struct EMU_CONTEXT* ctx);
 
 /**
  * Return the absolute virtual address of the image's entry point.
@@ -296,7 +344,7 @@ macwi_status_t macwi_pe_map_to_emu(const PE_IMAGE* image, struct EMU_CONTEXT* em
  * @param image  A successfully parsed PE_IMAGE.
  * @return Entry point VA, or 0 if the image has no entry point.
  */
-uint32_t macwi_pe_get_entry_point(const PE_IMAGE* image);
+uint64_t macwi_pe_get_entry_point(const PE_IMAGE* image);
 
 /**
  * Release all resources held by a PE_IMAGE (memory maps, allocations).

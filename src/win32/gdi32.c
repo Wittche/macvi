@@ -19,63 +19,68 @@
  * ============================================================================ */
 
 static void win32_GetDeviceCaps(EMU_CONTEXT* ctx) {
-    uint32_t hdc, nIndex;
-    macwi_thunk_read_param_32(ctx, 0, &hdc);
-    macwi_thunk_read_param_32(ctx, 1, &nIndex);
+    uint64_t hdc, nIndex;
+    macwi_thunk_read_param_64(ctx, 0, &hdc);
+    macwi_thunk_read_param_64(ctx, 1, &nIndex);
     
-    GDI32_LOG("GetDeviceCaps(hdc=0x%08X, index=%u)", hdc, nIndex);
+    GDI32_LOG("GetDeviceCaps(hdc=0x%llX, index=%u)", hdc, (uint32_t)nIndex);
     // 8 = BITSPIXEL, 12 = HORZRES, 10 = VERTRES
-    uint32_t result = 0;
+    uint64_t result = 0;
     if (nIndex == 8) result = 32; // 32 bits per pixel
     else if (nIndex == 12) result = 800; // HORZRES
     else if (nIndex == 10) result = 600; // VERTRES
-    macwi_emu_reg_write(ctx, 0, result);
+    macwi_emu_reg_write_64(ctx, 0, result);
+    macwi_thunk_stdcall_return(ctx, 2);
 }
 
 static void win32_CreateCompatibleDC(EMU_CONTEXT* ctx) {
-    uint32_t hdc;
-    macwi_thunk_read_param_32(ctx, 0, &hdc);
+    uint64_t hdc;
+    macwi_thunk_read_param_64(ctx, 0, &hdc);
     
-    GDI32_LOG("CreateCompatibleDC(0x%08X)", hdc);
-    macwi_emu_reg_write(ctx, 0, 0x2001); // Fake Memory DC
+    GDI32_LOG("CreateCompatibleDC(0x%llX)", hdc);
+    macwi_emu_reg_write_64(ctx, 0, 0x2001); // Fake Memory DC
+    macwi_thunk_stdcall_return(ctx, 1);
 }
 
 static void win32_CreateDIBSection(EMU_CONTEXT* ctx) {
-    uint32_t hdc, pbmi, usage, ppvBits, hSection, offset;
-    macwi_thunk_read_param_32(ctx, 0, &hdc);
-    macwi_thunk_read_param_32(ctx, 1, &pbmi);
-    macwi_thunk_read_param_32(ctx, 2, &usage);
-    macwi_thunk_read_param_32(ctx, 3, &ppvBits);
-    macwi_thunk_read_param_32(ctx, 4, &hSection);
-    macwi_thunk_read_param_32(ctx, 5, &offset);
+    uint64_t hdc, pbmi, usage, ppvBits, hSection, offset;
+    macwi_thunk_read_param_64(ctx, 0, &hdc);
+    macwi_thunk_read_param_64(ctx, 1, &pbmi);
+    macwi_thunk_read_param_64(ctx, 2, &usage);
+    macwi_thunk_read_param_64(ctx, 3, &ppvBits);
+    macwi_thunk_read_param_64(ctx, 4, &hSection);
+    macwi_thunk_read_param_64(ctx, 5, &offset);
 
-    GDI32_LOG("CreateDIBSection(hdc=0x%08X, ...)", hdc);
-    macwi_emu_reg_write(ctx, 0, 0x2002); // Fake Bitmap Handle
+    GDI32_LOG("CreateDIBSection(hdc=0x%llX, ...)", hdc);
+    macwi_emu_reg_write_64(ctx, 0, 0x2002); // Fake Bitmap Handle
+    macwi_thunk_stdcall_return(ctx, 6);
 }
 
 static void win32_SelectObject(EMU_CONTEXT* ctx) {
-    uint32_t hdc, hgdiobj;
-    macwi_thunk_read_param_32(ctx, 0, &hdc);
-    macwi_thunk_read_param_32(ctx, 1, &hgdiobj);
+    uint64_t hdc, hgdiobj;
+    macwi_thunk_read_param_64(ctx, 0, &hdc);
+    macwi_thunk_read_param_64(ctx, 1, &hgdiobj);
     
-    GDI32_LOG("SelectObject(hdc=0x%08X, obj=0x%08X)", hdc, hgdiobj);
-    macwi_emu_reg_write(ctx, 0, 0x2003); // Fake Old Object Handle
+    GDI32_LOG("SelectObject(hdc=0x%llX, obj=0x%llX)", hdc, hgdiobj);
+    macwi_emu_reg_write_64(ctx, 0, 0x2003); // Fake Old Object Handle
+    macwi_thunk_stdcall_return(ctx, 2);
 }
 
 static void win32_BitBlt(EMU_CONTEXT* ctx) {
-    uint32_t hdc, x, y, cx, cy, hdcSrc, x1, y1, rop;
-    macwi_thunk_read_param_32(ctx, 0, &hdc);
-    macwi_thunk_read_param_32(ctx, 1, &x);
-    macwi_thunk_read_param_32(ctx, 2, &y);
-    macwi_thunk_read_param_32(ctx, 3, &cx);
-    macwi_thunk_read_param_32(ctx, 4, &cy);
-    macwi_thunk_read_param_32(ctx, 5, &hdcSrc);
-    macwi_thunk_read_param_32(ctx, 6, &x1);
-    macwi_thunk_read_param_32(ctx, 7, &y1);
-    macwi_thunk_read_param_32(ctx, 8, &rop);
+    uint64_t hdc, x, y, cx, cy, hdcSrc, x1, y1, rop;
+    macwi_thunk_read_param_64(ctx, 0, &hdc);
+    macwi_thunk_read_param_64(ctx, 1, &x);
+    macwi_thunk_read_param_64(ctx, 2, &y);
+    macwi_thunk_read_param_64(ctx, 3, &cx);
+    macwi_thunk_read_param_64(ctx, 4, &cy);
+    macwi_thunk_read_param_64(ctx, 5, &hdcSrc);
+    macwi_thunk_read_param_64(ctx, 6, &x1);
+    macwi_thunk_read_param_64(ctx, 7, &y1);
+    macwi_thunk_read_param_64(ctx, 8, &rop);
 
-    GDI32_LOG("BitBlt(dst=0x%08X, src=0x%08X)", hdc, hdcSrc);
-    macwi_emu_reg_write(ctx, 0, 1); // TRUE
+    GDI32_LOG("BitBlt(dst=0x%llX, src=0x%llX)", hdc, hdcSrc);
+    macwi_emu_reg_write_64(ctx, 0, 1); // TRUE
+    macwi_thunk_stdcall_return(ctx, 9);
 }
 
 /* ============================================================================

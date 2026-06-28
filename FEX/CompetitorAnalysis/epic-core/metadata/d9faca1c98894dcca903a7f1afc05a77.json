@@ -1,0 +1,38 @@
+{
+  "app_name": "d9faca1c98894dcca903a7f1afc05a77",
+  "namespace": "b002ccbe10f946f082a63bf85fa30558",
+  "catalog_item_id": "952493e4db7748819c20e780bc269202",
+  "title": "The Ouroboros King",
+  "description": "The Ouroboros King",
+  "categories": [
+    "games",
+    "applications"
+  ],
+  "developer": "Plug In Digital SAS",
+  "custom_attributes": {
+    "FolderName": "TheOuroborosKing"
+  },
+  "key_images": [
+    {
+      "type": "DieselGameBox",
+      "url": "https://cdn1.epicgames.com/spt-assets/33630d7105014582a478094e89953f49/the-ouroboros-king-yv1zl.jpg"
+    },
+    {
+      "type": "DieselGameBoxTall",
+      "url": "https://cdn1.epicgames.com/spt-assets/33630d7105014582a478094e89953f49/the-ouroboros-king-zkg6a.jpg"
+    }
+  ],
+  "asset_infos": {
+    "Windows": {
+      "appName": "d9faca1c98894dcca903a7f1afc05a77",
+      "namespace": "b002ccbe10f946f082a63bf85fa30558",
+      "catalogItemId": "952493e4db7748819c20e780bc269202",
+      "buildVersion": "v0.12",
+      "labelName": "Live-Windows",
+      "assetId": "d9faca1c98894dcca903a7f1afc05a77"
+    }
+  },
+  "base_urls": [],
+  "raw_catalog_item_json": "{\"applicationId\":\"fghi45674u5zHIF8kZMZcBpvrzOSodiR\",\"categories\":[{\"path\":\"games\"},{\"path\":\"applications\"}],\"creationDate\":\"2026-02-06T14:05:24.055Z\",\"customAttributes\":{\"FolderName\":{\"type\":\"STRING\",\"value\":\"TheOuroborosKing\"}},\"description\":\"The Ouroboros King\",\"developer\":\"Plug In Digital SAS\",\"developerId\":\"o-yw5ga5z854qs64ld82qey3dz2d7z32\",\"endOfSupport\":false,\"entitlementName\":\"952493e4db7748819c20e780bc269202\",\"entitlementType\":\"EXECUTABLE\",\"id\":\"952493e4db7748819c20e780bc269202\",\"itemType\":\"DURABLE\",\"keyImages\":[{\"alt\":\"The Ouroboros King Offer\",\"height\":1440,\"md5\":\"aab4a26e208c90deffcfd831b3f8dc84\",\"size\":539261,\"type\":\"DieselGameBox\",\"uploadedDate\":\"2026-02-25T16:48:54.745Z\",\"url\":\"https://cdn1.epicgames.com/spt-assets/33630d7105014582a478094e89953f49/the-ouroboros-king-yv1zl.jpg\",\"width\":2560},{\"alt\":\"Download The Ouroboros King Offer\",\"height\":1600,\"md5\":\"99af7168e9bcd306fb47f1e6f5e084bd\",\"size\":306082,\"type\":\"DieselGameBoxTall\",\"uploadedDate\":\"2026-02-25T16:48:54.415Z\",\"url\":\"https://cdn1.epicgames.com/spt-assets/33630d7105014582a478094e89953f49/the-ouroboros-king-zkg6a.jpg\",\"width\":1200}],\"lastModifiedDate\":\"2026-04-23T10:00:16.183Z\",\"mainGameItemList\":[],\"namespace\":\"b002ccbe10f946f082a63bf85fa30558\",\"releaseInfo\":[{\"appId\":\"d9faca1c98894dcca903a7f1afc05a77\",\"id\":\"ad6ea201-c150-41b7-b1f8-087c3817ac12\",\"platform\":[\"Mac\",\"Windows\"]}],\"requiresSecureAccount\":false,\"status\":\"ACTIVE\",\"title\":\"The Ouroboros King\",\"unsearchable\":false}",
+  "fetched_at": 1781389319
+}

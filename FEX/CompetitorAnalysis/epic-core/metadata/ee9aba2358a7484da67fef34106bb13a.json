@@ -1,0 +1,42 @@
+{
+  "app_name": "ee9aba2358a7484da67fef34106bb13a",
+  "namespace": "bc51d32ca88b41bda1e50f5876c0b16e",
+  "catalog_item_id": "2676eaa03e664f11a93af7911bbc988e",
+  "title": "The Stone of Madness",
+  "description": "The Stone of Madness is a real-time tactical stealth game set in an 18th-century Spanish Monastery. Five prisoners pool their skills and resources to face their phobias, stave off insanity, uncover the mysteries of the Monastery, and find a way to escape.",
+  "categories": [
+    "games",
+    "applications"
+  ],
+  "developer": "Tripwire Interactive",
+  "custom_attributes": {
+    "CloudSaveFolder": "{AppData}/../LocalLow/TGK/TSoM_EOS/saves/default/",
+    "CloudSaveFolder_MAC": "{AppData}/unity.TGK.TSoM_EOS/saves/default/",
+    "FolderName": "TSoM"
+  },
+  "key_images": [
+    {
+      "type": "DieselGameBox",
+      "url": "https://cdn1.epicgames.com/spt-assets/8de621e8d91b473f892472024035dc22/the-stone-of-madness-11a59.jpg"
+    },
+    {
+      "type": "DieselGameBoxTall",
+      "url": "https://cdn1.epicgames.com/spt-assets/8de621e8d91b473f892472024035dc22/the-stone-of-madness-680ls.jpg"
+    }
+  ],
+  "cloud_save_folder": "{AppData}/../LocalLow/TGK/TSoM_EOS/saves/default/",
+  "cloud_save_folder_mac": "{AppData}/unity.TGK.TSoM_EOS/saves/default/",
+  "asset_infos": {
+    "Windows": {
+      "appName": "ee9aba2358a7484da67fef34106bb13a",
+      "namespace": "bc51d32ca88b41bda1e50f5876c0b16e",
+      "catalogItemId": "2676eaa03e664f11a93af7911bbc988e",
+      "buildVersion": "UNITY_PATCHED",
+      "labelName": "Live-Windows",
+      "assetId": "ee9aba2358a7484da67fef34106bb13a"
+    }
+  },
+  "base_urls": [],
+  "raw_catalog_item_json": "{\"applicationId\":\"fghi4567viqfr2imWnXGTLJZsxHoPtvE\",\"categories\":[{\"path\":\"games\"},{\"path\":\"applications\"}],\"creationDate\":\"2023-08-07T18:51:50.545Z\",\"customAttributes\":{\"CloudSaveFolder\":{\"type\":\"STRING\",\"value\":\"{AppData}/../LocalLow/TGK/TSoM_EOS/saves/default/\"},\"CloudSaveFolder_MAC\":{\"type\":\"STRING\",\"value\":\"{AppData}/unity.TGK.TSoM_EOS/saves/default/\"},\"FolderName\":{\"type\":\"STRING\",\"value\":\"TSoM\"}},\"description\":\"The Stone of Madness is a real-time tactical stealth game set in an 18th-century Spanish Monastery. Five prisoners pool their skills and resources to face their phobias, stave off insanity, uncover the mysteries of the Monastery, and find a way to escape.\",\"developer\":\"Tripwire Interactive\",\"developerId\":\"o-2baznhy8tfh7fmyb55ul656v7ggt7r\",\"endOfSupport\":false,\"entitlementName\":\"2676eaa03e664f11a93af7911bbc988e\",\"entitlementType\":\"EXECUTABLE\",\"id\":\"2676eaa03e664f11a93af7911bbc988e\",\"itemType\":\"DURABLE\",\"keyImages\":[{\"alt\":\"The Stone of Madness Offer\",\"height\":1440,\"md5\":\"7416b235c6c6dd41fbd49fd114a353da\",\"size\":908459,\"type\":\"DieselGameBox\",\"uploadedDate\":\"2024-08-07T19:38:08.952Z\",\"url\":\"https://cdn1.epicgames.com/spt-assets/8de621e8d91b473f892472024035dc22/the-stone-of-madness-11a59.jpg\",\"width\":2560},{\"alt\":\"Download The Stone of Madness Offer\",\"height\":1600,\"md5\":\"046fec03f42e60ed51dfcfeec06d0615\",\"size\":573526,\"type\":\"DieselGameBoxTall\",\"uploadedDate\":\"2024-08-07T19:38:14.172Z\",\"url\":\"https://cdn1.epicgames.com/spt-assets/8de621e8d91b473f892472024035dc22/the-stone-of-madness-680ls.jpg\",\"width\":1200}],\"lastModifiedDate\":\"2026-04-20T22:46:59.430Z\",\"mainGameItemList\":[],\"namespace\":\"bc51d32ca88b41bda1e50f5876c0b16e\",\"releaseInfo\":[{\"appId\":\"ee9aba2358a7484da67fef34106bb13a\",\"id\":\"e6584828750d42a5b3ec905d8212c3ed\",\"platform\":[\"Windows\"]}],\"requiresSecureAccount\":false,\"status\":\"ACTIVE\",\"title\":\"The Stone of Madness\",\"unsearchable\":false}",
+  "fetched_at": 1781303345
+}

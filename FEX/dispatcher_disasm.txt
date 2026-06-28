@@ -1,0 +1,761 @@
+(lldb) target create "./build/Bin/FEXMacOS"
+Current executable set to '/Users/firataktug/Desktop/FEX/build/Bin/FEXMacOS' (arm64).
+(lldb) settings set -- target.run-args  "./wine11.9/wine-install/lib/wine/x86_64-windows/winecfg.exe"
+(lldb) run
+FEXCore::Config::Initialize: Starting
+FEXCore::Config::Initialize: Layer added
+FEXCore::Config::Initialize: Meta assigned: 0x110000080
+[Dispatcher] Constructor: CTX=0x100e40ee0, Buffer=0x100838000, Size=0x4000
+[FEXMacOS] Native Bridge Mode: Loading ./wine11.9/wine-install/lib/wine/x86_64-windows/winecfg.exe
+[MacOSEmulation] Loading Mach-O binary: ./wine11.9/wine-install/lib/wine/x86_64-windows/winecfg.exe
+[FEXMacOS] Calling PELoader::Load for ./wine11.9/wine-install/lib/wine/x86_64-windows/winecfg.exe...
+[PELoader] Mapped image at 0x140000000 (Preferred: 0x140000000), Entry: 0x140012230
+[PELoader] Import Directory: VA=0x2e000, Size=0x2068
+[PELoader] Resolving imports for advapi32.dll
+[PELoader]   - advapi32.dll!RegCloseKey -> OK
+[PELoader] Resolved advapi32.dll!RegCloseKey -> 0x100848000
+[PELoader]   - advapi32.dll!RegCreateKeyExW -> OK
+[PELoader] Resolved advapi32.dll!RegCreateKeyExW -> 0x1008cc000
+[PELoader]   - advapi32.dll!RegCreateKeyW -> STUB
+[PELoader] Resolved advapi32.dll!RegCreateKeyW -> 0x1008d0000
+[PELoader]   - advapi32.dll!RegDeleteKeyExW -> STUB
+[PELoader] Resolved advapi32.dll!RegDeleteKeyExW -> 0x1008d4000
+[PELoader]   - advapi32.dll!RegDeleteKeyW -> STUB
+[PELoader] Resolved advapi32.dll!RegDeleteKeyW -> 0x1008d8000
+[PELoader]   - advapi32.dll!RegDeleteTreeW -> STUB
+[PELoader] Resolved advapi32.dll!RegDeleteTreeW -> 0x1008dc000
+[PELoader]   - advapi32.dll!RegDeleteValueW -> STUB
+[PELoader] Resolved advapi32.dll!RegDeleteValueW -> 0x1008e0000
+[PELoader]   - advapi32.dll!RegEnumKeyExW -> STUB
+[PELoader] Resolved advapi32.dll!RegEnumKeyExW -> 0x1008e4000
+[PELoader]   - advapi32.dll!RegEnumValueW -> STUB
+[PELoader] Resolved advapi32.dll!RegEnumValueW -> 0x1008e8000
+[PELoader]   - advapi32.dll!RegOpenKeyExW -> OK
+[PELoader] Resolved advapi32.dll!RegOpenKeyExW -> 0x1008ec000
+[PELoader]   - advapi32.dll!RegOpenKeyW -> OK
+[PELoader] Resolved advapi32.dll!RegOpenKeyW -> 0x1008f0000
+[PELoader]   - advapi32.dll!RegQueryValueExW -> OK
+[PELoader] Resolved advapi32.dll!RegQueryValueExW -> 0x1008f4000
+[PELoader]   - advapi32.dll!RegSetValueExW -> STUB
+[PELoader] Resolved advapi32.dll!RegSetValueExW -> 0x1008f8000
+[PELoader] Finished resolving imports for advapi32.dll
+[PELoader] Resolving imports for comctl32.dll
+[PELoader]   - comctl32.dll!InitCommonControls -> OK
+[PELoader] Resolved comctl32.dll!InitCommonControls -> 0x1008fc000
+[PELoader]   - comctl32.dll!#320 -> STUB
+[PELoader] Resolved comctl32.dll!#320 -> 0x100900000
+[PELoader]   - comctl32.dll!#323 -> STUB
+[PELoader] Resolved comctl32.dll!#323 -> 0x100904000
+[PELoader]   - comctl32.dll!#324 -> STUB
+[PELoader] Resolved comctl32.dll!#324 -> 0x100908000
+[PELoader]   - comctl32.dll!#388 -> STUB
+[PELoader] Resolved comctl32.dll!#388 -> 0x10090c000
+[PELoader]   - comctl32.dll!PropertySheetW -> STUB
+[PELoader] Resolved comctl32.dll!PropertySheetW -> 0x100910000
+[PELoader] Finished resolving imports for comctl32.dll
+[PELoader] Resolving imports for comdlg32.dll
+[PELoader]   - comdlg32.dll!ChooseColorW -> STUB
+[PELoader] Resolved comdlg32.dll!ChooseColorW -> 0x100914000
+[PELoader]   - comdlg32.dll!ChooseFontW -> STUB
+[PELoader] Resolved comdlg32.dll!ChooseFontW -> 0x100afc000
+[PELoader]   - comdlg32.dll!GetOpenFileNameW -> OK
+[PELoader] Resolved comdlg32.dll!GetOpenFileNameW -> 0x100b00000
+[PELoader] Finished resolving imports for comdlg32.dll
+[PELoader] Resolving imports for gdi32.dll
+[PELoader]   - gdi32.dll!CreateFontIndirectW -> STUB
+[PELoader] Resolved gdi32.dll!CreateFontIndirectW -> 0x100b04000
+[PELoader]   - gdi32.dll!CreateFontW -> STUB
+[PELoader] Resolved gdi32.dll!CreateFontW -> 0x100b08000
+[PELoader]   - gdi32.dll!CreateSolidBrush -> STUB
+[PELoader] Resolved gdi32.dll!CreateSolidBrush -> 0x100b0c000
+[PELoader]   - gdi32.dll!DeleteObject -> STUB
+[PELoader] Resolved gdi32.dll!DeleteObject -> 0x100b10000
+[PELoader]   - gdi32.dll!GetDeviceCaps -> STUB
+[PELoader] Resolved gdi32.dll!GetDeviceCaps -> 0x100b14000
+[PELoader]   - gdi32.dll!GetObjectW -> STUB
+[PELoader] Resolved gdi32.dll!GetObjectW -> 0x100b18000
+[PELoader]   - gdi32.dll!SetBkColor -> STUB
+[PELoader] Resolved gdi32.dll!SetBkColor -> 0x100b1c000
+[PELoader]   - gdi32.dll!SetTextColor -> STUB
+[PELoader] Resolved gdi32.dll!SetTextColor -> 0x100b20000
+[PELoader] Finished resolving imports for gdi32.dll
+[PELoader] Resolving imports for kernel32.dll
+[PELoader]   - kernel32.dll!CloseHandle -> OK
+[PELoader] Resolved kernel32.dll!CloseHandle -> 0x100b24000
+[PELoader]   - kernel32.dll!CreateFileW -> OK
+[PELoader] Resolved kernel32.dll!CreateFileW -> 0x100b28000
+[PELoader]   - kernel32.dll!CreateProcessW -> STUB
+[PELoader] Resolved kernel32.dll!CreateProcessW -> 0x100b2c000
+[PELoader]   - kernel32.dll!DeviceIoControl -> STUB
+[PELoader] Resolved kernel32.dll!DeviceIoControl -> 0x100b30000
+[PELoader]   - kernel32.dll!ExitProcess -> OK
+[PELoader] Resolved kernel32.dll!ExitProcess -> 0x100b34000
+[PELoader]   - kernel32.dll!FindClose -> STUB
+[PELoader] Resolved kernel32.dll!FindClose -> 0x1252b0000
+[PELoader]   - kernel32.dll!FindFirstFileW -> STUB
+[PELoader] Resolved kernel32.dll!FindFirstFileW -> 0x1252b4000
+[PELoader]   - kernel32.dll!FindNextFileW -> STUB
+[PELoader] Resolved kernel32.dll!FindNextFileW -> 0x1252b8000
+[PELoader]   - kernel32.dll!FormatMessageA -> STUB
+[PELoader] Resolved kernel32.dll!FormatMessageA -> 0x1252bc000
+[PELoader]   - kernel32.dll!GetCommandLineW -> OK
+[PELoader] Resolved kernel32.dll!GetCommandLineW -> 0x1252c0000
+[PELoader]   - kernel32.dll!GetEnvironmentVariableW -> STUB
+[PELoader] Resolved kernel32.dll!GetEnvironmentVariableW -> 0x1252c4000
+[PELoader]   - kernel32.dll!GetExitCodeProcess -> STUB
+[PELoader] Resolved kernel32.dll!GetExitCodeProcess -> 0x1252c8000
+[PELoader]   - kernel32.dll!GetFileAttributesW -> STUB
+[PELoader] Resolved kernel32.dll!GetFileAttributesW -> 0x1252cc000
+[PELoader]   - kernel32.dll!GetModuleHandleW -> OK
+[PELoader] Resolved kernel32.dll!GetModuleHandleW -> 0x1252d0000
+[PELoader]   - kernel32.dll!GetPrivateProfileStringW -> STUB
+[PELoader] Resolved kernel32.dll!GetPrivateProfileStringW -> 0x1252d4000
+[PELoader]   - kernel32.dll!GetProcAddress -> OK
+[PELoader] Resolved kernel32.dll!GetProcAddress -> 0x1252d8000
+[PELoader]   - kernel32.dll!GetStartupInfoW -> STUB
+[PELoader] Resolved kernel32.dll!GetStartupInfoW -> 0x1252dc000
+[PELoader]   - kernel32.dll!GetTickCount -> STUB
+[PELoader] Resolved kernel32.dll!GetTickCount -> 0x1252e0000
+[PELoader]   - kernel32.dll!GetVolumeInformationW -> STUB
+[PELoader] Resolved kernel32.dll!GetVolumeInformationW -> 0x1252e4000
+[PELoader]   - kernel32.dll!GlobalGetAtomNameW -> STUB
+[PELoader] Resolved kernel32.dll!GlobalGetAtomNameW -> 0x1252e8000
+[PELoader]   - kernel32.dll!HeapAlloc -> OK
+[PELoader] Resolved kernel32.dll!HeapAlloc -> 0x1252ec000
+[PELoader]   - kernel32.dll!HeapReAlloc -> STUB
+[PELoader] Resolved kernel32.dll!HeapReAlloc -> 0x1252f0000
+[PELoader]   - kernel32.dll!IsBadStringPtrA -> STUB
+[PELoader] Resolved kernel32.dll!IsBadStringPtrA -> 0x1252f4000
+[PELoader]   - kernel32.dll!IsBadStringPtrW -> STUB
+[PELoader] Resolved kernel32.dll!IsBadStringPtrW -> 0x1252f8000
+[PELoader]   - kernel32.dll!IsWow64Process -> STUB
+[PELoader] Resolved kernel32.dll!IsWow64Process -> 0x1252fc000
+[PELoader]   - kernel32.dll!MulDiv -> STUB
+[PELoader] Resolved kernel32.dll!MulDiv -> 0x125300000
+[PELoader]   - kernel32.dll!MultiByteToWideChar -> OK
+[PELoader] Resolved kernel32.dll!MultiByteToWideChar -> 0x125304000
+[PELoader]   - kernel32.dll!SetVolumeLabelW -> STUB
+[PELoader] Resolved kernel32.dll!SetVolumeLabelW -> 0x125308000
+[PELoader]   - kernel32.dll!WaitForSingleObject -> STUB
+[PELoader] Resolved kernel32.dll!WaitForSingleObject -> 0x12530c000
+[PELoader]   - kernel32.dll!WideCharToMultiByte -> STUB
+[PELoader] Resolved kernel32.dll!WideCharToMultiByte -> 0x125310000
+[PELoader]   - kernel32.dll!Wow64DisableWow64FsRedirection -> STUB
+[PELoader] Resolved kernel32.dll!Wow64DisableWow64FsRedirection -> 0x125314000
+[PELoader]   - kernel32.dll!Wow64RevertWow64FsRedirection -> STUB
+[PELoader] Resolved kernel32.dll!Wow64RevertWow64FsRedirection -> 0x125318000
+[PELoader]   - kernel32.dll!WriteFile -> OK
+[PELoader] Resolved kernel32.dll!WriteFile -> 0x12531c000
+[PELoader]   - kernel32.dll!lstrcmpiW -> STUB
+[PELoader] Resolved kernel32.dll!lstrcmpiW -> 0x125320000
+[PELoader] Finished resolving imports for kernel32.dll
+[PELoader] Resolving imports for ntdll.dll
+[PELoader]   - ntdll.dll!RtlDosPathNameToNtPathName_U -> STUB
+[PELoader] Resolved ntdll.dll!RtlDosPathNameToNtPathName_U -> 0x125324000
+[PELoader]   - ntdll.dll!RtlFreeUnicodeString -> STUB
+[PELoader] Resolved ntdll.dll!RtlFreeUnicodeString -> 0x125328000
+[PELoader]   - ntdll.dll!_vsnprintf -> STUB
+[PELoader] Resolved ntdll.dll!_vsnprintf -> 0x12532c000
+[PELoader] Finished resolving imports for ntdll.dll
+[PELoader] Resolving imports for ole32.dll
+[PELoader]   - ole32.dll!CoCreateInstance -> STUB
+[PELoader] Resolved ole32.dll!CoCreateInstance -> 0x125330000
+[PELoader]   - ole32.dll!CoInitializeEx -> STUB
+[PELoader] Resolved ole32.dll!CoInitializeEx -> 0x125334000
+[PELoader]   - ole32.dll!CoTaskMemFree -> STUB
+[PELoader] Resolved ole32.dll!CoTaskMemFree -> 0x125338000
+[PELoader]   - ole32.dll!CoUninitialize -> STUB
+[PELoader] Resolved ole32.dll!CoUninitialize -> 0x12533c000
+[PELoader]   - ole32.dll!PropVariantClear -> STUB
+[PELoader] Resolved ole32.dll!PropVariantClear -> 0x125340000
+[PELoader] Finished resolving imports for ole32.dll
+[PELoader] Resolving imports for shell32.dll
+[PELoader]   - shell32.dll!#155 -> STUB
+[PELoader] Resolved shell32.dll!#155 -> 0x125344000
+[PELoader]   - shell32.dll!#195 -> STUB
+[PELoader] Resolved shell32.dll!#195 -> 0x125348000
+[PELoader]   - shell32.dll!SHBindToParent -> STUB
+[PELoader] Resolved shell32.dll!SHBindToParent -> 0x12534c000
+[PELoader]   - shell32.dll!SHBrowseForFolderW -> STUB
+[PELoader] Resolved shell32.dll!SHBrowseForFolderW -> 0x125350000
+[PELoader]   - shell32.dll!SHCreateDirectoryExW -> STUB
+[PELoader] Resolved shell32.dll!SHCreateDirectoryExW -> 0x125354000
+[PELoader]   - shell32.dll!SHFileOperationW -> STUB
+[PELoader] Resolved shell32.dll!SHFileOperationW -> 0x125358000
+[PELoader]   - shell32.dll!SHGetDesktopFolder -> STUB
+[PELoader] Resolved shell32.dll!SHGetDesktopFolder -> 0x12535c000
+[PELoader]   - shell32.dll!SHGetFolderLocation -> STUB
+[PELoader] Resolved shell32.dll!SHGetFolderLocation -> 0x125360000
+[PELoader]   - shell32.dll!SHGetFolderPathW -> STUB
+[PELoader] Resolved shell32.dll!SHGetFolderPathW -> 0x125364000
+[PELoader]   - shell32.dll!ShellExecuteW -> STUB
+[PELoader] Resolved shell32.dll!ShellExecuteW -> 0x125368000
+[PELoader] Finished resolving imports for shell32.dll
+[PELoader] Resolving imports for shlwapi.dll
+[PELoader]   - shlwapi.dll!PathFindExtensionW -> STUB
+[PELoader] Resolved shlwapi.dll!PathFindExtensionW -> 0x12536c000
+[PELoader]   - shlwapi.dll!PathFindFileNameW -> OK
+[PELoader] Resolved shlwapi.dll!PathFindFileNameW -> 0x125370000
+[PELoader]   - shlwapi.dll!PathRemoveExtensionW -> STUB
+[PELoader] Resolved shlwapi.dll!PathRemoveExtensionW -> 0x125374000
+[PELoader]   - shlwapi.dll!StrDupW -> STUB
+[PELoader] Resolved shlwapi.dll!StrDupW -> 0x125378000
+[PELoader]   - shlwapi.dll!StrRetToBufW -> STUB
+[PELoader] Resolved shlwapi.dll!StrRetToBufW -> 0x12537c000
+[PELoader]   - shlwapi.dll!StrRetToStrW -> STUB
+[PELoader] Resolved shlwapi.dll!StrRetToStrW -> 0x125380000
+[PELoader] Finished resolving imports for shlwapi.dll
+[PELoader] Resolving imports for ucrtbase.dll
+[PELoader]   - ucrtbase.dll!__acrt_iob_func -> STUB
+[PELoader] Resolved ucrtbase.dll!__acrt_iob_func -> 0x125384000
+[PELoader]   - ucrtbase.dll!__p___argc -> OK
+[PELoader] Resolved ucrtbase.dll!__p___argc -> 0x125388000
+[PELoader]   - ucrtbase.dll!__p___wargv -> STUB
+[PELoader] Resolved ucrtbase.dll!__p___wargv -> 0x12538c000
+[PELoader]   - ucrtbase.dll!__stdio_common_vsprintf -> STUB
+[PELoader] Resolved ucrtbase.dll!__stdio_common_vsprintf -> 0x125390000
+[PELoader]   - ucrtbase.dll!__stdio_common_vswprintf -> STUB
+[PELoader] Resolved ucrtbase.dll!__stdio_common_vswprintf -> 0x125394000
+[PELoader]   - ucrtbase.dll!__stdio_common_vswscanf -> STUB
+[PELoader] Resolved ucrtbase.dll!__stdio_common_vswscanf -> 0x125398000
+[PELoader]   - ucrtbase.dll!_assert -> STUB
+[PELoader] Resolved ucrtbase.dll!_assert -> 0x12539c000
+[PELoader]   - ucrtbase.dll!_configure_wide_argv -> STUB
+[PELoader] Resolved ucrtbase.dll!_configure_wide_argv -> 0x1253a0000
+[PELoader]   - ucrtbase.dll!_crt_atexit -> STUB
+[PELoader] Resolved ucrtbase.dll!_crt_atexit -> 0x1253a4000
+[PELoader]   - ucrtbase.dll!_get_initial_wide_environment -> STUB
+[PELoader] Resolved ucrtbase.dll!_get_initial_wide_environment -> 0x1253a8000
+[PELoader]   - ucrtbase.dll!_initialize_wide_environment -> STUB
+[PELoader] Resolved ucrtbase.dll!_initialize_wide_environment -> 0x1253ac000
+[PELoader]   - ucrtbase.dll!_initterm -> OK
+[PELoader] Resolved ucrtbase.dll!_initterm -> 0x1253b0000
+[PELoader]   - ucrtbase.dll!_initterm_e -> OK
+[PELoader] Resolved ucrtbase.dll!_initterm_e -> 0x1253b4000
+[PELoader]   - ucrtbase.dll!_set_app_type -> OK
+[PELoader] Resolved ucrtbase.dll!_set_app_type -> 0x1253b8000
+[PELoader]   - ucrtbase.dll!_strdup -> STUB
+[PELoader] Resolved ucrtbase.dll!_strdup -> 0x1253bc000
+[PELoader]   - ucrtbase.dll!_wcsdup -> STUB
+[PELoader] Resolved ucrtbase.dll!_wcsdup -> 0x1253c0000
+[PELoader]   - ucrtbase.dll!_wcsicmp -> STUB
+[PELoader] Resolved ucrtbase.dll!_wcsicmp -> 0x1253c4000
+[PELoader]   - ucrtbase.dll!_wcsnicmp -> STUB
+[PELoader] Resolved ucrtbase.dll!_wcsnicmp -> 0x1253c8000
+[PELoader]   - ucrtbase.dll!bsearch -> STUB
+[PELoader] Resolved ucrtbase.dll!bsearch -> 0x1253cc000
+[PELoader]   - ucrtbase.dll!exit -> STUB
+[PELoader] Resolved ucrtbase.dll!exit -> 0x1253d0000
+[PELoader]   - ucrtbase.dll!free -> STUB
+[PELoader] Resolved ucrtbase.dll!free -> 0x1253d4000
+[PELoader]   - ucrtbase.dll!fwrite -> STUB
+[PELoader] Resolved ucrtbase.dll!fwrite -> 0x1253d8000
+[PELoader]   - ucrtbase.dll!getenv -> STUB
+[PELoader] Resolved ucrtbase.dll!getenv -> 0x1253dc000
+[PELoader]   - ucrtbase.dll!malloc -> STUB
+[PELoader] Resolved ucrtbase.dll!malloc -> 0x1253e0000
+[PELoader]   - ucrtbase.dll!memcmp -> STUB
+[PELoader] Resolved ucrtbase.dll!memcmp -> 0x1253e4000
+[PELoader]   - ucrtbase.dll!memcpy -> OK
+[PELoader] Resolved ucrtbase.dll!memcpy -> 0x1253e8000
+[PELoader]   - ucrtbase.dll!memmove -> STUB
+[PELoader] Resolved ucrtbase.dll!memmove -> 0x1253ec000
+[PELoader]   - ucrtbase.dll!realloc -> STUB
+[PELoader] Resolved ucrtbase.dll!realloc -> 0x1253f0000
+[PELoader]   - ucrtbase.dll!setlocale -> STUB
+[PELoader] Resolved ucrtbase.dll!setlocale -> 0x1253f4000
+[PELoader]   - ucrtbase.dll!strchr -> STUB
+[PELoader] Resolved ucrtbase.dll!strchr -> 0x1253f8000
+[PELoader]   - ucrtbase.dll!strcmp -> STUB
+[PELoader] Resolved ucrtbase.dll!strcmp -> 0x1253fc000
+[PELoader]   - ucrtbase.dll!strcpy -> STUB
+[PELoader] Resolved ucrtbase.dll!strcpy -> 0x125400000
+[PELoader]   - ucrtbase.dll!strcspn -> STUB
+[PELoader] Resolved ucrtbase.dll!strcspn -> 0x125404000
+[PELoader]   - ucrtbase.dll!strlen -> OK
+[PELoader] Resolved ucrtbase.dll!strlen -> 0x125408000
+[PELoader]   - ucrtbase.dll!strrchr -> STUB
+[PELoader] Resolved ucrtbase.dll!strrchr -> 0x12540c000
+[PELoader]   - ucrtbase.dll!toupper -> STUB
+[PELoader] Resolved ucrtbase.dll!toupper -> 0x125410000
+[PELoader]   - ucrtbase.dll!wcscat -> STUB
+[PELoader] Resolved ucrtbase.dll!wcscat -> 0x125414000
+[PELoader]   - ucrtbase.dll!wcschr -> STUB
+[PELoader] Resolved ucrtbase.dll!wcschr -> 0x125418000
+[PELoader]   - ucrtbase.dll!wcscmp -> STUB
+[PELoader] Resolved ucrtbase.dll!wcscmp -> 0x12541c000
+[PELoader]   - ucrtbase.dll!wcscpy -> STUB
+[PELoader] Resolved ucrtbase.dll!wcscpy -> 0x125420000
+[PELoader]   - ucrtbase.dll!wcslen -> STUB
+[PELoader] Resolved ucrtbase.dll!wcslen -> 0x125424000
+[PELoader]   - ucrtbase.dll!wcsncmp -> STUB
+[PELoader] Resolved ucrtbase.dll!wcsncmp -> 0x125428000
+[PELoader]   - ucrtbase.dll!wcsrchr -> STUB
+[PELoader] Resolved ucrtbase.dll!wcsrchr -> 0x12542c000
+[PELoader]   - ucrtbase.dll!wcstol -> STUB
+[PELoader] Resolved ucrtbase.dll!wcstol -> 0x125430000
+[PELoader]   - ucrtbase.dll!wcstoul -> STUB
+[PELoader] Resolved ucrtbase.dll!wcstoul -> 0x125434000
+[PELoader] Finished resolving imports for ucrtbase.dll
+[PELoader] Resolving imports for user32.dll
+[PELoader]   - user32.dll!AdjustWindowRectEx -> STUB
+[PELoader] Resolved user32.dll!AdjustWindowRectEx -> 0x125438000
+[PELoader]   - user32.dll!CheckDlgButton -> STUB
+[PELoader] Resolved user32.dll!CheckDlgButton -> 0x12543c000
+[PELoader]   - user32.dll!CheckRadioButton -> STUB
+[PELoader] Resolved user32.dll!CheckRadioButton -> 0x125440000
+[PELoader]   - user32.dll!DestroyIcon -> STUB
+[PELoader] Resolved user32.dll!DestroyIcon -> 0x125444000
+[PELoader]   - user32.dll!DialogBoxParamW -> STUB
+[PELoader] Resolved user32.dll!DialogBoxParamW -> 0x125448000
+[PELoader]   - user32.dll!DrawEdge -> STUB
+[PELoader] Resolved user32.dll!DrawEdge -> 0x12544c000
+[PELoader]   - user32.dll!DrawFocusRect -> STUB
+[PELoader] Resolved user32.dll!DrawFocusRect -> 0x125450000
+[PELoader]   - user32.dll!DrawFrameControl -> STUB
+[PELoader] Resolved user32.dll!DrawFrameControl -> 0x125454000
+[PELoader]   - user32.dll!DrawIconEx -> STUB
+[PELoader] Resolved user32.dll!DrawIconEx -> 0x125458000
+[PELoader]   - user32.dll!EnableWindow -> STUB
+[PELoader] Resolved user32.dll!EnableWindow -> 0x12545c000
+[PELoader]   - user32.dll!EndDialog -> STUB
+[PELoader] Resolved user32.dll!EndDialog -> 0x125460000
+[PELoader]   - user32.dll!EnumWindows -> STUB
+[PELoader] Resolved user32.dll!EnumWindows -> 0x125464000
+[PELoader]   - user32.dll!FillRect -> STUB
+[PELoader] Resolved user32.dll!FillRect -> 0x125468000
+[PELoader]   - user32.dll!FrameRect -> STUB
+[PELoader] Resolved user32.dll!FrameRect -> 0x12546c000
+[PELoader]   - user32.dll!GetClientRect -> STUB
+[PELoader] Resolved user32.dll!GetClientRect -> 0x125470000
+[PELoader]   - user32.dll!GetDC -> STUB
+[PELoader] Resolved user32.dll!GetDC -> 0x125474000
+[PELoader]   - user32.dll!GetDesktopWindow -> STUB
+[PELoader] Resolved user32.dll!GetDesktopWindow -> 0x125478000
+[PELoader]   - user32.dll!GetDlgCtrlID -> STUB
+[PELoader] Resolved user32.dll!GetDlgCtrlID -> 0x12547c000
+[PELoader]   - user32.dll!GetDlgItem -> STUB
+[PELoader] Resolved user32.dll!GetDlgItem -> 0x125480000
+[PELoader]   - user32.dll!GetDlgItemInt -> STUB
+[PELoader] Resolved user32.dll!GetDlgItemInt -> 0x125484000
+[PELoader]   - user32.dll!GetDpiForWindow -> STUB
+[PELoader] Resolved user32.dll!GetDpiForWindow -> 0x125488000
+[PELoader]   - user32.dll!GetMenu -> STUB
+[PELoader] Resolved user32.dll!GetMenu -> 0x12548c000
+[PELoader]   - user32.dll!GetParent -> STUB
+[PELoader] Resolved user32.dll!GetParent -> 0x125490000
+[PELoader]   - user32.dll!GetPropW -> STUB
+[PELoader] Resolved user32.dll!GetPropW -> 0x125494000
+[PELoader]   - user32.dll!GetSysColor -> STUB
+[PELoader] Resolved user32.dll!GetSysColor -> 0x125498000
+[PELoader]   - user32.dll!GetSysColorBrush -> STUB
+[PELoader] Resolved user32.dll!GetSysColorBrush -> 0x12549c000
+[PELoader]   - user32.dll!GetSystemMetrics -> STUB
+[PELoader] Resolved user32.dll!GetSystemMetrics -> 0x1254a0000
+[PELoader]   - user32.dll!GetWindowLongPtrW -> STUB
+[PELoader] Resolved user32.dll!GetWindowLongPtrW -> 0x1254a4000
+[PELoader]   - user32.dll!GetWindowLongW -> STUB
+[PELoader] Resolved user32.dll!GetWindowLongW -> 0x1254a8000
+[PELoader]   - user32.dll!GetWindowTextLengthW -> STUB
+[PELoader] Resolved user32.dll!GetWindowTextLengthW -> 0x1254ac000
+[PELoader]   - user32.dll!GetWindowTextW -> STUB
+[PELoader] Resolved user32.dll!GetWindowTextW -> 0x1254b0000
+[PELoader]   - user32.dll!InvalidateRect -> STUB
+[PELoader] Resolved user32.dll!InvalidateRect -> 0x1254b4000
+[PELoader]   - user32.dll!IsDlgButtonChecked -> STUB
+[PELoader] Resolved user32.dll!IsDlgButtonChecked -> 0x1254b8000
+[PELoader]   - user32.dll!KillTimer -> STUB
+[PELoader] Resolved user32.dll!KillTimer -> 0x1254bc000
+[PELoader]   - user32.dll!LoadCursorW -> STUB
+[PELoader] Resolved user32.dll!LoadCursorW -> 0x1254c0000
+[PELoader]   - user32.dll!LoadIconW -> STUB
+[PELoader] Resolved user32.dll!LoadIconW -> 0x1254c4000
+[PELoader]   - user32.dll!LoadImageW -> STUB
+[PELoader] Resolved user32.dll!LoadImageW -> 0x1254c8000
+[PELoader]   - user32.dll!LoadStringW -> STUB
+[PELoader] Resolved user32.dll!LoadStringW -> 0x1254cc000
+[PELoader]   - user32.dll!MessageBoxIndirectW -> STUB
+[PELoader] Resolved user32.dll!MessageBoxIndirectW -> 0x1254d0000
+[PELoader]   - user32.dll!MessageBoxW -> STUB
+[PELoader] Resolved user32.dll!MessageBoxW -> 0x1254d4000
+[PELoader]   - user32.dll!MoveWindow -> STUB
+[PELoader] Resolved user32.dll!MoveWindow -> 0x1254d8000
+[PELoader]   - user32.dll!ReleaseDC -> STUB
+[PELoader] Resolved user32.dll!ReleaseDC -> 0x1254dc000
+[PELoader]   - user32.dll!SendDlgItemMessageW -> STUB
+[PELoader] Resolved user32.dll!SendDlgItemMessageW -> 0x1254e0000
+[PELoader]   - user32.dll!SendMessageW -> STUB
+[PELoader] Resolved user32.dll!SendMessageW -> 0x1254e4000
+[PELoader]   - user32.dll!SetCursor -> STUB
+[PELoader] Resolved user32.dll!SetCursor -> 0x1254e8000
+[PELoader]   - user32.dll!SetDlgItemInt -> STUB
+[PELoader] Resolved user32.dll!SetDlgItemInt -> 0x1254ec000
+[PELoader]   - user32.dll!SetDlgItemTextA -> STUB
+[PELoader] Resolved user32.dll!SetDlgItemTextA -> 0x1254f0000
+[PELoader]   - user32.dll!SetDlgItemTextW -> STUB
+[PELoader] Resolved user32.dll!SetDlgItemTextW -> 0x1254f4000
+[PELoader]   - user32.dll!SetFocus -> STUB
+[PELoader] Resolved user32.dll!SetFocus -> 0x1254f8000
+[PELoader]   - user32.dll!SetSysColors -> STUB
+[PELoader] Resolved user32.dll!SetSysColors -> 0x1254fc000
+[PELoader]   - user32.dll!SetTimer -> STUB
+[PELoader] Resolved user32.dll!SetTimer -> 0x125500000
+[PELoader]   - user32.dll!SetWindowLongPtrW -> STUB
+[PELoader] Resolved user32.dll!SetWindowLongPtrW -> 0x125504000
+[PELoader]   - user32.dll!SetWindowPos -> STUB
+[PELoader] Resolved user32.dll!SetWindowPos -> 0x125508000
+[PELoader]   - user32.dll!SetWindowTextA -> STUB
+[PELoader] Resolved user32.dll!SetWindowTextA -> 0x12550c000
+[PELoader]   - user32.dll!SetWindowTextW -> STUB
+[PELoader] Resolved user32.dll!SetWindowTextW -> 0x125510000
+[PELoader]   - user32.dll!ShowWindow -> OK
+[PELoader] Resolved user32.dll!ShowWindow -> 0x125514000
+[PELoader]   - user32.dll!SystemParametersInfoW -> STUB
+[PELoader] Resolved user32.dll!SystemParametersInfoW -> 0x125518000
+[PELoader] Finished resolving imports for user32.dll
+[PELoader] Resolving imports for uxtheme.dll
+[PELoader] Resolving DLL uxtheme.dll -> /Windows/System32/uxtheme.dll
+[PELoader]   - uxtheme.dll!#2 [PELoader] WARNING: Could not resolve uxtheme.dll!#2
+[PELoader]   - uxtheme.dll!#3 [PELoader] WARNING: Could not resolve uxtheme.dll!#3
+[PELoader]   - uxtheme.dll!#4 [PELoader] WARNING: Could not resolve uxtheme.dll!#4
+[PELoader]   - uxtheme.dll!#8 [PELoader] WARNING: Could not resolve uxtheme.dll!#8
+[PELoader]   - uxtheme.dll!#9 [PELoader] WARNING: Could not resolve uxtheme.dll!#9
+[PELoader]   - uxtheme.dll!#10 [PELoader] WARNING: Could not resolve uxtheme.dll!#10
+[PELoader]   - uxtheme.dll!CloseThemeData [PELoader] WARNING: Could not resolve uxtheme.dll!CloseThemeData
+[PELoader]   - uxtheme.dll!DrawThemeBackground [PELoader] WARNING: Could not resolve uxtheme.dll!DrawThemeBackground
+[PELoader]   - uxtheme.dll!DrawThemeParentBackground [PELoader] WARNING: Could not resolve uxtheme.dll!DrawThemeParentBackground
+[PELoader]   - uxtheme.dll!GetCurrentThemeName [PELoader] WARNING: Could not resolve uxtheme.dll!GetCurrentThemeName
+[PELoader]   - uxtheme.dll!GetThemeMargins [PELoader] WARNING: Could not resolve uxtheme.dll!GetThemeMargins
+[PELoader]   - uxtheme.dll!IsThemeActive [PELoader] WARNING: Could not resolve uxtheme.dll!IsThemeActive
+[PELoader]   - uxtheme.dll!IsThemeBackgroundPartiallyTransparent [PELoader] WARNING: Could not resolve uxtheme.dll!IsThemeBackgroundPartiallyTransparent
+[PELoader]   - uxtheme.dll!OpenThemeDataForDpi [PELoader] WARNING: Could not resolve uxtheme.dll!OpenThemeDataForDpi
+[PELoader] Finished resolving imports for uxtheme.dll
+[PELoader] Resolving imports for winmm.dll
+[PELoader] Resolving DLL winmm.dll -> /Windows/System32/winmm.dll
+[PELoader]   - winmm.dll!PlaySoundW [PELoader] WARNING: Could not resolve winmm.dll!PlaySoundW
+[PELoader]   - winmm.dll!midiOutGetDevCapsW [PELoader] WARNING: Could not resolve winmm.dll!midiOutGetDevCapsW
+[PELoader]   - winmm.dll!midiOutGetNumDevs [PELoader] WARNING: Could not resolve winmm.dll!midiOutGetNumDevs
+[PELoader] Finished resolving imports for winmm.dll
+[PELoader] ALL imports resolved successfully.
+[PELoader] SUCCESS: Loaded winecfg.exe at 0x140000000
+[FEXMacOS] PELoader::Load completed successfully.
+[FEXMacOS] Successfully loaded Windows PE binary
+[FEXCore] L1Pointer = 0x135d20000, PageMemory = 0x12dd20000
+FEXDBG_DISPATCHER: InitThreadPointers DispatcherLoopTop=0x1008380a0 SignalReturnHandler=0x1008383b0 SignalReturnHandlerRT=0x1008383b4 ThunkCallbackRet=0x0 GuestSignal_SIGSEGV=0x100838460 GlobalMemoryBase=0x0
+[FEXLibrary] Thread created. GDT: 0x100e45760, CS: 0xb, RIP: 0x140012230, RSP: 0x125d1b000
+[FEXWindows] Ready. TEB: 0x137d28000
+[FEXMacOS] JIT Starting at 0x140012230 (RSP: 0x125d1b000, TLS: 0x137d24000)
+[FEXMacOS] Calling FEX_ThreadExecute...
+[FEX-JIT] Entering RIP: 0x140012230 (RSP: 0x125d1b000)
+[FEX-JIT] Calling Ctx->ExecuteThread...
+FEXDBG_CORE: ExecuteThread RIP=0x140012230 RSP=0x125d1b000 ThunkCallbackRet=0x0 SignalReturnHandler=0x1008383b0 SignalReturnHandlerRT=0x1008383b4 GlobalMemoryBase=0x0
+Process 24403 launched: '/Users/firataktug/Desktop/FEX/build/Bin/FEXMacOS' (arm64)
+Process 24403 stopped
+* thread #2, stop reason = EXC_BAD_ACCESS (code=1, address=0x0)
+    frame #0: 0x00000001008384b4 
+->  0x1008384b4: ldr    x1, [x1]
+    0x1008384b8: mrs    x0, FPCR
+    0x1008384bc: and    x0, x0, #0xfffffffffffffff8
+    0x1008384c0: msr    FPCR, x0
+(lldb) memory read -force -f i -c 300 0x100838000
+    0x100838000: stp    x19, x20, [sp, #-0x10]!
+    0x100838004: stp    x21, x22, [sp, #-0x10]!
+    0x100838008: stp    x23, x24, [sp, #-0x10]!
+    0x10083800c: stp    x25, x26, [sp, #-0x10]!
+    0x100838010: stp    x27, x28, [sp, #-0x10]!
+    0x100838014: stp    x29, x30, [sp, #-0x10]!
+    0x100838018: sub    sp, sp, #0x40
+    0x10083801c: mov    x19, sp
+    0x100838020: st4.d  { v8, v9, v10, v11 }[0], [x19], #32
+    0x100838024: st4.d  { v12, v13, v14, v15 }[0], [x19], #32
+    0x100838028: mov    x28, x0
+    0x10083802c: mov    x0, sp
+    0x100838030: str    x0, [x28, #0x5c0]
+    0x100838034: ldr    x25, [x28, #0xb0]
+    0x100838038: ldr    w4, [x28, #0x408]
+    0x10083803c: msr    NZCV, x4
+    0x100838040: mrs    x4, FPCR
+    0x100838044: orr    x4, x4, #0x6
+    0x100838048: ldr    w7, [x28, #0x3cc]
+    0x10083804c: bfxil  x4, x7, #6, #1
+    0x100838050: msr    FPCR, x4
+    0x100838054: add    x4, x28, #0x1c0
+    0x100838058: ld1.2d { v16, v17, v18, v19 }, [x4], #64
+    0x10083805c: ld1.2d { v20, v21, v22, v23 }, [x4], #64
+    0x100838060: ld1.2d { v24, v25, v26, v27 }, [x4], #64
+    0x100838064: ld1.2d { v28, v29, v30, v31 }, [x4], #64
+    0x100838068: ldp    x4, x7, [x28, #0x20]
+    0x10083806c: ldp    x5, x6, [x28, #0x30]
+    0x100838070: ldp    x8, x9, [x28, #0x40]
+    0x100838074: ldp    x10, x11, [x28, #0x50]
+    0x100838078: ldp    x12, x13, [x28, #0x60]
+    0x10083807c: ldp    x14, x15, [x28, #0x70]
+    0x100838080: ldp    x19, x20, [x28, #0x80]
+    0x100838084: ldp    x21, x22, [x28, #0x90]
+    0x100838088: ldp    w26, w27, [x28, #0x10]
+    0x10083808c: ldr    x2, [x28, #0x18]
+    0x100838090: cbnz   w1, 0x1008382d8
+    0x100838094: nop    
+    0x100838098: nop    
+    0x10083809c: nop    
+    0x1008380a0: ldr    x2, [x28, #0x18]
+    0x1008380a4: ldrb   w0, [x28, #0x3f8]
+    0x1008380a8: cbnz   w0, 0x1008382d8
+    0x1008380ac: b      0x1008381fc
+    0x1008380b0: mrs    x0, FPCR
+    0x1008380b4: and    x0, x0, #0xfffffffffffffff8
+    0x1008380b8: msr    FPCR, x0
+    0x1008380bc: mrs    x0, NZCV
+    0x1008380c0: str    w0, [x28, #0x408]
+    0x1008380c4: str    x25, [x28, #0xb0]
+    0x1008380c8: stp    x4, x7, [x28, #0x20]
+    0x1008380cc: stp    x5, x6, [x28, #0x30]
+    0x1008380d0: stp    x8, x9, [x28, #0x40]
+    0x1008380d4: stp    x10, x11, [x28, #0x50]
+    0x1008380d8: stp    x12, x13, [x28, #0x60]
+    0x1008380dc: stp    x14, x15, [x28, #0x70]
+    0x1008380e0: stp    x19, x20, [x28, #0x80]
+    0x1008380e4: stp    x21, x22, [x28, #0x90]
+    0x1008380e8: stp    w26, w27, [x28, #0x10]
+    0x1008380ec: add    x0, x28, #0x1c0
+    0x1008380f0: st1.2d { v16, v17, v18, v19 }, [x0], #64
+    0x1008380f4: st1.2d { v20, v21, v22, v23 }, [x0], #64
+    0x1008380f8: st1.2d { v24, v25, v26, v27 }, [x0], #64
+    0x1008380fc: st1.2d { v28, v29, v30, v31 }, [x0], #64
+    0x100838100: ld4.d  { v8, v9, v10, v11 }[0], [sp], #32
+    0x100838104: ld4.d  { v12, v13, v14, v15 }[0], [sp], #32
+    0x100838108: ldp    x29, x30, [sp], #0x10
+    0x10083810c: ldp    x27, x28, [sp], #0x10
+    0x100838110: ldp    x25, x26, [sp], #0x10
+    0x100838114: ldp    x23, x24, [sp], #0x10
+    0x100838118: ldp    x21, x22, [sp], #0x10
+    0x10083811c: ldp    x19, x20, [sp], #0x10
+    0x100838120: ret    
+    0x100838124: ldr    x1, [x28, #0x8]
+    0x100838128: add    x1, x1, #0x1
+    0x10083812c: str    x1, [x28, #0x8]
+    0x100838130: mrs    x0, FPCR
+    0x100838134: and    x0, x0, #0xfffffffffffffff8
+    0x100838138: msr    FPCR, x0
+    0x10083813c: mrs    x0, NZCV
+    0x100838140: str    w0, [x28, #0x408]
+    0x100838144: str    x25, [x28, #0xb0]
+    0x100838148: stp    x4, x7, [x28, #0x20]
+    0x10083814c: stp    x5, x6, [x28, #0x30]
+    0x100838150: stp    x8, x9, [x28, #0x40]
+    0x100838154: stp    x10, x11, [x28, #0x50]
+    0x100838158: stp    x12, x13, [x28, #0x60]
+    0x10083815c: stp    x14, x15, [x28, #0x70]
+    0x100838160: stp    x19, x20, [x28, #0x80]
+    0x100838164: stp    x21, x22, [x28, #0x90]
+    0x100838168: stp    w26, w27, [x28, #0x10]
+    0x10083816c: add    x0, x28, #0x1c0
+    0x100838170: st1.2d { v16, v17, v18, v19 }, [x0], #64
+    0x100838174: st1.2d { v20, v21, v22, v23 }, [x0], #64
+    0x100838178: st1.2d { v24, v25, v26, v27 }, [x0], #64
+    0x10083817c: st1.2d { v28, v29, v30, v31 }, [x0], #64
+    0x100838180: mov    x0, x28
+    0x100838184: mov    x1, x30
+    0x100838188: ldr    x2, [x28, #0x638]
+    0x10083818c: blr    x2
+    0x100838190: ldr    x25, [x28, #0xb0]
+    0x100838194: ldr    w4, [x28, #0x408]
+    0x100838198: msr    NZCV, x4
+    0x10083819c: mrs    x4, FPCR
+    0x1008381a0: orr    x4, x4, #0x6
+    0x1008381a4: ldr    w7, [x28, #0x3cc]
+    0x1008381a8: bfxil  x4, x7, #6, #1
+    0x1008381ac: msr    FPCR, x4
+    0x1008381b0: add    x4, x28, #0x1c0
+    0x1008381b4: ld1.2d { v16, v17, v18, v19 }, [x4], #64
+    0x1008381b8: ld1.2d { v20, v21, v22, v23 }, [x4], #64
+    0x1008381bc: ld1.2d { v24, v25, v26, v27 }, [x4], #64
+    0x1008381c0: ld1.2d { v28, v29, v30, v31 }, [x4], #64
+    0x1008381c4: ldp    x4, x7, [x28, #0x20]
+    0x1008381c8: ldp    x5, x6, [x28, #0x30]
+    0x1008381cc: ldp    x8, x9, [x28, #0x40]
+    0x1008381d0: ldp    x10, x11, [x28, #0x50]
+    0x1008381d4: ldp    x12, x13, [x28, #0x60]
+    0x1008381d8: ldp    x14, x15, [x28, #0x70]
+    0x1008381dc: ldp    x19, x20, [x28, #0x80]
+    0x1008381e0: ldp    x21, x22, [x28, #0x90]
+    0x1008381e4: ldp    w26, w27, [x28, #0x10]
+    0x1008381e8: ldr    x1, [x28, #0x8]
+    0x1008381ec: sub    x1, x1, #0x1
+    0x1008381f0: str    x1, [x28, #0x8]
+    0x1008381f4: strb   wzr, [x28, #0xec0]
+    0x1008381f8: br     x0
+    0x1008381fc: ldr    x1, [x28, #0x8]
+    0x100838200: add    x1, x1, #0x1
+    0x100838204: str    x1, [x28, #0x8]
+    0x100838208: mrs    x0, FPCR
+    0x10083820c: and    x0, x0, #0xfffffffffffffff8
+    0x100838210: msr    FPCR, x0
+    0x100838214: mrs    x0, NZCV
+    0x100838218: str    w0, [x28, #0x408]
+    0x10083821c: str    x25, [x28, #0xb0]
+    0x100838220: stp    x4, x7, [x28, #0x20]
+    0x100838224: stp    x5, x6, [x28, #0x30]
+    0x100838228: stp    x8, x9, [x28, #0x40]
+    0x10083822c: stp    x10, x11, [x28, #0x50]
+    0x100838230: stp    x12, x13, [x28, #0x60]
+    0x100838234: stp    x14, x15, [x28, #0x70]
+    0x100838238: stp    x19, x20, [x28, #0x80]
+    0x10083823c: stp    x21, x22, [x28, #0x90]
+    0x100838240: stp    w26, w27, [x28, #0x10]
+    0x100838244: add    x0, x28, #0x1c0
+    0x100838248: st1.2d { v16, v17, v18, v19 }, [x0], #64
+    0x10083824c: st1.2d { v20, v21, v22, v23 }, [x0], #64
+    0x100838250: st1.2d { v24, v25, v26, v27 }, [x0], #64
+    0x100838254: st1.2d { v28, v29, v30, v31 }, [x0], #64
+    0x100838258: ldr    x0, 0x100839c64
+    0x10083825c: mov    x1, x28
+    0x100838260: mov    x3, #0x0                  ; =0 
+    0x100838264: ldr    x4, 0x100839c74
+    0x100838268: blr    x4
+    0x10083826c: ldr    x25, [x28, #0xb0]
+    0x100838270: ldr    w4, [x28, #0x408]
+    0x100838274: msr    NZCV, x4
+    0x100838278: mrs    x4, FPCR
+    0x10083827c: orr    x4, x4, #0x6
+    0x100838280: ldr    w7, [x28, #0x3cc]
+    0x100838284: bfxil  x4, x7, #6, #1
+    0x100838288: msr    FPCR, x4
+    0x10083828c: add    x4, x28, #0x1c0
+    0x100838290: ld1.2d { v16, v17, v18, v19 }, [x4], #64
+    0x100838294: ld1.2d { v20, v21, v22, v23 }, [x4], #64
+    0x100838298: ld1.2d { v24, v25, v26, v27 }, [x4], #64
+    0x10083829c: ld1.2d { v28, v29, v30, v31 }, [x4], #64
+    0x1008382a0: ldp    x4, x7, [x28, #0x20]
+    0x1008382a4: ldp    x5, x6, [x28, #0x30]
+    0x1008382a8: ldp    x8, x9, [x28, #0x40]
+    0x1008382ac: ldp    x10, x11, [x28, #0x50]
+    0x1008382b0: ldp    x12, x13, [x28, #0x60]
+    0x1008382b4: ldp    x14, x15, [x28, #0x70]
+    0x1008382b8: ldp    x19, x20, [x28, #0x80]
+    0x1008382bc: ldp    x21, x22, [x28, #0x90]
+    0x1008382c0: ldp    w26, w27, [x28, #0x10]
+    0x1008382c4: ldr    x1, [x28, #0x8]
+    0x1008382c8: sub    x1, x1, #0x1
+    0x1008382cc: str    x1, [x28, #0x8]
+    0x1008382d0: strb   wzr, [x28, #0xec0]
+    0x1008382d4: br     x0
+    0x1008382d8: ldr    x1, [x28, #0x8]
+    0x1008382dc: add    x1, x1, #0x1
+    0x1008382e0: str    x1, [x28, #0x8]
+    0x1008382e4: mrs    x0, FPCR
+    0x1008382e8: and    x0, x0, #0xfffffffffffffff8
+    0x1008382ec: msr    FPCR, x0
+    0x1008382f0: mrs    x0, NZCV
+    0x1008382f4: str    w0, [x28, #0x408]
+    0x1008382f8: str    x25, [x28, #0xb0]
+    0x1008382fc: stp    x4, x7, [x28, #0x20]
+    0x100838300: stp    x5, x6, [x28, #0x30]
+    0x100838304: stp    x8, x9, [x28, #0x40]
+    0x100838308: stp    x10, x11, [x28, #0x50]
+    0x10083830c: stp    x12, x13, [x28, #0x60]
+    0x100838310: stp    x14, x15, [x28, #0x70]
+    0x100838314: stp    x19, x20, [x28, #0x80]
+    0x100838318: stp    x21, x22, [x28, #0x90]
+    0x10083831c: stp    w26, w27, [x28, #0x10]
+    0x100838320: add    x0, x28, #0x1c0
+    0x100838324: st1.2d { v16, v17, v18, v19 }, [x0], #64
+    0x100838328: st1.2d { v20, v21, v22, v23 }, [x0], #64
+    0x10083832c: st1.2d { v24, v25, v26, v27 }, [x0], #64
+    0x100838330: st1.2d { v28, v29, v30, v31 }, [x0], #64
+    0x100838334: ldr    x0, 0x100839c64
+    0x100838338: mov    x1, x28
+    0x10083833c: ldr    x4, 0x100839c7c
+    0x100838340: blr    x4
+    0x100838344: ldr    x25, [x28, #0xb0]
+    0x100838348: ldr    w4, [x28, #0x408]
+    0x10083834c: msr    NZCV, x4
+    0x100838350: mrs    x4, FPCR
+    0x100838354: orr    x4, x4, #0x6
+    0x100838358: ldr    w7, [x28, #0x3cc]
+    0x10083835c: bfxil  x4, x7, #6, #1
+    0x100838360: msr    FPCR, x4
+    0x100838364: add    x4, x28, #0x1c0
+    0x100838368: ld1.2d { v16, v17, v18, v19 }, [x4], #64
+    0x10083836c: ld1.2d { v20, v21, v22, v23 }, [x4], #64
+    0x100838370: ld1.2d { v24, v25, v26, v27 }, [x4], #64
+    0x100838374: ld1.2d { v28, v29, v30, v31 }, [x4], #64
+    0x100838378: ldp    x4, x7, [x28, #0x20]
+    0x10083837c: ldp    x5, x6, [x28, #0x30]
+    0x100838380: ldp    x8, x9, [x28, #0x40]
+    0x100838384: ldp    x10, x11, [x28, #0x50]
+    0x100838388: ldp    x12, x13, [x28, #0x60]
+    0x10083838c: ldp    x14, x15, [x28, #0x70]
+    0x100838390: ldp    x19, x20, [x28, #0x80]
+    0x100838394: ldp    x21, x22, [x28, #0x90]
+    0x100838398: ldp    w26, w27, [x28, #0x10]
+    0x10083839c: ldr    x1, [x28, #0x8]
+    0x1008383a0: sub    x1, x1, #0x1
+    0x1008383a4: str    x1, [x28, #0x8]
+    0x1008383a8: strb   wzr, [x28, #0xec0]
+    0x1008383ac: br     x0
+    0x1008383b0: hlt    #0
+    0x1008383b4: hlt    #0
+    0x1008383b8: mrs    x0, FPCR
+    0x1008383bc: and    x0, x0, #0xfffffffffffffff8
+    0x1008383c0: msr    FPCR, x0
+    0x1008383c4: mrs    x0, NZCV
+    0x1008383c8: str    w0, [x28, #0x408]
+    0x1008383cc: str    x25, [x28, #0xb0]
+    0x1008383d0: stp    x4, x7, [x28, #0x20]
+    0x1008383d4: stp    x5, x6, [x28, #0x30]
+    0x1008383d8: stp    x8, x9, [x28, #0x40]
+    0x1008383dc: stp    x10, x11, [x28, #0x50]
+    0x1008383e0: stp    x12, x13, [x28, #0x60]
+    0x1008383e4: stp    x14, x15, [x28, #0x70]
+    0x1008383e8: stp    x19, x20, [x28, #0x80]
+    0x1008383ec: stp    x21, x22, [x28, #0x90]
+    0x1008383f0: stp    w26, w27, [x28, #0x10]
+    0x1008383f4: add    x0, x28, #0x1c0
+    0x1008383f8: st1.2d { v16, v17, v18, v19 }, [x0], #64
+    0x1008383fc: st1.2d { v20, v21, v22, v23 }, [x0], #64
+    0x100838400: st1.2d { v24, v25, v26, v27 }, [x0], #64
+    0x100838404: st1.2d { v28, v29, v30, v31 }, [x0], #64
+    0x100838408: hlt    #0
+    0x10083840c: mrs    x0, FPCR
+    0x100838410: and    x0, x0, #0xfffffffffffffff8
+    0x100838414: msr    FPCR, x0
+    0x100838418: mrs    x0, NZCV
+    0x10083841c: str    w0, [x28, #0x408]
+    0x100838420: str    x25, [x28, #0xb0]
+    0x100838424: stp    x4, x7, [x28, #0x20]
+    0x100838428: stp    x5, x6, [x28, #0x30]
+    0x10083842c: stp    x8, x9, [x28, #0x40]
+    0x100838430: stp    x10, x11, [x28, #0x50]
+    0x100838434: stp    x12, x13, [x28, #0x60]
+    0x100838438: stp    x14, x15, [x28, #0x70]
+    0x10083843c: stp    x19, x20, [x28, #0x80]
+    0x100838440: stp    x21, x22, [x28, #0x90]
+    0x100838444: stp    w26, w27, [x28, #0x10]
+    0x100838448: add    x0, x28, #0x1c0
+    0x10083844c: st1.2d { v16, v17, v18, v19 }, [x0], #64
+    0x100838450: st1.2d { v20, v21, v22, v23 }, [x0], #64
+    0x100838454: st1.2d { v24, v25, v26, v27 }, [x0], #64
+    0x100838458: st1.2d { v28, v29, v30, v31 }, [x0], #64
+    0x10083845c: brk    #0
+    0x100838460: mrs    x0, FPCR
+    0x100838464: and    x0, x0, #0xfffffffffffffff8
+    0x100838468: msr    FPCR, x0
+    0x10083846c: mrs    x0, NZCV
+    0x100838470: str    w0, [x28, #0x408]
+    0x100838474: str    x25, [x28, #0xb0]
+    0x100838478: stp    x4, x7, [x28, #0x20]
+    0x10083847c: stp    x5, x6, [x28, #0x30]
+    0x100838480: stp    x8, x9, [x28, #0x40]
+    0x100838484: stp    x10, x11, [x28, #0x50]
+    0x100838488: stp    x12, x13, [x28, #0x60]
+    0x10083848c: stp    x14, x15, [x28, #0x70]
+    0x100838490: stp    x19, x20, [x28, #0x80]
+    0x100838494: stp    x21, x22, [x28, #0x90]
+    0x100838498: stp    w26, w27, [x28, #0x10]
+    0x10083849c: add    x0, x28, #0x1c0
+    0x1008384a0: st1.2d { v16, v17, v18, v19 }, [x0], #64
+    0x1008384a4: st1.2d { v20, v21, v22, v23 }, [x0], #64
+    0x1008384a8: st1.2d { v24, v25, v26, v27 }, [x0], #64
+    0x1008384ac: st1.2d { v28, v29, v30, v31 }, [x0], #64
+[K

@@ -1,0 +1,38 @@
+{
+  "app_name": "c22fcf8eec61424b9901f2888843a25a",
+  "namespace": "e64225d40c214f32a71ccf6a7a612d6b",
+  "catalog_item_id": "3fe2cb2f745e4a0fae56874d470c94a3",
+  "title": "Warhammer 40K Speed Freeks",
+  "description": "Warhammer 40K Speed Freeks",
+  "categories": [
+    "games",
+    "applications"
+  ],
+  "developer": "Wired Productions",
+  "custom_attributes": {
+    "FolderName": "Warhammer40KSpeedFretTvaR"
+  },
+  "key_images": [
+    {
+      "type": "DieselGameBox",
+      "url": "https://cdn1.epicgames.com/spt-assets/a1af14251fb748fc9bda63bfc260f933/warhammer-40k-speed-freeks-iizug.jpg"
+    },
+    {
+      "type": "DieselGameBoxTall",
+      "url": "https://cdn1.epicgames.com/spt-assets/a1af14251fb748fc9bda63bfc260f933/warhammer-40k-speed-freeks-1siso.png"
+    }
+  ],
+  "asset_infos": {
+    "Windows": {
+      "appName": "c22fcf8eec61424b9901f2888843a25a",
+      "namespace": "e64225d40c214f32a71ccf6a7a612d6b",
+      "catalogItemId": "3fe2cb2f745e4a0fae56874d470c94a3",
+      "buildVersion": "1.0.13",
+      "labelName": "Live-Windows",
+      "assetId": "c22fcf8eec61424b9901f2888843a25a"
+    }
+  },
+  "base_urls": [],
+  "raw_catalog_item_json": "{\"applicationId\":\"fghi4567LKolJUyo3aOqbN7N6R6WeB0a\",\"categories\":[{\"path\":\"games\"},{\"path\":\"applications\"}],\"creationDate\":\"2025-05-19T12:01:52.955Z\",\"customAttributes\":{\"FolderName\":{\"type\":\"STRING\",\"value\":\"Warhammer40KSpeedFretTvaR\"}},\"description\":\"Warhammer 40K Speed Freeks\",\"developer\":\"Wired Productions\",\"developerId\":\"o-r83qbqhwd8y5y5r6e9x62vtrsd9mqm\",\"endOfSupport\":false,\"entitlementName\":\"3fe2cb2f745e4a0fae56874d470c94a3\",\"entitlementType\":\"EXECUTABLE\",\"id\":\"3fe2cb2f745e4a0fae56874d470c94a3\",\"itemType\":\"DURABLE\",\"keyImages\":[{\"alt\":\"Warhammer 40K Speed Freeks Offer\",\"height\":1440,\"md5\":\"d20e66c909d9dd0fcc6098cf5553b278\",\"size\":917418,\"type\":\"DieselGameBox\",\"uploadedDate\":\"2026-02-24T17:37:45.324Z\",\"url\":\"https://cdn1.epicgames.com/spt-assets/a1af14251fb748fc9bda63bfc260f933/warhammer-40k-speed-freeks-iizug.jpg\",\"width\":2560},{\"alt\":\"Download Warhammer 40K Speed Freeks Offer\",\"height\":1600,\"md5\":\"ac6e173411ef122ceaec26dcc0d6d268\",\"size\":2633038,\"type\":\"DieselGameBoxTall\",\"uploadedDate\":\"2026-02-24T17:37:48.441Z\",\"url\":\"https://cdn1.epicgames.com/spt-assets/a1af14251fb748fc9bda63bfc260f933/warhammer-40k-speed-freeks-1siso.png\",\"width\":1200}],\"lastModifiedDate\":\"2026-06-12T13:50:16.747Z\",\"mainGameItemList\":[],\"namespace\":\"e64225d40c214f32a71ccf6a7a612d6b\",\"releaseInfo\":[{\"appId\":\"c22fcf8eec61424b9901f2888843a25a\",\"id\":\"6dda09604ff94e2e85c8a7debb90d763\",\"platform\":[\"Windows\"]}],\"requiresSecureAccount\":false,\"status\":\"ACTIVE\",\"title\":\"Warhammer 40K Speed Freeks\",\"unsearchable\":false}",
+  "fetched_at": 1781389319
+}

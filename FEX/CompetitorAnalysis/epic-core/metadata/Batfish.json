@@ -1,0 +1,44 @@
+{
+  "app_name": "Batfish",
+  "namespace": "f2bfff793b224f6190a394f461c9a4b8",
+  "catalog_item_id": "6de90e98ba294bc6bb8d9215330f3987",
+  "title": "Telltale Batman Season 1",
+  "description": "The Telltale Batman Shadows Edition Season 1",
+  "categories": [
+    "public",
+    "games",
+    "applications"
+  ],
+  "developer": "LCG Entertainment, Inc.",
+  "custom_attributes": {
+    "CanRunOffline": "true",
+    "CanSkipKoreanIdVerification": "true",
+    "FolderName": "TelltaleBatmanS1",
+    "MonitorPresence": "true",
+    "PresenceId": "f2bfff793b224f6190a394f461c9a4b8",
+    "RequirementsJson": "[]"
+  },
+  "key_images": [
+    {
+      "type": "DieselGameBox",
+      "url": "https://cdn1.epicgames.com/f2bfff793b224f6190a394f461c9a4b8/item/TheTelltaleBatmanShadowsEdition-2560x1440-1ababb36a948b5c732ab85a330787e85.jpg"
+    },
+    {
+      "type": "DieselGameBoxTall",
+      "url": "https://cdn1.epicgames.com/f2bfff793b224f6190a394f461c9a4b8/item/EGS_LCGEntertainmentInc_TheTelltaleBatmanShadowsEdition_S2-1280x1440-fd5b112cdbb50096f95471aba82e18f9.jpg"
+    }
+  ],
+  "asset_infos": {
+    "Windows": {
+      "appName": "Batfish",
+      "namespace": "f2bfff793b224f6190a394f461c9a4b8",
+      "catalogItemId": "6de90e98ba294bc6bb8d9215330f3987",
+      "buildVersion": "1.0.0.1",
+      "labelName": "Live-Windows",
+      "assetId": "Batfish"
+    }
+  },
+  "base_urls": [],
+  "raw_catalog_item_json": "{\"ageGatings\":{},\"applicationId\":\"\",\"categories\":[{\"path\":\"public\"},{\"path\":\"games\"},{\"path\":\"applications\"}],\"creationDate\":\"2019-11-16T03:43:47.627Z\",\"customAttributes\":{\"CanRunOffline\":{\"type\":\"STRING\",\"value\":\"true\"},\"CanSkipKoreanIdVerification\":{\"type\":\"STRING\",\"value\":\"true\"},\"FolderName\":{\"type\":\"STRING\",\"value\":\"TelltaleBatmanS1\"},\"MonitorPresence\":{\"type\":\"STRING\",\"value\":\"true\"},\"PresenceId\":{\"type\":\"STRING\",\"value\":\"f2bfff793b224f6190a394f461c9a4b8\"},\"RequirementsJson\":{\"type\":\"STRING\",\"value\":\"[]\"}},\"description\":\"The Telltale Batman Shadows Edition Season 1\",\"developer\":\"LCG Entertainment, Inc.\",\"developerId\":\"o-w6l7l9e6c93j85x29twne9ae6su4jt\",\"endOfSupport\":false,\"entitlementName\":\"6de90e98ba294bc6bb8d9215330f3987\",\"entitlementType\":\"EXECUTABLE\",\"eulaIds\":[\"egstore\"],\"id\":\"6de90e98ba294bc6bb8d9215330f3987\",\"itemType\":\"DURABLE\",\"keyImages\":[{\"height\":1440,\"md5\":\"1ababb36a948b5c732ab85a330787e85\",\"size\":404734,\"type\":\"DieselGameBox\",\"uploadedDate\":\"2019-12-16T16:29:42.628Z\",\"url\":\"https://cdn1.epicgames.com/f2bfff793b224f6190a394f461c9a4b8/item/TheTelltaleBatmanShadowsEdition-2560x1440-1ababb36a948b5c732ab85a330787e85.jpg\",\"width\":2560},{\"height\":1440,\"md5\":\"fd5b112cdbb50096f95471aba82e18f9\",\"size\":442544,\"type\":\"DieselGameBoxTall\",\"uploadedDate\":\"2019-12-16T16:29:54.894Z\",\"url\":\"https://cdn1.epicgames.com/f2bfff793b224f6190a394f461c9a4b8/item/EGS_LCGEntertainmentInc_TheTelltaleBatmanShadowsEdition_S2-1280x1440-fd5b112cdbb50096f95471aba82e18f9.jpg\",\"width\":1280}],\"lastModifiedDate\":\"2025-06-24T21:16:08.672Z\",\"mainGameItemList\":[],\"namespace\":\"f2bfff793b224f6190a394f461c9a4b8\",\"releaseInfo\":[{\"appId\":\"Batfish\",\"id\":\"79905b3df86a486f88d7a715b631cb40\",\"platform\":[\"Windows\"]}],\"selfRefundable\":true,\"status\":\"ACTIVE\",\"title\":\"Telltale Batman Season 1\",\"unsearchable\":false}",
+  "fetched_at": 1781303331
+}

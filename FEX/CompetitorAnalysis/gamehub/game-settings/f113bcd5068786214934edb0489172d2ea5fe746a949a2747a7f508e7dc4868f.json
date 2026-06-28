@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "key": {
+    "kind": "local",
+    "local_game_id": "local_e8d1d17c-985c-4267-a8d1-019ebee7c8ad",
+    "game_id": null
+  },
+  "stable_game_key_hash": "f113bcd5068786214934edb0489172d2ea5fe746a949a2747a7f508e7dc4868f",
+  "binding_id": 2,
+  "settings": {
+    "language": "system",
+    "start_parameters": "",
+    "compatibility_layer": "10000033",
+    "compatibility_layer_config": {
+      "display_name": "wine-proton_10.0",
+      "framework": "X64",
+      "framework_type": "proton",
+      "id": 10000033,
+      "is_steam": 1,
+      "name": "wine-proton_10.0",
+      "version": "10.0.2",
+      "version_code": 4
+    },
+    "sync_mode": "msync",
+    "bypass_av_decode": false,
+    "avx_enabled": false,
+    "gamepad_compat_mode": false,
+    "retina_mode": false,
+    "metal_hud_enabled": true,
+    "metal4_enabled": false,
+    "graphics_stack": {
+      "kind": "gptk",
+      "component_id": "10000085",
+      "component_config": {
+        "base_type": 0,
+        "display_name": "gptk-3.0-3",
+        "id": 10000085,
+        "is_base": 0,
+        "is_ui": 0,
+        "name": "gptk-3.0-3",
+        "type": 4,
+        "version": "1.0.3",
+        "version_code": 4
+      }
+    },
+    "dlss_mode": "disabled",
+    "ray_tracing_mode": "auto",
+    "dxmt_experimental_dx12_support": false,
+    "molten_vk": "builtin-moltenvk-1.4.2",
+    "steam": {
+      "steam_version": "",
+      "offline_mode": false,
+      "auto_sync_cloud_archive": false,
+      "steam_input": false,
+      "network_accelerate": false,
+      "open_startup_window": true
+    },
+    "component_ids": [
+      10000074
+    ],
+    "directx_panel": 1,
+    "auto_sync_cloud_archive": false,
+    "updated_at": 1781319334
+  },
+  "created_at": 1781319321,
+  "updated_at": 1781319334
+}

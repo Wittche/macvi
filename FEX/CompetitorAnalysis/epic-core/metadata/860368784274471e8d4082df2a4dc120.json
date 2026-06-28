@@ -1,0 +1,40 @@
+{
+  "app_name": "860368784274471e8d4082df2a4dc120",
+  "namespace": "5c10bee95e764d44bb35230a61aaf869",
+  "catalog_item_id": "04f06747248d41ed87e66825a8659562",
+  "title": "Sunderfolk",
+  "description": "Rediscover game night in this tactical RPG where shared strategy shapes every turn. Adventure across the Sunderlands with up to four players in online multiplayer using your mouse & keyboard or play couch co-op using phones as controllers. Play the first 4 missions for free!",
+  "categories": [
+    "games",
+    "applications"
+  ],
+  "developer": "Dreamhaven, Inc.",
+  "custom_attributes": {
+    "CloudSaveFolder": "{AppData}/../LocalLow/Secret Door/Sunderfolk/epic/{EpicID}/",
+    "FolderName": "Sunderfolk"
+  },
+  "key_images": [
+    {
+      "type": "DieselGameBox",
+      "url": "https://cdn1.epicgames.com/spt-assets/71c943751e9642c3918ba6b20ebe4b13/sunderfolk-17uyu.png"
+    },
+    {
+      "type": "DieselGameBoxTall",
+      "url": "https://cdn1.epicgames.com/spt-assets/71c943751e9642c3918ba6b20ebe4b13/sunderfolk-16skg.png"
+    }
+  ],
+  "cloud_save_folder": "{AppData}/../LocalLow/Secret Door/Sunderfolk/epic/{EpicID}/",
+  "asset_infos": {
+    "Windows": {
+      "appName": "860368784274471e8d4082df2a4dc120",
+      "namespace": "5c10bee95e764d44bb35230a61aaf869",
+      "catalogItemId": "04f06747248d41ed87e66825a8659562",
+      "buildVersion": "2.0.9.69363.11039",
+      "labelName": "Live-Windows",
+      "assetId": "860368784274471e8d4082df2a4dc120"
+    }
+  },
+  "base_urls": [],
+  "raw_catalog_item_json": "{\"applicationId\":\"fghi4567kWOr3K7SbP6F9ZBh3VRs3HyM\",\"categories\":[{\"path\":\"games\"},{\"path\":\"applications\"}],\"creationDate\":\"2025-11-13T00:33:55.299Z\",\"customAttributes\":{\"CloudSaveFolder\":{\"type\":\"STRING\",\"value\":\"{AppData}/../LocalLow/Secret Door/Sunderfolk/epic/{EpicID}/\"},\"FolderName\":{\"type\":\"STRING\",\"value\":\"Sunderfolk\"}},\"description\":\"Rediscover game night in this tactical RPG where shared strategy shapes every turn. Adventure across the Sunderlands with up to four players in online multiplayer using your mouse & keyboard or play couch co-op using phones as controllers. Play the first 4 missions for free!\",\"developer\":\"Dreamhaven, Inc.\",\"developerId\":\"o-cufnvnhm6n2c3f3pnuvx84re9vt8rj\",\"endOfSupport\":false,\"entitlementName\":\"04f06747248d41ed87e66825a8659562\",\"entitlementType\":\"EXECUTABLE\",\"id\":\"04f06747248d41ed87e66825a8659562\",\"itemType\":\"DURABLE\",\"keyImages\":[{\"alt\":\"Sunderfolk Offer\",\"height\":1440,\"md5\":\"f92c007294d188bf4f37190633b55970\",\"size\":4182180,\"type\":\"DieselGameBox\",\"uploadedDate\":\"2026-03-05T01:21:56.354Z\",\"url\":\"https://cdn1.epicgames.com/spt-assets/71c943751e9642c3918ba6b20ebe4b13/sunderfolk-17uyu.png\",\"width\":2560},{\"alt\":\"Download Sunderfolk Offer\",\"height\":1600,\"md5\":\"129763062cf261e3a0f6c9885d666a36\",\"size\":2410977,\"type\":\"DieselGameBoxTall\",\"uploadedDate\":\"2026-03-05T01:21:56.196Z\",\"url\":\"https://cdn1.epicgames.com/spt-assets/71c943751e9642c3918ba6b20ebe4b13/sunderfolk-16skg.png\",\"width\":1200}],\"lastModifiedDate\":\"2026-03-10T16:57:50.183Z\",\"mainGameItemList\":[],\"namespace\":\"5c10bee95e764d44bb35230a61aaf869\",\"releaseInfo\":[{\"appId\":\"860368784274471e8d4082df2a4dc120\",\"id\":\"2f4e69f0cf89443eb30d4cd881a2ef65\",\"platform\":[\"Windows\"]}],\"requiresSecureAccount\":false,\"status\":\"ACTIVE\",\"title\":\"Sunderfolk\",\"unsearchable\":false}",
+  "fetched_at": 1781303328
+}

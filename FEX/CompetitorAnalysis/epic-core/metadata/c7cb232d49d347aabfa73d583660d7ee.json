@@ -1,0 +1,42 @@
+{
+  "app_name": "c7cb232d49d347aabfa73d583660d7ee",
+  "namespace": "db6d869788bd4aa59f9ccb26c91a0153",
+  "catalog_item_id": "7ae00498170d40a18952e3542b7cdd08",
+  "title": "KILL KNIGHT",
+  "description": "KILL KNIGHT is an ultra-responsive arcade-inspired isometric action shooter. Condemned to eternal sufferance, deep within the voids of an eldritch arena, you must wield an arsenal of devastating weaponry to obliterate swarms of otherworldly horrors - and MASTER THE DEMON WITHIN.",
+  "categories": [
+    "games",
+    "applications"
+  ],
+  "developer": "PlaySide Studios LTD",
+  "custom_attributes": {
+    "CloudIncludeList": "Campaign0.save,Campaign0.backupsave",
+    "CloudSaveFolder": "{AppData}/../LocalLow/Playside Studios/KILL KNIGHT/",
+    "FolderName": "KILLKNIGHT",
+    "MaxSizeMB": "2"
+  },
+  "key_images": [
+    {
+      "type": "DieselGameBox",
+      "url": "https://cdn1.epicgames.com/spt-assets/7ec1d897ec2c4228b5b2bb63cc447456/kill-knight-365qs.jpg"
+    },
+    {
+      "type": "DieselGameBoxTall",
+      "url": "https://cdn1.epicgames.com/spt-assets/7ec1d897ec2c4228b5b2bb63cc447456/kill-knight-6pm7c.jpg"
+    }
+  ],
+  "cloud_save_folder": "{AppData}/../LocalLow/Playside Studios/KILL KNIGHT/",
+  "asset_infos": {
+    "Windows": {
+      "appName": "c7cb232d49d347aabfa73d583660d7ee",
+      "namespace": "db6d869788bd4aa59f9ccb26c91a0153",
+      "catalogItemId": "7ae00498170d40a18952e3542b7cdd08",
+      "buildVersion": "v1.2.1-FINAL",
+      "labelName": "Live-Windows",
+      "assetId": "c7cb232d49d347aabfa73d583660d7ee"
+    }
+  },
+  "base_urls": [],
+  "raw_catalog_item_json": "{\"applicationId\":\"fghi4567pChK5gxct3B85e5CUs1M99qq\",\"categories\":[{\"path\":\"games\"},{\"path\":\"applications\"}],\"creationDate\":\"2024-10-15T06:44:17.187Z\",\"customAttributes\":{\"CloudIncludeList\":{\"type\":\"STRING\",\"value\":\"Campaign0.save,Campaign0.backupsave\"},\"CloudSaveFolder\":{\"type\":\"STRING\",\"value\":\"{AppData}/../LocalLow/Playside Studios/KILL KNIGHT/\"},\"FolderName\":{\"type\":\"STRING\",\"value\":\"KILLKNIGHT\"},\"MaxSizeMB\":{\"type\":\"STRING\",\"value\":\"2\"}},\"description\":\"KILL KNIGHT is an ultra-responsive arcade-inspired isometric action shooter. Condemned to eternal sufferance, deep within the voids of an eldritch arena, you must wield an arsenal of devastating weaponry to obliterate swarms of otherworldly horrors - and MASTER THE DEMON WITHIN.\",\"developer\":\"PlaySide Studios LTD\",\"developerId\":\"o-dhnxbfhqukwnj6x7db4g94s764peag\",\"endOfSupport\":false,\"entitlementName\":\"7ae00498170d40a18952e3542b7cdd08\",\"entitlementType\":\"EXECUTABLE\",\"id\":\"7ae00498170d40a18952e3542b7cdd08\",\"itemType\":\"DURABLE\",\"keyImages\":[{\"alt\":\"KILL KNIGHT Offer\",\"height\":1440,\"md5\":\"ab10c4387d8da162730fefc8a3eb9c22\",\"size\":531463,\"type\":\"DieselGameBox\",\"uploadedDate\":\"2024-11-13T04:50:58.312Z\",\"url\":\"https://cdn1.epicgames.com/spt-assets/7ec1d897ec2c4228b5b2bb63cc447456/kill-knight-365qs.jpg\",\"width\":2560},{\"alt\":\"Download KILL KNIGHT Offer\",\"height\":1600,\"md5\":\"52e24762dffce980f3d24b0b4ea417c4\",\"size\":708724,\"type\":\"DieselGameBoxTall\",\"uploadedDate\":\"2024-11-13T04:51:04.705Z\",\"url\":\"https://cdn1.epicgames.com/spt-assets/7ec1d897ec2c4228b5b2bb63cc447456/kill-knight-6pm7c.jpg\",\"width\":1200}],\"lastModifiedDate\":\"2025-05-18T23:22:46.032Z\",\"mainGameItemList\":[],\"namespace\":\"db6d869788bd4aa59f9ccb26c91a0153\",\"releaseInfo\":[{\"appId\":\"c7cb232d49d347aabfa73d583660d7ee\",\"id\":\"630762a31e424061bbddeeb21af7faa9\",\"platform\":[\"Win32\",\"Windows\"]}],\"requiresSecureAccount\":false,\"status\":\"ACTIVE\",\"title\":\"KILL KNIGHT\",\"unsearchable\":false}",
+  "fetched_at": 1781303343
+}

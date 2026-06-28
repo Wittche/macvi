@@ -1,0 +1,41 @@
+{
+  "app_name": "89443d0c5afa4ef586c72445c0399a8b",
+  "namespace": "194cda74f9024d67860202683a3dab18",
+  "catalog_item_id": "24cb36289be34527b528cda87cdc925c",
+  "title": "Wizard of Legend",
+  "description": "Wizard of Legend is a no-nonsense, action-packed take on wizardry that emphasizes precise movements and smart comboing of spells in a rogue-like dungeon crawler that features over a hundred unique spells and relics!",
+  "categories": [
+    "games",
+    "applications"
+  ],
+  "developer": "Good Games Group",
+  "custom_attributes": {
+    "CloudIncludeList": "GameData.gd,\nGameDataChaos.gd,\nGameSettings.gd",
+    "CloudSaveFolder": "{AppData}/../LocalLow/Contingent99/Wizard of Legend/{EpicID}/",
+    "FolderName": "WizardofLegend"
+  },
+  "key_images": [
+    {
+      "type": "DieselGameBox",
+      "url": "https://cdn1.epicgames.com/spt-assets/b1d735eb93de4c6da325aa9a6db9a5a5/wizard-of-legend-13r1z.png"
+    },
+    {
+      "type": "DieselGameBoxTall",
+      "url": "https://cdn1.epicgames.com/spt-assets/b1d735eb93de4c6da325aa9a6db9a5a5/wizard-of-legend-tkwu2.png"
+    }
+  ],
+  "cloud_save_folder": "{AppData}/../LocalLow/Contingent99/Wizard of Legend/{EpicID}/",
+  "asset_infos": {
+    "Windows": {
+      "appName": "89443d0c5afa4ef586c72445c0399a8b",
+      "namespace": "194cda74f9024d67860202683a3dab18",
+      "catalogItemId": "24cb36289be34527b528cda87cdc925c",
+      "buildVersion": "1.23.4a",
+      "labelName": "Live-Windows",
+      "assetId": "89443d0c5afa4ef586c72445c0399a8b"
+    }
+  },
+  "base_urls": [],
+  "raw_catalog_item_json": "{\"applicationId\":\"\",\"categories\":[{\"path\":\"games\"},{\"path\":\"applications\"}],\"creationDate\":\"2024-12-18T20:10:01.537Z\",\"customAttributes\":{\"CloudIncludeList\":{\"type\":\"STRING\",\"value\":\"GameData.gd,\\nGameDataChaos.gd,\\nGameSettings.gd\"},\"CloudSaveFolder\":{\"type\":\"STRING\",\"value\":\"{AppData}/../LocalLow/Contingent99/Wizard of Legend/{EpicID}/\"},\"FolderName\":{\"type\":\"STRING\",\"value\":\"WizardofLegend\"}},\"description\":\"Wizard of Legend is a no-nonsense, action-packed take on wizardry that emphasizes precise movements and smart comboing of spells in a rogue-like dungeon crawler that features over a hundred unique spells and relics!\",\"developer\":\"Good Games Group\",\"developerId\":\"o-r3zdgsbnfhk2d6r5s6ztvluv5y6rau\",\"endOfSupport\":false,\"entitlementName\":\"24cb36289be34527b528cda87cdc925c\",\"entitlementType\":\"EXECUTABLE\",\"id\":\"24cb36289be34527b528cda87cdc925c\",\"itemType\":\"DURABLE\",\"keyImages\":[{\"alt\":\"Wizard of Legend Offer\",\"height\":1440,\"md5\":\"cd096b43fcb321b119a954660dab9dac\",\"size\":3838779,\"type\":\"DieselGameBox\",\"uploadedDate\":\"2024-10-28T20:25:24.777Z\",\"url\":\"https://cdn1.epicgames.com/spt-assets/b1d735eb93de4c6da325aa9a6db9a5a5/wizard-of-legend-13r1z.png\",\"width\":2560},{\"alt\":\"Download Wizard of Legend Offer\",\"height\":1600,\"md5\":\"94dc8e9f4d8141e5291c145861412597\",\"size\":2796845,\"type\":\"DieselGameBoxTall\",\"uploadedDate\":\"2024-10-28T20:25:26.075Z\",\"url\":\"https://cdn1.epicgames.com/spt-assets/b1d735eb93de4c6da325aa9a6db9a5a5/wizard-of-legend-tkwu2.png\",\"width\":1200}],\"lastModifiedDate\":\"2026-06-05T13:24:26.350Z\",\"mainGameItemList\":[],\"namespace\":\"194cda74f9024d67860202683a3dab18\",\"releaseInfo\":[{\"appId\":\"89443d0c5afa4ef586c72445c0399a8b\",\"id\":\"5185601538b9405aa4be626d35ceab8e\",\"platform\":[\"Windows\"]}],\"requiresSecureAccount\":false,\"status\":\"ACTIVE\",\"title\":\"Wizard of Legend\",\"unsearchable\":false}",
+  "fetched_at": 1781303329
+}

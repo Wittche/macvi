@@ -22,11 +22,11 @@
 static macwi_window_t g_main_window = NULL;
 
 static void win32_MessageBoxA(EMU_CONTEXT* ctx) {
-    uint32_t hWnd, lpText, lpCaption, uType;
-    macwi_thunk_read_param_32(ctx, 0, &hWnd);
-    macwi_thunk_read_param_32(ctx, 1, &lpText);
-    macwi_thunk_read_param_32(ctx, 2, &lpCaption);
-    macwi_thunk_read_param_32(ctx, 3, &uType);
+    uint64_t hWnd, lpText, lpCaption, uType;
+    macwi_thunk_read_param_64(ctx, 0, &hWnd);
+    macwi_thunk_read_param_64(ctx, 1, &lpText);
+    macwi_thunk_read_param_64(ctx, 2, &lpCaption);
+    macwi_thunk_read_param_64(ctx, 3, &uType);
 
     char text[1024] = {0};
     char caption[256] = {0};
@@ -38,12 +38,13 @@ static void win32_MessageBoxA(EMU_CONTEXT* ctx) {
     
     macwi_cocoa_message_box(caption, text);
     
-    macwi_emu_reg_write(ctx, 0, 1); // IDOK
+    macwi_emu_reg_write_64(ctx, 0, 1); // IDOK
+    macwi_thunk_stdcall_return(ctx, 4);
 }
 
 static void win32_RegisterClassExA(EMU_CONTEXT* ctx) {
-    uint32_t lpwcx;
-    macwi_thunk_read_param_32(ctx, 0, &lpwcx);
+    uint64_t lpwcx;
+    macwi_thunk_read_param_64(ctx, 0, &lpwcx);
     
     if (lpwcx) {
         WNDCLASSEXA_32 wc32;
@@ -58,25 +59,26 @@ static void win32_RegisterClassExA(EMU_CONTEXT* ctx) {
         USER32_LOG("RegisterClassExA(NULL)");
     }
     
-    macwi_emu_reg_write(ctx, 0, 0x1234); // Pseudo ATOM
+    macwi_emu_reg_write_64(ctx, 0, 0x1234); // Pseudo ATOM
+    macwi_thunk_stdcall_return(ctx, 1);
 }
 
 static void win32_CreateWindowExA(EMU_CONTEXT* ctx) {
-    uint32_t dwExStyle, lpClassName, lpWindowName, dwStyle, x, y, nWidth, nHeight;
-    uint32_t hWndParent, hMenu, hInstance, lpParam;
+    uint64_t dwExStyle, lpClassName, lpWindowName, dwStyle, x, y, nWidth, nHeight;
+    uint64_t hWndParent, hMenu, hInstance, lpParam;
     
-    macwi_thunk_read_param_32(ctx, 0, &dwExStyle);
-    macwi_thunk_read_param_32(ctx, 1, &lpClassName);
-    macwi_thunk_read_param_32(ctx, 2, &lpWindowName);
-    macwi_thunk_read_param_32(ctx, 3, &dwStyle);
-    macwi_thunk_read_param_32(ctx, 4, &x);
-    macwi_thunk_read_param_32(ctx, 5, &y);
-    macwi_thunk_read_param_32(ctx, 6, &nWidth);
-    macwi_thunk_read_param_32(ctx, 7, &nHeight);
-    macwi_thunk_read_param_32(ctx, 8, &hWndParent);
-    macwi_thunk_read_param_32(ctx, 9, &hMenu);
-    macwi_thunk_read_param_32(ctx, 10, &hInstance);
-    macwi_thunk_read_param_32(ctx, 11, &lpParam);
+    macwi_thunk_read_param_64(ctx, 0, &dwExStyle);
+    macwi_thunk_read_param_64(ctx, 1, &lpClassName);
+    macwi_thunk_read_param_64(ctx, 2, &lpWindowName);
+    macwi_thunk_read_param_64(ctx, 3, &dwStyle);
+    macwi_thunk_read_param_64(ctx, 4, &x);
+    macwi_thunk_read_param_64(ctx, 5, &y);
+    macwi_thunk_read_param_64(ctx, 6, &nWidth);
+    macwi_thunk_read_param_64(ctx, 7, &nHeight);
+    macwi_thunk_read_param_64(ctx, 8, &hWndParent);
+    macwi_thunk_read_param_64(ctx, 9, &hMenu);
+    macwi_thunk_read_param_64(ctx, 10, &hInstance);
+    macwi_thunk_read_param_64(ctx, 11, &lpParam);
 
     char title[256] = "MacWI App";
     if (lpWindowName) macwi_thunk_read_guest_string(ctx, lpWindowName, title, sizeof(title));
@@ -90,68 +92,70 @@ static void win32_CreateWindowExA(EMU_CONTEXT* ctx) {
 
     g_main_window = macwi_cocoa_create_window(title, cx, cy, cw, ch);
     
-    macwi_emu_reg_write(ctx, 0, (uint32_t)(uintptr_t)g_main_window); // HWND
+    macwi_emu_reg_write_64(ctx, 0, (uint64_t)(uintptr_t)g_main_window); // HWND
+    macwi_thunk_stdcall_return(ctx, 12);
 }
 
 static void win32_ShowWindow(EMU_CONTEXT* ctx) {
-    uint32_t hWnd, nCmdShow;
-    macwi_thunk_read_param_32(ctx, 0, &hWnd);
-    macwi_thunk_read_param_32(ctx, 1, &nCmdShow);
+    uint64_t hWnd, nCmdShow;
+    macwi_thunk_read_param_64(ctx, 0, &hWnd);
+    macwi_thunk_read_param_64(ctx, 1, &nCmdShow);
     
-    USER32_LOG("ShowWindow(0x%X, %d)", hWnd, nCmdShow);
+    USER32_LOG("ShowWindow(0x%llX, %u)", hWnd, (uint32_t)nCmdShow);
     
-    if (hWnd == (uint32_t)(uintptr_t)g_main_window) {
+    if (hWnd == (uint64_t)(uintptr_t)g_main_window) {
         macwi_cocoa_show_window(g_main_window, nCmdShow != 0); // 0 is SW_HIDE
     }
-    macwi_emu_reg_write(ctx, 0, 1);
+    macwi_emu_reg_write_64(ctx, 0, 1);
+    macwi_thunk_stdcall_return(ctx, 2);
 }
 
 static void win32_UpdateWindow(EMU_CONTEXT* ctx) {
-    uint32_t hWnd;
-    macwi_thunk_read_param_32(ctx, 0, &hWnd);
-    USER32_LOG("UpdateWindow(0x%X)", hWnd);
-    macwi_emu_reg_write(ctx, 0, 1);
+    uint64_t hWnd;
+    macwi_thunk_read_param_64(ctx, 0, &hWnd);
+    USER32_LOG("UpdateWindow(0x%llX)", hWnd);
+    macwi_emu_reg_write_64(ctx, 0, 1);
+    macwi_thunk_stdcall_return(ctx, 1);
 }
 
 static void win32_GetMessageA(EMU_CONTEXT* ctx) {
-    uint32_t lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax;
-    macwi_thunk_read_param_32(ctx, 0, &lpMsg);
-    macwi_thunk_read_param_32(ctx, 1, &hWnd);
-    macwi_thunk_read_param_32(ctx, 2, &wMsgFilterMin);
-    macwi_thunk_read_param_32(ctx, 3, &wMsgFilterMax);
+    uint64_t lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax;
+    macwi_thunk_read_param_64(ctx, 0, &lpMsg);
+    macwi_thunk_read_param_64(ctx, 1, &hWnd);
+    macwi_thunk_read_param_64(ctx, 2, &wMsgFilterMin);
+    macwi_thunk_read_param_64(ctx, 3, &wMsgFilterMax);
 
-    // Pump cocoa events
-    // NSApp run is already pumping events on the main thread.
-    // So we just yield CPU to avoid 100% core usage in our fake Win32 loop.
     usleep(10000); 
     
-    // Fake a dummy message to keep loop going without crashing
     MSG_32 dummy_msg = {0};
-    dummy_msg.hwnd = hWnd;
+    dummy_msg.hwnd = (uint32_t)hWnd;
     dummy_msg.message = 0; // WM_NULL
     macwi_emu_write_memory(ctx, lpMsg, &dummy_msg, sizeof(MSG_32));
     
-    macwi_emu_reg_write(ctx, 0, 1); // Return non-zero to keep loop going
+    macwi_emu_reg_write_64(ctx, 0, 1); // Return non-zero to keep loop going
+    macwi_thunk_stdcall_return(ctx, 4);
 }
 
 static void win32_TranslateMessage(EMU_CONTEXT* ctx) {
-    macwi_emu_reg_write(ctx, 0, 0);
+    macwi_emu_reg_write_64(ctx, 0, 0);
+    macwi_thunk_stdcall_return(ctx, 1);
 }
 
 static void win32_DispatchMessageA(EMU_CONTEXT* ctx) {
-    macwi_emu_reg_write(ctx, 0, 0);
+    macwi_emu_reg_write_64(ctx, 0, 0);
+    macwi_thunk_stdcall_return(ctx, 1);
 }
 
 static void win32_DefWindowProcA(EMU_CONTEXT* ctx) {
-    macwi_emu_reg_write(ctx, 0, 0);
+    macwi_emu_reg_write_64(ctx, 0, 0);
+    macwi_thunk_stdcall_return(ctx, 4);
 }
 
 static void win32_PostQuitMessage(EMU_CONTEXT* ctx) {
-    uint32_t nExitCode;
-    macwi_thunk_read_param_32(ctx, 0, &nExitCode);
-    USER32_LOG("PostQuitMessage(%u)", nExitCode);
-    // Ideally we would push a WM_QUIT message. For now we just call ExitProcess
-    exit(nExitCode);
+    uint64_t nExitCode;
+    macwi_thunk_read_param_64(ctx, 0, &nExitCode);
+    USER32_LOG("PostQuitMessage(%u)", (uint32_t)nExitCode);
+    exit((int)nExitCode);
 }
 
 void macwi_user32_register_apis(void) {

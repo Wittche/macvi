@@ -1,0 +1,33 @@
+{
+  "app_name": "UE_5.8",
+  "namespace": "ue",
+  "catalog_item_id": "18b3b415bc434c5b974f50488360ca31",
+  "title": "Unreal Engine",
+  "description": "Preview",
+  "categories": [
+    "engines/ue5",
+    "engines",
+    "engines/preview"
+  ],
+  "developer": "Epic Games",
+  "custom_attributes": {
+    "AllowMultipleInstances": "true",
+    "CanSkipCabinedWarning": "true",
+    "NotarizedAndSigned": "true",
+    "UE_5.7:RequirementsJson": "{\"Requirements\": {\"Windows\": { \"MinMajorVersion\": 6, \"MinMinorVersion\": 1, \"MinServicePackVersion\": 1 },\"MacOS\": { \"MinMajorVersion\": 12, \"MinMinorVersion\": 5, \"MinRevision\": 0 }}}   "
+  },
+  "key_images": [],
+  "asset_infos": {
+    "Windows": {
+      "appName": "UE_5.8",
+      "namespace": "ue",
+      "catalogItemId": "18b3b415bc434c5b974f50488360ca31",
+      "buildVersion": "5.8.0-53629095+++UE5+Release-5.8-Windows",
+      "labelName": "Live-Windows",
+      "assetId": "UE"
+    }
+  },
+  "base_urls": [],
+  "raw_catalog_item_json": "{\"ageGatings\":{},\"applicationId\":\"\",\"categories\":[{\"path\":\"engines/ue5\"},{\"path\":\"engines\"},{\"path\":\"engines/preview\"}],\"creationDate\":\"2026-04-10T13:37:23.556Z\",\"customAttributes\":{\"AllowMultipleInstances\":{\"type\":\"STRING\",\"value\":\"true\"},\"CanSkipCabinedWarning\":{\"type\":\"STRING\",\"value\":\"true\"},\"NotarizedAndSigned\":{\"type\":\"STRING\",\"value\":\"true\"},\"UE_5.7:RequirementsJson\":{\"type\":\"STRING\",\"value\":\"{\\\"Requirements\\\": {\\\"Windows\\\": { \\\"MinMajorVersion\\\": 6, \\\"MinMinorVersion\\\": 1, \\\"MinServicePackVersion\\\": 1 },\\\"MacOS\\\": { \\\"MinMajorVersion\\\": 12, \\\"MinMinorVersion\\\": 5, \\\"MinRevision\\\": 0 }}}   \"}},\"description\":\"Preview\",\"developer\":\"Epic Games\",\"developerId\":\"o-aa83a0a9bc45e98c80c1b1c9d92e9e\",\"endOfSupport\":false,\"entitlementName\":\"18b3b415bc434c5b974f50488360ca31\",\"entitlementType\":\"EXECUTABLE\",\"eulaIds\":[\"unreal_engine2\"],\"id\":\"18b3b415bc434c5b974f50488360ca31\",\"itemType\":\"DURABLE\",\"keyImages\":[],\"lastModifiedDate\":\"2026-05-13T18:03:14.539Z\",\"longDescription\":\"\",\"mainGameItemList\":[],\"namespace\":\"ue\",\"releaseInfo\":[{\"appId\":\"UE_5.8\",\"compatibleApps\":[],\"dateAdded\":\"2026-04-10T13:33:00.000Z\",\"id\":\"eaa3054def4849c185df6c9ceeff22e4\",\"platform\":[\"Windows\",\"Mac\"]}],\"requiresSecureAccount\":false,\"status\":\"ACTIVE\",\"title\":\"Unreal Engine\",\"unsearchable\":false}",
+  "fetched_at": 1781303339
+}

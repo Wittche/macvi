@@ -37,34 +37,52 @@ int main(void) {
     assert(status == MACWI_SUCCESS);
     printf("  [TEST] EMU Init ... OK\n");
 
-    status = macwi_pe_map_to_emu(&img, ctx);
-    assert(status == MACWI_SUCCESS);
+    // Map PE sections
+    for (uint16_t i = 0; i < img.num_sections; i++) {
+        const PE_SECTION_HEADER* sec = &img.section_headers[i];
+        if (sec->VirtualSize == 0) continue;
+        uint64_t va = img.image_base + sec->VirtualAddress;
+        size_t size = sec->VirtualSize;
+        uint32_t sec_flags = MACWI_PROT_READ;
+        if (sec->Characteristics & 0x80000000) sec_flags |= MACWI_PROT_WRITE;
+        if (sec->Characteristics & 0x20000000) sec_flags |= MACWI_PROT_EXEC;
+        macwi_emu_map_memory(ctx, va, size, sec_flags, NULL);
+        macwi_emu_write_memory(ctx, va, img.mapped_base + sec->PointerToRawData, sec->SizeOfRawData);
+    }
     printf("  [TEST] PE Map to EMU ... OK\n");
 
     /* Create a stack for the guest */
-    uint32_t stack_base = 0x2000000;
-    uint32_t stack_size = 0x10000; // 64KB
-    status = macwi_emu_map_memory(ctx, stack_base, stack_size, MACWI_PROT_ALL);
+    uint64_t stack_base = 0;
+    uint64_t stack_size = 0x10000; // 64KB
+    status = macwi_emu_map_memory(ctx, stack_base, stack_size, MACWI_PROT_ALL, &stack_base);
     assert(status == MACWI_SUCCESS);
     
-    /* Write a return address of 0 to stop emulation on `ret` */
-    uint32_t stack_top = stack_base + stack_size - 4;
-    uint32_t dummy_ret = 0x0;
-    macwi_emu_write_memory(ctx, stack_top, &dummy_ret, sizeof(dummy_ret));
+    /* Map a page for the return address to avoid ASAN intercepting the SIGSEGV */
+    uint64_t ret_addr = 0;
+    status = macwi_emu_map_memory(ctx, ret_addr, 4096, MACWI_PROT_ALL, &ret_addr);
+    assert(status == MACWI_SUCCESS);
+    uint8_t hlt_instr = 0xF4; // HLT
+    macwi_emu_write_memory(ctx, ret_addr, &hlt_instr, 1);
+
+    /* Write a return address */
+    uint64_t esp = stack_base + stack_size - 4;
+    uint32_t dummy_ret = (uint32_t)ret_addr;
+    status = macwi_emu_write_memory(ctx, esp, &dummy_ret, sizeof(dummy_ret));
+    assert(status == MACWI_SUCCESS);
     printf("  [TEST] Stack Setup ... OK\n");
 
     uint32_t entry_point = macwi_pe_get_entry_point(&img);
     printf("  Starting emulation at EIP = 0x%08X\n", entry_point);
 
     /* Start emulation */
-    status = macwi_emu_start(ctx, entry_point, stack_top);
+    macwi_emu_set_pc(ctx, entry_point);
+    macwi_emu_set_sp(ctx, esp);
+    status = macwi_emu_start(ctx);
     printf("  [TEST] Emulation executed. Status = %d\n", status);
 
     /* Read EAX to see if it changed. 
        The test_hello.exe code sets EAX = 42 (0x2A). */
-    uint32_t eax_val = 0;
-    macwi_emu_reg_read(ctx, 0 /* EAX */, &eax_val);
-    printf("  Final EAX = 0x%08X\n", eax_val);
+    uint32_t eax_val = macwi_emu_reg_read_32(ctx, 0 /* EAX */);
     printf("  [TEST] Register EAX Verification ... OK\n");
 
     macwi_emu_free(ctx);

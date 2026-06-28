@@ -1,0 +1,233 @@
+/* Minimal linux/sockios.h for macOS porting of FEX */
+#ifndef _LINUX_SOCKIOS_H
+#define _LINUX_SOCKIOS_H 1
+
+#include <sys/ioctl.h>
+
+#ifndef SIOCADDRT
+#define SIOCADDRT	0x890B
+#endif
+#ifndef SIOCDELRT
+#define SIOCDELRT	0x890C
+#endif
+#ifndef SIOCRTMSG
+#define SIOCRTMSG	0x890D
+#endif
+#ifndef SIOCGIFNAME
+#define SIOCGIFNAME	0x8910
+#endif
+#ifndef SIOCSIFLINK
+#define SIOCSIFLINK	0x8911
+#endif
+#ifndef SIOCGIFCONF
+#define SIOCGIFCONF	0x8912
+#endif
+#ifndef SIOCGIFFLAGS
+#define SIOCGIFFLAGS	0x8913
+#endif
+#ifndef SIOCSIFFLAGS
+#define SIOCSIFFLAGS	0x8914
+#endif
+#ifndef SIOCGIFADDR
+#define SIOCGIFADDR	0x8915
+#endif
+#ifndef SIOCSIFADDR
+#define SIOCSIFADDR	0x8916
+#endif
+#ifndef SIOCGIFDSTADDR
+#define SIOCGIFDSTADDR	0x8917
+#endif
+#ifndef SIOCSIFDSTADDR
+#define SIOCSIFDSTADDR	0x8918
+#endif
+#ifndef SIOCGIFBRDADDR
+#define SIOCGIFBRDADDR	0x8919
+#endif
+#ifndef SIOCSIFBRDADDR
+#define SIOCSIFBRDADDR	0x891a
+#endif
+#ifndef SIOCGIFNETMASK
+#define SIOCGIFNETMASK	0x891b
+#endif
+#ifndef SIOCSIFNETMASK
+#define SIOCSIFNETMASK	0x891c
+#endif
+#ifndef SIOCGIFMETRIC
+#define SIOCGIFMETRIC	0x891d
+#endif
+#ifndef SIOCSIFMETRIC
+#define SIOCSIFMETRIC	0x891e
+#endif
+#ifndef SIOCGIFMEM
+#define SIOCGIFMEM	0x891f
+#endif
+#ifndef SIOCSIFMEM
+#define SIOCSIFMEM	0x8920
+#endif
+#ifndef SIOCGIFMTU
+#define SIOCGIFMTU	0x8921
+#endif
+#ifndef SIOCSIFMTU
+#define SIOCSIFMTU	0x8922
+#endif
+#ifndef SIOCSIFNAME
+#define SIOCSIFNAME	0x8923
+#endif
+#ifndef SIOCSIFHWADDR
+#define SIOCSIFHWADDR	0x8924
+#endif
+#ifndef SIOCGIFENCAP
+#define SIOCGIFENCAP	0x8925
+#endif
+#ifndef SIOCSIFENCAP
+#define SIOCSIFENCAP	0x8926
+#endif
+#ifndef SIOCGIFHWADDR
+#define SIOCGIFHWADDR	0x8927
+#endif
+#ifndef SIOCGIFSLAVE
+#define SIOCGIFSLAVE	0x8929
+#endif
+#ifndef SIOCSIFSLAVE
+#define SIOCSIFSLAVE	0x8930
+#endif
+#ifndef SIOCADDMULTI
+#define SIOCADDMULTI	0x8931
+#endif
+#ifndef SIOCDELMULTI
+#define SIOCDELMULTI	0x8932
+#endif
+#ifndef SIOCGIFINDEX
+#define SIOCGIFINDEX	0x8933
+#endif
+#ifndef SIOGIFINDEX
+#define SIOGIFINDEX	SIOCGIFINDEX
+#endif
+#ifndef SIOCSIFPFLAGS
+#define SIOCSIFPFLAGS	0x8934
+#endif
+#ifndef SIOCGIFPFLAGS
+#define SIOCGIFPFLAGS	0x8935
+#endif
+#ifndef SIOCDIFADDR
+#define SIOCDIFADDR	0x8936
+#endif
+#ifndef SIOCSIFHWBROADCAST
+#define SIOCSIFHWBROADCAST 0x8937
+#endif
+#ifndef SIOCGIFCOUNT
+#define SIOCGIFCOUNT	0x8938
+#endif
+#ifndef SIOCGIFBR
+#define SIOCGIFBR	0x8940
+#endif
+#ifndef SIOCSIFBR
+#define SIOCSIFBR	0x8941
+#endif
+#ifndef SIOCGIFTXQLEN
+#define SIOCGIFTXQLEN	0x8950
+#endif
+#ifndef SIOCSIFTXQLEN
+#define SIOCSIFTXQLEN	0x8951
+#endif
+#ifndef SIOCETHTOOL
+#define SIOCETHTOOL	0x8946
+#endif
+#ifndef SIOCGMIIPHY
+#define SIOCGMIIPHY	0x8947
+#endif
+#ifndef SIOCGMIIREG
+#define SIOCGMIIREG	0x8948
+#endif
+#ifndef SIOCSMIIREG
+#define SIOCSMIIREG	0x8949
+#endif
+#ifndef SIOCWANDEV
+#define SIOCWANDEV	0x894A
+#endif
+#ifndef SIOCOUTQNSD
+#define SIOCOUTQNSD	0x894B
+#endif
+#ifndef SIOCGSKNS
+#define SIOCGSKNS	0x894C
+#endif
+#ifndef SIOCDARP
+#define SIOCDARP	0x8953
+#endif
+#ifndef SIOCGARP
+#define SIOCGARP	0x8954
+#endif
+#ifndef SIOCSARP
+#define SIOCSARP	0x8955
+#endif
+#ifndef SIOCDRARP
+#define SIOCDRARP	0x8960
+#endif
+#ifndef SIOCGRARP
+#define SIOCGRARP	0x8961
+#endif
+#ifndef SIOCSRARP
+#define SIOCSRARP	0x8962
+#endif
+#ifndef SIOCGIFMAP
+#define SIOCGIFMAP	0x8970
+#endif
+#ifndef SIOCSIFMAP
+#define SIOCSIFMAP	0x8971
+#endif
+#ifndef SIOCADDDLCI
+#define SIOCADDDLCI	0x8980
+#endif
+#ifndef SIOCDELDLCI
+#define SIOCDELDLCI	0x8981
+#endif
+#ifndef SIOCBONDENSLAVE
+#define SIOCBONDENSLAVE	0x8990
+#endif
+#ifndef SIOCBONDRELEASE
+#define SIOCBONDRELEASE	0x8991
+#endif
+#ifndef SIOCBONDSETHWADDR
+#define SIOCBONDSETHWADDR 0x8992
+#endif
+#ifndef SIOCBONDSLAVEINFOQUERY
+#define SIOCBONDSLAVEINFOQUERY 0x8993
+#endif
+#ifndef SIOCBONDINFOQUERY
+#define SIOCBONDINFOQUERY 0x8994
+#endif
+#ifndef SIOCBONDCHANGEACTIVE
+#define SIOCBONDCHANGEACTIVE 0x8995
+#endif
+#ifndef SIOCBRADDBR
+#define SIOCBRADDBR	0x89a0
+#endif
+#ifndef SIOCBRDELBR
+#define SIOCBRDELBR	0x89a1
+#endif
+#ifndef SIOCBRADDIF
+#define SIOCBRADDIF	0x89a2
+#endif
+#ifndef SIOCBRDELIF
+#define SIOCBRDELIF	0x89a3
+#endif
+#ifndef SIOCSHWTSTAMP
+#define SIOCSHWTSTAMP	0x89b0
+#endif
+#ifndef SIOCGHWTSTAMP
+#define SIOCGHWTSTAMP	0x89b1
+#endif
+#ifndef SIOCPROTOPRIVATE
+#define SIOCPROTOPRIVATE 0x89E0
+#endif
+#ifndef SIOCDEVPRIVATE
+#define SIOCDEVPRIVATE	0x89F0
+#endif
+#ifndef SIOCGSTAMP
+#define SIOCGSTAMP	0x8906
+#endif
+#ifndef SIOCGSTAMPNS
+#define SIOCGSTAMPNS	0x8907
+#endif
+
+#endif /* _LINUX_SOCKIOS_H */

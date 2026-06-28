@@ -5,7 +5,6 @@
 
 add_library(macwi_thunk STATIC
     thunk.c
-    dispatch.c
 )
 
 target_include_directories(macwi_thunk PUBLIC

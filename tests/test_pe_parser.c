@@ -96,12 +96,12 @@ static void test_parse_valid_pe(void) {
 
     assert(status == MACWI_SUCCESS);
     assert(image.dos_header != NULL);
-    assert(image.nt_headers != NULL);
+    assert(image.nt_headers_32 != NULL);
     assert(image.section_headers != NULL);
     assert(image.num_sections == 1);
     assert(image.image_base == 0x00400000);
     assert(image.entry_point == 0x00401000);  /* ImageBase + AddressOfEntryPoint */
-    assert(image.nt_headers->FileHeader.Machine == IMAGE_FILE_MACHINE_I386);
+    assert(image.file_header->Machine == IMAGE_FILE_MACHINE_I386);
 
     printf("OK\n");
 }
@@ -232,7 +232,7 @@ static void test_get_entry_point(void) {
     macwi_status_t status = macwi_pe_parse_headers(buf, sizeof(buf), &image);
     assert(status == MACWI_SUCCESS);
 
-    uint32_t ep = macwi_pe_get_entry_point(&image);
+    uint64_t ep = macwi_pe_get_entry_point(&image);
     assert(ep == 0x00401000);
 
     /* NULL image should return 0 */

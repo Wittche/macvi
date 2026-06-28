@@ -1,0 +1,8 @@
+{
+  "Comment": "D3D11/D3D12/DXGI thunks for Windows game compatibility via Metal 4",
+  "ThunksDB": {
+    "dxgi": 1,
+    "d3d11": 1,
+    "d3d12": 1
+  }
+}

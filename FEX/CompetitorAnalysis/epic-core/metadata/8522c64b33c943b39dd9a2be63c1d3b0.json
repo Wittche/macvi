@@ -1,0 +1,40 @@
+{
+  "app_name": "8522c64b33c943b39dd9a2be63c1d3b0",
+  "namespace": "610a546d4e204215a0b9a1c8a382bacb",
+  "catalog_item_id": "573af74f96ae4fafbcc886dbf6400edb",
+  "title": "Football Manager 2024 Demo",
+  "description": "Football Manager 2024 Demo",
+  "categories": [
+    "games",
+    "applications"
+  ],
+  "developer": "SEGA of Europe",
+  "custom_attributes": {
+    "CanRunOffline": "true",
+    "FolderName": "FM24Demo",
+    "OwnershipToken": "true"
+  },
+  "key_images": [
+    {
+      "type": "DieselGameBox",
+      "url": "https://cdn1.epicgames.com/item/610a546d4e204215a0b9a1c8a382bacb/EGS_FootballManager2024Demo_SportsInteractive_Demo_S1_2560x1440-52c475c63a370f60822100e6e2a70da8"
+    },
+    {
+      "type": "DieselGameBoxTall",
+      "url": "https://cdn1.epicgames.com/item/610a546d4e204215a0b9a1c8a382bacb/EGS_FootballManager2024Demo_SportsInteractive_Demo_S2_1200x1600-ec18bfdc90151a6b5e19974791f97f50"
+    }
+  ],
+  "asset_infos": {
+    "Windows": {
+      "appName": "8522c64b33c943b39dd9a2be63c1d3b0",
+      "namespace": "610a546d4e204215a0b9a1c8a382bacb",
+      "catalogItemId": "573af74f96ae4fafbcc886dbf6400edb",
+      "buildVersion": "2081839-win+denuvo-fix",
+      "labelName": "Live-Windows",
+      "assetId": "8522c64b33c943b39dd9a2be63c1d3b0"
+    }
+  },
+  "base_urls": [],
+  "raw_catalog_item_json": "{\"ageGatings\":{},\"applicationId\":\"\",\"categories\":[{\"path\":\"games\"},{\"path\":\"applications\"}],\"creationDate\":\"2023-07-27T23:44:04.695Z\",\"customAttributes\":{\"CanRunOffline\":{\"type\":\"STRING\",\"value\":\"true\"},\"FolderName\":{\"type\":\"STRING\",\"value\":\"FM24Demo\"},\"OwnershipToken\":{\"type\":\"STRING\",\"value\":\"true\"}},\"description\":\"Football Manager 2024 Demo\",\"developer\":\"SEGA of Europe\",\"developerId\":\"o-q3zwbk8kbbbgar9ql3x7d43rjj8bjl\",\"endOfSupport\":false,\"entitlementName\":\"573af74f96ae4fafbcc886dbf6400edb\",\"entitlementType\":\"EXECUTABLE\",\"eulaIds\":[\"egstore\"],\"id\":\"573af74f96ae4fafbcc886dbf6400edb\",\"itemType\":\"DURABLE\",\"keyImages\":[{\"height\":1440,\"md5\":\"52c475c63a370f60822100e6e2a70da8\",\"size\":973691,\"type\":\"DieselGameBox\",\"uploadedDate\":\"2023-10-20T17:49:54.919Z\",\"url\":\"https://cdn1.epicgames.com/item/610a546d4e204215a0b9a1c8a382bacb/EGS_FootballManager2024Demo_SportsInteractive_Demo_S1_2560x1440-52c475c63a370f60822100e6e2a70da8\",\"width\":2560},{\"height\":1600,\"md5\":\"ec18bfdc90151a6b5e19974791f97f50\",\"size\":820287,\"type\":\"DieselGameBoxTall\",\"uploadedDate\":\"2023-10-20T17:49:58.287Z\",\"url\":\"https://cdn1.epicgames.com/item/610a546d4e204215a0b9a1c8a382bacb/EGS_FootballManager2024Demo_SportsInteractive_Demo_S2_1200x1600-ec18bfdc90151a6b5e19974791f97f50\",\"width\":1200}],\"lastModifiedDate\":\"2023-11-06T14:57:29.102Z\",\"mainGameItemList\":[],\"namespace\":\"610a546d4e204215a0b9a1c8a382bacb\",\"releaseInfo\":[{\"appId\":\"8522c64b33c943b39dd9a2be63c1d3b0\",\"compatibleApps\":[],\"dateAdded\":\"2023-07-31T13:53:10.160Z\",\"id\":\"0ecba86cc0c9443db754e6b68674b38b\",\"platform\":[\"Windows\",\"Mac\"]}],\"requiresSecureAccount\":false,\"status\":\"ACTIVE\",\"title\":\"Football Manager 2024 Demo\",\"unsearchable\":true}",
+  "fetched_at": 1781303328
+}

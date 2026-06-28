@@ -18,7 +18,7 @@
 /** Opaque handle for an emulation context */
 typedef struct EMU_CONTEXT EMU_CONTEXT;
 
-/** Memory protection flags (consistent with Unicorn's UC_PROT_*) */
+/** Memory protection flags */
 #define MACWI_PROT_NONE  0
 #define MACWI_PROT_READ  1
 #define MACWI_PROT_WRITE 2
@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 /**
- * Initialize the emulation context for an x86 32-bit machine.
+ * Initialize the emulation context for an x86_64 64-bit machine.
  *
  * @param out_ctx Pointer to receive the allocated context.
  * @return MACWI_SUCCESS on success, error code otherwise.
@@ -47,7 +47,7 @@ void macwi_emu_free(EMU_CONTEXT* ctx);
 /**
  * Map a region of memory in the emulator's isolated address space.
  * 
- * Note: `address` and `size` must be page-aligned (typically 4KB for x86).
+ * Note: `address` and `size` must be page-aligned (typically 4KB).
  *
  * @param ctx Context handle.
  * @param address The virtual address in the guest to map.
@@ -55,92 +55,117 @@ void macwi_emu_free(EMU_CONTEXT* ctx);
  * @param perms Protection flags (MACWI_PROT_*).
  * @return MACWI_SUCCESS on success.
  */
-macwi_status_t macwi_emu_map_memory(EMU_CONTEXT* ctx, uint32_t address, size_t size, uint32_t perms);
+macwi_status_t macwi_emu_map_memory(EMU_CONTEXT* ctx, uint64_t address, size_t size, uint32_t perms, uint64_t* out_address);
 
 /**
- * Unmap a region of memory from the emulator.
+ * Write data into the emulator's memory.
  *
  * @param ctx Context handle.
- * @param address The starting virtual address.
- * @param size The size of the region in bytes.
+ * @param address The virtual address to write to.
+ * @param data Pointer to the data to write.
+ * @param size Size of the data in bytes.
  * @return MACWI_SUCCESS on success.
  */
-macwi_status_t macwi_emu_unmap_memory(EMU_CONTEXT* ctx, uint32_t address, size_t size);
-
-/**
- * Write data to the emulator's memory.
- *
- * @param ctx Context handle.
- * @param address The target virtual address.
- * @param data The data to write.
- * @param size The number of bytes to write.
- * @return MACWI_SUCCESS on success.
- */
-macwi_status_t macwi_emu_write_memory(EMU_CONTEXT* ctx, uint32_t address, const void* data, size_t size);
+macwi_status_t macwi_emu_write_memory(EMU_CONTEXT* ctx, uint64_t address, const void* data, size_t size);
 
 /**
  * Read data from the emulator's memory.
  *
  * @param ctx Context handle.
- * @param address The source virtual address.
- * @param data The buffer to receive data.
- * @param size The number of bytes to read.
+ * @param address The virtual address to read from.
+ * @param out_data Pointer to the buffer to receive the data.
+ * @param size Size of the data to read in bytes.
  * @return MACWI_SUCCESS on success.
  */
-macwi_status_t macwi_emu_read_memory(EMU_CONTEXT* ctx, uint32_t address, void* data, size_t size);
+macwi_status_t macwi_emu_read_memory(EMU_CONTEXT* ctx, uint64_t address, void* out_data, size_t size);
 
 /**
- * Read the value of a specific x86 register.
+ * Read a 32-bit register.
  *
  * @param ctx Context handle.
- * @param reg_id A predefined register ID (0=EAX, 1=EBX, 2=ECX, 3=EDX, 4=ESI, 5=EDI, 6=EBP, 7=ESP, 8=EIP)
- * @param out_value Pointer to receive the register value.
- * @return MACWI_SUCCESS on success.
+ * @param reg_id Register ID (0=eax, 1=ecx, 2=edx, 3=ebx, 4=esp, 5=ebp, 6=esi, 7=edi).
+ * @return The value of the register.
  */
-macwi_status_t macwi_emu_reg_read(EMU_CONTEXT* ctx, int reg_id, uint32_t* out_value);
+uint32_t macwi_emu_reg_read_32(EMU_CONTEXT* ctx, int reg_id);
 
 /**
- * Write a value to a specific x86 register.
+ * Write a 32-bit register.
  *
  * @param ctx Context handle.
- * @param reg_id A predefined register ID.
+ * @param reg_id Register ID.
  * @param value The value to write.
- * @return MACWI_SUCCESS on success.
  */
-macwi_status_t macwi_emu_reg_write(EMU_CONTEXT* ctx, int reg_id, uint32_t value);
+void macwi_emu_reg_write_32(EMU_CONTEXT* ctx, int reg_id, uint32_t value);
 
 /**
- * Start execution of the emulator.
+ * Read a 64-bit register.
  *
  * @param ctx Context handle.
- * @param entry_point The guest address to start execution from.
- * @param stack_top The guest address of the top of the stack.
- * @return MACWI_SUCCESS on normal exit, error on crash/exception.
+ * @param reg_id Register ID (0=rax, 1=rcx, 2=rdx, 3=rbx, 4=rsp, 5=rbp, 6=rsi, 7=rdi, 8=r8...).
+ * @return The value of the register.
  */
-macwi_status_t macwi_emu_start(EMU_CONTEXT* ctx, uint32_t entry_point, uint32_t stack_top);
+uint64_t macwi_emu_reg_read_64(EMU_CONTEXT* ctx, int reg_id);
+
+/**
+ * Write a 64-bit register.
+ *
+ * @param ctx Context handle.
+ * @param reg_id Register ID.
+ * @param value The value to write.
+ */
+void macwi_emu_reg_write_64(EMU_CONTEXT* ctx, int reg_id, uint64_t value);
+
+/**
+ * Set the Program Counter (RIP).
+ */
+void macwi_emu_set_pc(EMU_CONTEXT* ctx, uint64_t pc);
+
+/**
+ * Get the Program Counter (RIP).
+ */
+uint64_t macwi_emu_get_pc(EMU_CONTEXT* ctx);
+
+/**
+ * Set the Stack Pointer (RSP).
+ */
+void macwi_emu_set_sp(EMU_CONTEXT* ctx, uint64_t sp);
+
+/**
+ * Get the Stack Pointer (RSP).
+ */
+uint64_t macwi_emu_get_sp(EMU_CONTEXT* ctx);
+
+/**
+ * Start execution from the current PC.
+ *
+ * @param ctx Context handle.
+ * @return MACWI_SUCCESS on success.
+ */
+macwi_status_t macwi_emu_start(EMU_CONTEXT* ctx);
+
+/**
+ * Stop execution.
+ */
+void macwi_emu_stop(EMU_CONTEXT* ctx);
 
 /**
  * Callback signature for code execution hooks.
  *
  * @param ctx The emulation context.
  * @param address The address being executed.
- * @param size The size of the instruction.
  * @param user_data Arbitrary user data passed during registration.
  */
-typedef void (*macwi_emu_hook_cb)(EMU_CONTEXT* ctx, uint32_t address, uint32_t size, void* user_data);
+typedef void (*macwi_emu_hook_cb)(EMU_CONTEXT* ctx, uint64_t address, void* user_data);
 
 /**
  * Add a hook to intercept code execution in a specific address range.
  *
  * @param ctx Context handle.
- * @param begin Starting address.
- * @param end Ending address.
  * @param callback The function to call.
  * @param user_data Opaque pointer passed to the callback.
- * @param out_hook_handle Pointer to receive an opaque handle (can be NULL).
  * @return MACWI_SUCCESS on success.
  */
-macwi_status_t macwi_emu_add_code_hook(EMU_CONTEXT* ctx, uint32_t begin, uint32_t end, macwi_emu_hook_cb callback, void* user_data, void** out_hook_handle);
+macwi_status_t macwi_emu_hook_unmapped(EMU_CONTEXT* ctx, macwi_emu_hook_cb callback, void* user_data);
 
 #ifdef __cplusplus
 }
