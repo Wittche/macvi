@@ -52,6 +52,11 @@ typedef struct {
 #define WM_PAINT        0x000F
 #define WM_CLOSE        0x0010
 #define WM_QUIT         0x0012
+#define WM_KEYDOWN      0x0100
+#define WM_KEYUP        0x0101
+#define WM_MOUSEMOVE    0x0200
+#define WM_LBUTTONDOWN  0x0201
+#define WM_LBUTTONUP    0x0202
 
 #define SW_SHOW         5
 #define SW_SHOWNORMAL   1

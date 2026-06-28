@@ -45,6 +45,76 @@ static CGContextRef g_current_cg_context = NULL;
 
 @implementation MacWIView
 
+- (BOOL)acceptsFirstResponder {
+    return YES;
+}
+
+- (void)mouseDown:(NSEvent *)event {
+    NSPoint loc = [self convertPoint:[event locationInWindow] fromView:nil];
+    macwi_event_t out_evt;
+    out_evt.type = MACWI_EVENT_MOUSEDOWN;
+    out_evt.window = (void*)[self window];
+    out_evt.key_code = 0;
+    out_evt.mouse_x = (int)loc.x;
+    out_evt.mouse_y = (int)([self bounds].size.height - loc.y); // Convert Cocoa Y to Windows Y (top-down)
+
+    pthread_mutex_lock(&g_event_mutex);
+    if (g_eventQueue) {
+        NSValue* val = [NSValue valueWithBytes:&out_evt objCType:@encode(macwi_event_t)];
+        [g_eventQueue addObject:val];
+    }
+    pthread_mutex_unlock(&g_event_mutex);
+}
+
+- (void)mouseUp:(NSEvent *)event {
+    NSPoint loc = [self convertPoint:[event locationInWindow] fromView:nil];
+    macwi_event_t out_evt;
+    out_evt.type = MACWI_EVENT_MOUSEUP;
+    out_evt.window = (void*)[self window];
+    out_evt.key_code = 0;
+    out_evt.mouse_x = (int)loc.x;
+    out_evt.mouse_y = (int)([self bounds].size.height - loc.y);
+
+    pthread_mutex_lock(&g_event_mutex);
+    if (g_eventQueue) {
+        NSValue* val = [NSValue valueWithBytes:&out_evt objCType:@encode(macwi_event_t)];
+        [g_eventQueue addObject:val];
+    }
+    pthread_mutex_unlock(&g_event_mutex);
+}
+
+- (void)keyDown:(NSEvent *)event {
+    macwi_event_t out_evt;
+    out_evt.type = MACWI_EVENT_KEYDOWN;
+    out_evt.window = (void*)[self window];
+    out_evt.key_code = [event keyCode];
+    out_evt.mouse_x = 0;
+    out_evt.mouse_y = 0;
+
+    pthread_mutex_lock(&g_event_mutex);
+    if (g_eventQueue) {
+        NSValue* val = [NSValue valueWithBytes:&out_evt objCType:@encode(macwi_event_t)];
+        [g_eventQueue addObject:val];
+    }
+    pthread_mutex_unlock(&g_event_mutex);
+}
+
+- (void)keyUp:(NSEvent *)event {
+    macwi_event_t out_evt;
+    out_evt.type = MACWI_EVENT_KEYUP;
+    out_evt.window = (void*)[self window];
+    out_evt.key_code = [event keyCode];
+    out_evt.mouse_x = 0;
+    out_evt.mouse_y = 0;
+
+    pthread_mutex_lock(&g_event_mutex);
+    if (g_eventQueue) {
+        NSValue* val = [NSValue valueWithBytes:&out_evt objCType:@encode(macwi_event_t)];
+        [g_eventQueue addObject:val];
+    }
+    pthread_mutex_unlock(&g_event_mutex);
+}
+
 - (void)drawRect:(NSRect)dirtyRect {
     [super drawRect:dirtyRect];
     

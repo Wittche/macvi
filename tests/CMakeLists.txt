@@ -124,3 +124,10 @@ add_custom_command(
     COMMENT "Building GDI Test 32-bit Windows PE executable with MinGW"
 )
 add_custom_target(gdi_test ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/gdi_test.exe)
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/input_test.exe
+    COMMAND i686-w64-mingw32-gcc ${CMAKE_CURRENT_SOURCE_DIR}/input_test.c -o ${CMAKE_CURRENT_BINARY_DIR}/input_test.exe -nostdlib -lkernel32 -luser32 -lgdi32 -Wl,-e,__start -Wl,--image-base,0x2A000000
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/input_test.c
+    COMMENT "Building Input Test 32-bit Windows PE executable with MinGW"
+)
+add_custom_target(input_test ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/input_test.exe)

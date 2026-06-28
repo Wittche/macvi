@@ -162,6 +162,18 @@ static void win32_GetMessageA(EMU_CONTEXT* ctx) {
             msg.message = WM_CLOSE;
         } else if (event.type == MACWI_EVENT_PAINT) {
             msg.message = WM_PAINT;
+        } else if (event.type == MACWI_EVENT_KEYDOWN) {
+            msg.message = WM_KEYDOWN;
+            msg.wParam = event.key_code;
+        } else if (event.type == MACWI_EVENT_KEYUP) {
+            msg.message = WM_KEYUP;
+            msg.wParam = event.key_code;
+        } else if (event.type == MACWI_EVENT_MOUSEDOWN) {
+            msg.message = WM_LBUTTONDOWN;
+            msg.lParam = (event.mouse_y << 16) | (event.mouse_x & 0xFFFF);
+        } else if (event.type == MACWI_EVENT_MOUSEUP) {
+            msg.message = WM_LBUTTONUP;
+            msg.lParam = (event.mouse_y << 16) | (event.mouse_x & 0xFFFF);
         } else {
             msg.message = 0;
         }
