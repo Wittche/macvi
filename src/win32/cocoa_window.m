@@ -185,7 +185,7 @@ void* macwi_cocoa_create_window(const char* title, int width, int height) {
 }
 
 void macwi_cocoa_show_window(void* window_ptr) {
-    dispatch_sync(dispatch_get_main_queue(), ^{
+    dispatch_async(dispatch_get_main_queue(), ^{
         NSWindow* window = (__bridge NSWindow*)window_ptr;
         [window makeKeyAndOrderFront:nil];
         [NSApp activateIgnoringOtherApps:YES];

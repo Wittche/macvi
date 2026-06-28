@@ -30,9 +30,6 @@ public:
         // EAX contains the API index
         uint32_t api_index = (uint32_t)Args->Argument[0];
         
-        fprintf(stderr, "[macwi:emu] HandleSyscall invoked for API index %u at RIP=0x%llX\n", api_index, Frame->State.rip);
-        fflush(stderr);
-        
         // Dispatch to the native host implementation
         macwi_thunk_handle_syscall(m_ctx, api_index);
         
