@@ -1,6 +1,6 @@
 /**
  * @file registry.h
- * @brief Registry emulation — In-memory tree for Windows Registry.
+ * @brief Registry emulation — File-backed tree for Windows Registry.
  *
  * SPDX-License-Identifier: MIT
  */
@@ -24,15 +24,27 @@ extern "C" {
 #define REG_EXPAND_SZ         2
 #define REG_BINARY            3
 #define REG_DWORD             4
+#define REG_DWORD_BIG_ENDIAN  5
+#define REG_MULTI_SZ          7
+#define REG_QWORD             11
 
-// Base initialization for the registry subsystem
+// Initialization and persistence
 macwi_status_t macwi_registry_init(void);
+void           macwi_registry_save(void);
 
-// Registry API
+// Key operations
 macwi_status_t macwi_reg_open_key(uint32_t hKey, const char* lpSubKey, void** out_key_obj);
 macwi_status_t macwi_reg_create_key(uint32_t hKey, const char* lpSubKey, void** out_key_obj);
+macwi_status_t macwi_reg_delete_key(uint32_t hKey, const char* lpSubKey);
+
+// Value operations
 macwi_status_t macwi_reg_set_value(void* key_obj, const char* lpValueName, uint32_t dwType, const uint8_t* lpData, uint32_t cbData);
 macwi_status_t macwi_reg_query_value(void* key_obj, const char* lpValueName, uint32_t* lpType, uint8_t* lpData, uint32_t* lpcbData);
+macwi_status_t macwi_reg_delete_value(void* key_obj, const char* lpValueName);
+
+// Enumeration
+macwi_status_t macwi_reg_enum_key(void* key_obj, uint32_t dwIndex, char* lpName, uint32_t* lpcchName);
+macwi_status_t macwi_reg_enum_value(void* key_obj, uint32_t dwIndex, char* lpValueName, uint32_t* lpcchValueName, uint32_t* lpType, uint8_t* lpData, uint32_t* lpcbData);
 
 #ifdef __cplusplus
 }

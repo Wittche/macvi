@@ -20,6 +20,9 @@
 
 extern HANDLE_TABLE g_macwi_handle_table;
 
+/* ============================================================================
+ * RegOpenKeyExA
+ * ============================================================================ */
 static void win32_RegOpenKeyExA(EMU_CONTEXT* ctx) {
     uint64_t hKey, lpSubKey, ulOptions, samDesired, phkResult;
     macwi_thunk_read_param_64(ctx, 0, &hKey);
@@ -45,6 +48,9 @@ static void win32_RegOpenKeyExA(EMU_CONTEXT* ctx) {
     macwi_thunk_stdcall_return(ctx, 5);
 }
 
+/* ============================================================================
+ * RegCreateKeyExA
+ * ============================================================================ */
 static void win32_RegCreateKeyExA(EMU_CONTEXT* ctx) {
     uint64_t hKey, lpSubKey, Reserved, lpClass, dwOptions, samDesired, lpSecurityAttributes, phkResult, lpdwDisposition;
     macwi_thunk_read_param_64(ctx, 0, &hKey);
@@ -78,6 +84,9 @@ static void win32_RegCreateKeyExA(EMU_CONTEXT* ctx) {
     macwi_thunk_stdcall_return(ctx, 9);
 }
 
+/* ============================================================================
+ * RegSetValueExA
+ * ============================================================================ */
 static void win32_RegSetValueExA(EMU_CONTEXT* ctx) {
     uint64_t hKey, lpValueName, Reserved, dwType, lpData, cbData;
     macwi_thunk_read_param_64(ctx, 0, &hKey);
@@ -90,7 +99,7 @@ static void win32_RegSetValueExA(EMU_CONTEXT* ctx) {
     char valname[256] = {0};
     if (lpValueName) macwi_thunk_read_guest_string(ctx, lpValueName, valname, sizeof(valname));
 
-    ADVAPI_STUB_LOG("RegSetValueExA(hKey=0x%llX, valname=\"%s\")", hKey, valname);
+    ADVAPI_STUB_LOG("RegSetValueExA(hKey=0x%llX, valname=\"%s\", type=%u, cbData=%u)", hKey, valname, (uint32_t)dwType, (uint32_t)cbData);
 
     void* key_obj = NULL;
     if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hKey, HANDLE_TYPE_REGISTRY_KEY, &key_obj) != MACWI_SUCCESS) {
@@ -99,9 +108,9 @@ static void win32_RegSetValueExA(EMU_CONTEXT* ctx) {
         return;
     }
 
-    uint8_t* temp = (uint8_t*)malloc(cbData);
+    uint8_t* temp = (uint8_t*)malloc(cbData > 0 ? cbData : 1);
     if (cbData > 0) macwi_emu_read_memory(ctx, lpData, temp, cbData);
-    
+
     macwi_status_t st = macwi_reg_set_value(key_obj, valname, (uint32_t)dwType, temp, (uint32_t)cbData);
     free(temp);
 
@@ -109,6 +118,9 @@ static void win32_RegSetValueExA(EMU_CONTEXT* ctx) {
     macwi_thunk_stdcall_return(ctx, 6);
 }
 
+/* ============================================================================
+ * RegQueryValueExA
+ * ============================================================================ */
 static void win32_RegQueryValueExA(EMU_CONTEXT* ctx) {
     uint64_t hKey, lpValueName, lpReserved, lpType, lpData, lpcbData;
     macwi_thunk_read_param_64(ctx, 0, &hKey);
@@ -132,8 +144,7 @@ static void win32_RegQueryValueExA(EMU_CONTEXT* ctx) {
 
     uint32_t type = 0;
     uint32_t size = 0;
-    
-    // First pass to get size
+
     if (lpcbData) macwi_emu_read_memory(ctx, lpcbData, &size, 4);
 
     uint8_t* temp = NULL;
@@ -158,14 +169,145 @@ static void win32_RegQueryValueExA(EMU_CONTEXT* ctx) {
     macwi_thunk_stdcall_return(ctx, 6);
 }
 
+/* ============================================================================
+ * RegDeleteKeyA
+ * ============================================================================ */
+static void win32_RegDeleteKeyA(EMU_CONTEXT* ctx) {
+    uint64_t hKey, lpSubKey;
+    macwi_thunk_read_param_64(ctx, 0, &hKey);
+    macwi_thunk_read_param_64(ctx, 1, &lpSubKey);
+
+    char subkey[256] = {0};
+    if (lpSubKey) macwi_thunk_read_guest_string(ctx, lpSubKey, subkey, sizeof(subkey));
+
+    ADVAPI_STUB_LOG("RegDeleteKeyA(hKey=0x%llX, subkey=\"%s\")", hKey, subkey);
+
+    macwi_status_t st = macwi_reg_delete_key((uint32_t)hKey, subkey);
+    macwi_emu_reg_write_64(ctx, 0, (st == MACWI_SUCCESS) ? 0 : 2);
+    macwi_thunk_stdcall_return(ctx, 2);
+}
+
+/* ============================================================================
+ * RegDeleteValueA
+ * ============================================================================ */
+static void win32_RegDeleteValueA(EMU_CONTEXT* ctx) {
+    uint64_t hKey, lpValueName;
+    macwi_thunk_read_param_64(ctx, 0, &hKey);
+    macwi_thunk_read_param_64(ctx, 1, &lpValueName);
+
+    char valname[256] = {0};
+    if (lpValueName) macwi_thunk_read_guest_string(ctx, lpValueName, valname, sizeof(valname));
+
+    ADVAPI_STUB_LOG("RegDeleteValueA(hKey=0x%llX, valname=\"%s\")", hKey, valname);
+
+    void* key_obj = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hKey, HANDLE_TYPE_REGISTRY_KEY, &key_obj) != MACWI_SUCCESS) {
+        macwi_emu_reg_write_64(ctx, 0, 6); // ERROR_INVALID_HANDLE
+        macwi_thunk_stdcall_return(ctx, 2);
+        return;
+    }
+
+    macwi_status_t st = macwi_reg_delete_value(key_obj, valname);
+    macwi_emu_reg_write_64(ctx, 0, (st == MACWI_SUCCESS) ? 0 : 2);
+    macwi_thunk_stdcall_return(ctx, 2);
+}
+
+/* ============================================================================
+ * RegEnumKeyExA
+ * ============================================================================ */
+static void win32_RegEnumKeyExA(EMU_CONTEXT* ctx) {
+    uint64_t hKey, dwIndex, lpName, lpcchName, lpReserved, lpClass, lpcchClass, lpftLastWriteTime;
+    macwi_thunk_read_param_64(ctx, 0, &hKey);
+    macwi_thunk_read_param_64(ctx, 1, &dwIndex);
+    macwi_thunk_read_param_64(ctx, 2, &lpName);
+    macwi_thunk_read_param_64(ctx, 3, &lpcchName);
+    macwi_thunk_read_param_64(ctx, 4, &lpReserved);
+    macwi_thunk_read_param_64(ctx, 5, &lpClass);
+    macwi_thunk_read_param_64(ctx, 6, &lpcchClass);
+    macwi_thunk_read_param_64(ctx, 7, &lpftLastWriteTime);
+
+    ADVAPI_STUB_LOG("RegEnumKeyExA(hKey=0x%llX, index=%u)", hKey, (uint32_t)dwIndex);
+
+    void* key_obj = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hKey, HANDLE_TYPE_REGISTRY_KEY, &key_obj) != MACWI_SUCCESS) {
+        macwi_emu_reg_write_64(ctx, 0, 6); // ERROR_INVALID_HANDLE
+        macwi_thunk_stdcall_return(ctx, 8);
+        return;
+    }
+
+    char name_buf[256] = {0};
+    uint32_t name_len = sizeof(name_buf);
+
+    macwi_status_t st = macwi_reg_enum_key(key_obj, (uint32_t)dwIndex, name_buf, &name_len);
+
+    if (st == MACWI_SUCCESS) {
+        if (lpName) macwi_emu_write_memory(ctx, lpName, name_buf, name_len + 1);
+        if (lpcchName) macwi_emu_write_memory(ctx, lpcchName, &name_len, 4);
+        macwi_emu_reg_write_64(ctx, 0, 0); // ERROR_SUCCESS
+    } else {
+        macwi_emu_reg_write_64(ctx, 0, 259); // ERROR_NO_MORE_ITEMS
+    }
+    macwi_thunk_stdcall_return(ctx, 8);
+}
+
+/* ============================================================================
+ * RegEnumValueA
+ * ============================================================================ */
+static void win32_RegEnumValueA(EMU_CONTEXT* ctx) {
+    uint64_t hKey, dwIndex, lpValueName, lpcchValueName, lpReserved, lpType, lpData, lpcbData;
+    macwi_thunk_read_param_64(ctx, 0, &hKey);
+    macwi_thunk_read_param_64(ctx, 1, &dwIndex);
+    macwi_thunk_read_param_64(ctx, 2, &lpValueName);
+    macwi_thunk_read_param_64(ctx, 3, &lpcchValueName);
+    macwi_thunk_read_param_64(ctx, 4, &lpReserved);
+    macwi_thunk_read_param_64(ctx, 5, &lpType);
+    macwi_thunk_read_param_64(ctx, 6, &lpData);
+    macwi_thunk_read_param_64(ctx, 7, &lpcbData);
+
+    ADVAPI_STUB_LOG("RegEnumValueA(hKey=0x%llX, index=%u)", hKey, (uint32_t)dwIndex);
+
+    void* key_obj = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hKey, HANDLE_TYPE_REGISTRY_KEY, &key_obj) != MACWI_SUCCESS) {
+        macwi_emu_reg_write_64(ctx, 0, 6);
+        macwi_thunk_stdcall_return(ctx, 8);
+        return;
+    }
+
+    char vname_buf[256] = {0};
+    uint32_t vname_len = sizeof(vname_buf);
+    uint32_t type = 0;
+    uint8_t data_buf[1024] = {0};
+    uint32_t data_len = sizeof(data_buf);
+
+    macwi_status_t st = macwi_reg_enum_value(key_obj, (uint32_t)dwIndex, vname_buf, &vname_len, &type, data_buf, &data_len);
+
+    if (st == MACWI_SUCCESS) {
+        if (lpValueName) macwi_emu_write_memory(ctx, lpValueName, vname_buf, vname_len + 1);
+        if (lpcchValueName) macwi_emu_write_memory(ctx, lpcchValueName, &vname_len, 4);
+        if (lpType) macwi_emu_write_memory(ctx, lpType, &type, 4);
+        if (lpData && lpcbData) macwi_emu_write_memory(ctx, lpData, data_buf, data_len);
+        if (lpcbData) macwi_emu_write_memory(ctx, lpcbData, &data_len, 4);
+        macwi_emu_reg_write_64(ctx, 0, 0);
+    } else {
+        macwi_emu_reg_write_64(ctx, 0, 259); // ERROR_NO_MORE_ITEMS
+    }
+    macwi_thunk_stdcall_return(ctx, 8);
+}
+
+/* ============================================================================
+ * RegCloseKey
+ * ============================================================================ */
 static void win32_RegCloseKey(EMU_CONTEXT* ctx) {
     uint64_t hKey;
     macwi_thunk_read_param_64(ctx, 0, &hKey);
     ADVAPI_STUB_LOG("RegCloseKey(0x%llX)", hKey);
-    
-    // We do not actually free the key object here, just close handle
+
     macwi_status_t st = macwi_handle_close(&g_macwi_handle_table, (HANDLE)(uintptr_t)hKey);
     macwi_emu_reg_write_64(ctx, 0, (st == MACWI_SUCCESS) ? 0 : 6);
+
+    // Auto-save registry on close
+    macwi_registry_save();
+
     macwi_thunk_stdcall_return(ctx, 1);
 }
 
@@ -174,9 +316,13 @@ static void win32_RegCloseKey(EMU_CONTEXT* ctx) {
  * ============================================================================ */
 
 void macwi_advapi32_register_apis(void) {
-    macwi_thunk_register_api("advapi32.dll", "RegOpenKeyExA", win32_RegOpenKeyExA, 5);
-    macwi_thunk_register_api("advapi32.dll", "RegCreateKeyExA", win32_RegCreateKeyExA, 9);
-    macwi_thunk_register_api("advapi32.dll", "RegSetValueExA", win32_RegSetValueExA, 6);
+    macwi_thunk_register_api("advapi32.dll", "RegOpenKeyExA",    win32_RegOpenKeyExA, 5);
+    macwi_thunk_register_api("advapi32.dll", "RegCreateKeyExA",  win32_RegCreateKeyExA, 9);
+    macwi_thunk_register_api("advapi32.dll", "RegSetValueExA",   win32_RegSetValueExA, 6);
     macwi_thunk_register_api("advapi32.dll", "RegQueryValueExA", win32_RegQueryValueExA, 6);
-    macwi_thunk_register_api("advapi32.dll", "RegCloseKey", win32_RegCloseKey, 1);
+    macwi_thunk_register_api("advapi32.dll", "RegDeleteKeyA",    win32_RegDeleteKeyA, 2);
+    macwi_thunk_register_api("advapi32.dll", "RegDeleteValueA",  win32_RegDeleteValueA, 2);
+    macwi_thunk_register_api("advapi32.dll", "RegEnumKeyExA",    win32_RegEnumKeyExA, 8);
+    macwi_thunk_register_api("advapi32.dll", "RegEnumValueA",    win32_RegEnumValueA, 8);
+    macwi_thunk_register_api("advapi32.dll", "RegCloseKey",      win32_RegCloseKey, 1);
 }

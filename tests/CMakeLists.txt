@@ -87,3 +87,21 @@ add_custom_command(
     COMMENT "Building GUI Test 32-bit Windows PE executable with MinGW"
 )
 add_custom_target(gui_win32 ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/gui_win32.exe)
+
+# Build registry_test.exe using MinGW
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/registry_test.exe
+    COMMAND i686-w64-mingw32-gcc ${CMAKE_CURRENT_SOURCE_DIR}/registry_test.c -o ${CMAKE_CURRENT_BINARY_DIR}/registry_test.exe -nostdlib -lkernel32 -ladvapi32 -Wl,-e,__start -Wl,--image-base,0x2A000000
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/registry_test.c
+    COMMENT "Building Registry Test 32-bit Windows PE executable with MinGW"
+)
+add_custom_target(registry_test ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/registry_test.exe)
+
+# Build thread_test.exe using MinGW
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/thread_test.exe
+    COMMAND i686-w64-mingw32-gcc ${CMAKE_CURRENT_SOURCE_DIR}/thread_test.c -o ${CMAKE_CURRENT_BINARY_DIR}/thread_test.exe -nostdlib -lkernel32 -Wl,-e,__start -Wl,--image-base,0x2B000000
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/thread_test.c
+    COMMENT "Building Thread Test 32-bit Windows PE executable with MinGW"
+)
+add_custom_target(thread_test ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/thread_test.exe)

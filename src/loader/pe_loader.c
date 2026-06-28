@@ -92,8 +92,16 @@ macwi_status_t macwi_pe_load_file(const char* path, PE_IMAGE* out_image) {
 
     for (int i = 0; i < out_image->num_sections; i++) {
         const PE_SECTION_HEADER* sec = &out_image->section_headers[i];
-        if (sec->SizeOfRawData == 0) continue;
         uint32_t sec_rva = sec->VirtualAddress;
+        
+        if (sec->SizeOfRawData == 0) {
+            // BSS-like section: zero-fill the virtual area
+            if (sec->VirtualSize > 0 && sec_rva + sec->VirtualSize <= image_size) {
+                memset((uint8_t*)image_base + sec_rva, 0, sec->VirtualSize);
+            }
+            continue;
+        }
+        
         uint32_t raw_size = sec->SizeOfRawData;
         uint32_t raw_ptr = sec->PointerToRawData;
         uint32_t copy_size = raw_size;
@@ -104,6 +112,11 @@ macwi_status_t macwi_pe_load_file(const char* path, PE_IMAGE* out_image) {
 
         if (raw_ptr + copy_size <= total_read && sec_rva + copy_size <= image_size) {
             memcpy((uint8_t*)image_base + sec_rva, file_data + raw_ptr, copy_size);
+        }
+        
+        // Zero-fill remaining virtual space if VirtualSize > SizeOfRawData
+        if (sec->VirtualSize > copy_size && sec_rva + sec->VirtualSize <= image_size) {
+            memset((uint8_t*)image_base + sec_rva + copy_size, 0, sec->VirtualSize - copy_size);
         }
     }
 

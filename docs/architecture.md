@@ -362,21 +362,19 @@ typedef struct macwi_handle_entry {
 
 ---
 
-### 3.6 Registry Virtualization (`registry`) — _Future_
+### 3.6 Registry Virtualization (`registry`) — _Implemented_
 
 A file-backed emulation of the Windows Registry, providing the `HKEY` tree
 structure that many Windows applications depend on.
 
-#### Design Goals
+#### Implementation
 
-- **Persistent storage** — Registry hives stored as SQLite databases or
-  memory-mapped flat files under `~/.macwi/registry/`.
-- **View separation** — Support `KEY_WOW64_32KEY` and `KEY_WOW64_64KEY` flags
-  for 32/64-bit registry view redirection.
-- **Pre-populated hives** — Ship default values for
-  `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion` and other
-  commonly-queried keys.
-- **Transactional writes** — Atomic commit semantics to prevent corruption.
+- **JSON persistence** — Registry hives stored as JSON files under `~/.macwi/registry/` (`hklm.json`, `hkcu.json`, `hkcr.json`, `hku.json`).
+- **Auto-save** — Registry is automatically saved to disk when `RegCloseKey` is called.
+- **Full CRUD** — `RegCreateKeyExA`, `RegOpenKeyExA`, `RegSetValueExA`, `RegQueryValueExA`, `RegDeleteKeyA`, `RegDeleteValueA` all implemented.
+- **Enumeration** — `RegEnumKeyExA` and `RegEnumValueA` for iterating subkeys and values.
+- **Thread-safe** — All registry operations protected by `pthread_mutex`.
+- **Pre-populated roots** — `HKEY_LOCAL_MACHINE`, `HKEY_CURRENT_USER`, `HKEY_CLASSES_ROOT`, `HKEY_USERS` all available.
 
 ---
 
