@@ -71,11 +71,18 @@ Projenin yol haritasında %100 başarıyla tamamlanan aşamalar şunlardır:
   * `FindFirstFileA`, `FindNextFileA` ve `FindClose` API'leri POSIX `opendir`/`readdir` fonksiyonlarıyla bağlanarak dizin döngüleri ve iterasyon desteklendi.
   * `fs_win32.exe` programıyla tüm VFS operasyonları baştan sona test edildi ve hatasız tamamlandı. (Ek olarak FEXCore JIT hafıza çakışmaları çözülerek Image Base ayarları stabiliteye kavuşturuldu.)
 
+* **Faz 12-14: Grafik, Windowing (User32) ve Mesaj Döngüsü (Güncel Başarı):**
+  * Gerçek bir GUI penceresi açabilmek için macOS Cocoa (`NSWindow`) tabanlı bir arayüz köprüsü oluşturuldu.
+  * `CreateWindowExA`, `RegisterClassExA`, `ShowWindow`, `SetWindowTextA` API'leri entegre edildi.
+  * `GetMessageA` ve `DispatchMessageA` ile macOS olay döngüsü (NSEvent) dinlendi ve Windows spesifik `WM_LBUTTONDOWN`, `WM_PAINT`, `WM_CLOSE` mesajlarına çevrildi.
+  * `BeginPaint` / `EndPaint` altyapısı kurularak `drawRect:` (Cocoa) ve Emülatör (x86) thread'leri arası deadlock yapmayan senkronize çizim mantığı başarıyla uygulandı (`FillRect`, `TextOutA` testleri geçti).
+  * `advanced_gui_test.exe` uygulaması ekrana eksiksiz bir pencere çizerek ve üzerine basılan tuşları algılayarak testleri başarıyla geçti.
+
 ## 5. Sıradaki Hedefler (Gelecek Aşamalar)
 
-Şu anki mimari Windows sisteminin kalbini (Dosya sistemi, Threading, Senkronizasyon, Memory, Registry) güvenilir şekilde çalıştırmaktadır. Önümüzdeki en büyük ve son temel altyapı hedefi Grafik ve Arayüzdür:
+Şu anki mimari Windows sisteminin kalbini (Dosya sistemi, Threading, Senkronizasyon, Memory, Registry) ve temel arayüzünü (GUI Window, Paint, Event Loop) güvenilir şekilde çalıştırmaktadır. Önümüzdeki en büyük hedef gelişmiş arayüz elementleri ve kontrolleridir:
 
-* **Faz 12 (Grafik ve Windowing / User32 - GDI):** Gerçek bir GUI penceresi açabilmek için Metal veya Cocoa tabanlı bir arayüz köprüsü oluşturmak, `CreateWindowEx`, `RegisterClassEx`, `ShowWindow` ve `GetMessage` / `DispatchMessage` loop'unu sağlamak. İlk aşamada ekrana basit bir boş pencere çizebilmek amaçlanmaktadır.
+* **Faz 15 (Gelişmiş GDI, Zamanlayıcılar ve UI Kontrolleri):** Özel fontların (CreateFont) yüklenmesi, Timer (`SetTimer`) yapısının entegrasyonu ve Buton/Listbox gibi yerleşik kontrollerin (Common Controls) emüle edilmesi.
 
 ---
-*Bu belge, projenin geldiği en güncel noktayı (Faz 11 sonu) ve teknik temelini yansıtmaktadır.*
+*Bu belge, projenin geldiği en güncel noktayı (Faz 14 sonu) ve teknik temelini yansıtmaktadır.*

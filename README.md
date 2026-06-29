@@ -120,11 +120,11 @@ macwi/
 - [x] Section mapping via `mmap`
 - [x] Handle table with generation-based stale detection
 - [x] kernel32 / ntdll API stubs (logging only)
-- [ ] Import Address Table (IAT) resolution
-- [ ] x86 instruction emulation (via Unicorn or custom interpreter)
-- [ ] Full kernel32 implementation (file I/O, memory, sync)
-- [ ] GDI32 / USER32 stubs for basic GUI support
-- [ ] Dynamic recompilation (x86 → ARM64 JIT)
+- [x] Import Address Table (IAT) resolution
+- [x] x86 instruction emulation (via FEXCore JIT Engine)
+- [x] Full kernel32 implementation (file I/O, memory, sync, threading, VFS)
+- [x] GDI32 / USER32 stubs for basic GUI support (Windows, Message Loops, Painting)
+- [ ] Advanced GUI controls, Timers, and GDI Bitmaps
 
 ## License
 

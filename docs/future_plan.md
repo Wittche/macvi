@@ -9,29 +9,27 @@
 
 Artık MacWI'nin altyapısı "arkaplanda" (headless) çalışan hemen hemen tüm konsol uygulamalarını koşturabilecek seviyededir.
 
-## Bundan Sonra Nasıl İlerleyeceğiz? (Faz 12 ve Sonrası)
+## Bundan Sonra Nasıl İlerleyeceğiz? (Faz 15 ve Sonrası)
 
-MacWI'yi gerçek bir "Windows uyumluluk katmanı" (Wine benzeri) yapabilmek için atılması gereken bir sonraki en büyük adım **Grafik ve Kullanıcı Arayüzü (User32 ve GDI32)** entegrasyonudur.
+MacWI'yi gerçek bir "Windows uyumluluk katmanı" (Wine benzeri) yapabilmek için atılması gereken en büyük adımlardan olan **Grafik ve Kullanıcı Arayüzü (User32 ve GDI32)** entegrasyonu (Faz 12-14) başarıyla tamamlandı. Artık MacWI, ekranda native macOS pencereleri (NSWindow) oluşturabiliyor, event döngülerini (Message Loop) yönetebiliyor ve `WM_PAINT` sırasında senkronize GDI çizimlerini (`FillRect`, `TextOutA`) yapabiliyor.
 
-Bu bağlamda **Faz 12 (Grafik Subsystem)** için planımız şu şekildedir:
+Bu bağlamda **Faz 15 ve Sonrası (Gelişmiş Grafik ve Kontroller)** için planımız şu şekildedir:
 
-### Adım 1: Temel User32.dll Entegrasyonu ve Pencere Sınıfları
-- `user32.dll` thunk altyapısının projeye dahil edilmesi.
-- `RegisterClassExA` ve `CreateWindowExA` gibi temel pencere oluşturma API'lerinin macOS native pencere sistemine (Cocoa / AppKit) bağlanması.
-- 32-bit uygulamaların `HWND` (Pencere Handle'ları) değerlerinin, arka planda oluşturulan `NSWindow` referanslarına map edilmesi.
+### Adım 1: Gelişmiş GDI Çizimleri ve Fontlar
+- `gdi32.dll` thunk'larının genişletilmesi.
+- Özel Fontların (CreateFontA) CoreText üzerinden render edilmesi.
+- Görüntü (Bitmap) kopyalama, Alpha blending ve karmaşık GUI nesnelerinin desteklenmesi.
 
-### Adım 2: Mesaj Döngüsü (Message Loop)
-- Windows uygulamalarının can damarı olan `GetMessageA`, `TranslateMessage`, ve `DispatchMessageA` fonksiyonlarının implementasyonu.
-- macOS event loop'unun (NSEvent) dinlenmesi ve tıklama, klavye girişi, pencere kapatma gibi olayların Windows spesifik `WM_PAINT`, `WM_QUIT`, `WM_LBUTTONDOWN` mesajlarına çevrilerek guest uygulamaya iletilmesi.
+### Adım 2: Pencere İçi Kontroller (Common Controls)
+- Buton, Textbox, Listbox, Combobox vb. klasik Windows UI bileşenlerinin (Common Controls) emüle edilmesi.
+- Bu bileşenlerin event'lerinin (Command Messages) ana pencereye yönlendirilmesi.
 
-### Adım 3: Temel Çizim İşlemleri (GDI32)
-- Bir pencere içine bir şeyler çizebilmek için `gdi32.dll` thunk'larının oluşturulması.
-- `BeginPaint`, `EndPaint`, `GetDC` API'lerinin macOS `CGContext` (Core Graphics) veya `Metal` API'lerine bağlanması.
-- Ekrana basit metinler (TextOut) ve düz renkli kutular (FillRect) çizdirerek grafik köprüsünün doğrulanması.
+### Adım 3: Zamanlayıcılar (Timers)
+- `SetTimer` ve `KillTimer` fonksiyonlarının implemente edilerek `WM_TIMER` event'lerinin message loop üzerinden işlenmesi. Animasyonlar ve periyodik UI güncellemeleri için şarttır.
 
-### Adım 4: Gelişmiş GUI Test Uygulaması (gui_win32.exe)
-- Konsol testlerimizin (`fs_win32.exe`, `advanced_win32.exe`) yanına bir de `gui_win32.exe` test uygulamasının yazılması.
-- Bu uygulamanın ekranda basit bir pencere açması, bir mesaj döngüsü çalıştırması ve kullanıcı pencereyi kapatana kadar ekranda bir metin veya şekil göstermesi.
+### Adım 4: Gelişmiş Mouse & Klavye İşlemleri
+- Klavye tuşlarının (Virtual Keys) birebir çevirisi ve `WM_KEYDOWN`/`WM_KEYUP` eventlerinin zenginleştirilmesi.
+- Çoklu monitör desteği ve pencere pozisyonlama mantığının (SetWindowPos) iyileştirilmesi.
 
 ## Neden Bu Yolu Seçiyoruz?
-Şu anda işletim sisteminin "kalbi" (CPU, Memory, File System, Threading) tamamen sağlıklı çalışmaktadır. Ancak bir Windows uygulamasının varoluş amacı görsel arayüz sunmaktır. `user32.dll` entegrasyonu olmadan MacWI sadece arka plan görevlerini çalıştırabilen bir terminal emülatörü olarak kalır. Pencere çizdirme altyapısını kurduğumuz anda, eski nesil 32-bit oyunları ve programları macOS ekranında görsel olarak render etmeye bir adım daha yaklaşmış olacağız.
+Şu anda işletim sisteminin "kalbi" (CPU, Memory, File System, Threading) ve temel "arayüzü" (Window, Message Loop, Basic Paint) sağlıklı çalışmaktadır. Ancak karmaşık bir Windows oyunu veya programı, basit metinlerden çok daha fazlasına (zamanlayıcılar, bitmapler, input focus vb.) ihtiyaç duyar. İleri grafik ve timer yetenekleri kazandığımızda, eski nesil 32-bit oyunları ve programları macOS ekranında görsel olarak tam teşekküllü render etmeye bir adım daha yaklaşmış olacağız.
