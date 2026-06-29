@@ -54,7 +54,7 @@ static bool g_in_draw_rect = false;
     NSPoint loc = [self convertPoint:[event locationInWindow] fromView:nil];
     macwi_event_t out_evt;
     out_evt.type = MACWI_EVENT_MOUSEDOWN;
-    out_evt.window = (void*)[self window];
+    out_evt.window = (void*)self;
     out_evt.key_code = 0;
     out_evt.mouse_x = (int)loc.x;
     out_evt.mouse_y = (int)([self bounds].size.height - loc.y); // Convert Cocoa Y to Windows Y (top-down)
@@ -71,7 +71,7 @@ static bool g_in_draw_rect = false;
     NSPoint loc = [self convertPoint:[event locationInWindow] fromView:nil];
     macwi_event_t out_evt;
     out_evt.type = MACWI_EVENT_MOUSEUP;
-    out_evt.window = (void*)[self window];
+    out_evt.window = (void*)self;
     out_evt.key_code = 0;
     out_evt.mouse_x = (int)loc.x;
     out_evt.mouse_y = (int)([self bounds].size.height - loc.y);
@@ -87,7 +87,7 @@ static bool g_in_draw_rect = false;
 - (void)keyDown:(NSEvent *)event {
     macwi_event_t out_evt;
     out_evt.type = MACWI_EVENT_KEYDOWN;
-    out_evt.window = (void*)[self window];
+    out_evt.window = (void*)self;
     out_evt.key_code = [event keyCode];
     out_evt.mouse_x = 0;
     out_evt.mouse_y = 0;
@@ -103,7 +103,7 @@ static bool g_in_draw_rect = false;
 - (void)keyUp:(NSEvent *)event {
     macwi_event_t out_evt;
     out_evt.type = MACWI_EVENT_KEYUP;
-    out_evt.window = (void*)[self window];
+    out_evt.window = (void*)self;
     out_evt.key_code = [event keyCode];
     out_evt.mouse_x = 0;
     out_evt.mouse_y = 0;
@@ -133,7 +133,7 @@ static bool g_in_draw_rect = false;
     // Push paint event
     macwi_event_t event;
     event.type = MACWI_EVENT_PAINT;
-    event.window = (void*)[self window];
+    event.window = (void*)self;
     event.key_code = 0;
     event.mouse_x = 0;
     event.mouse_y = 0;
@@ -185,13 +185,26 @@ void* macwi_cocoa_create_window(const char* title, int width, int height) {
         MacWIView* view = [[MacWIView alloc] initWithFrame:frame];
         [window setContentView:view];
     });
-    return (void*)window;
+    return (void*)[[window contentView] self]; // Return the view
+}
+
+void* macwi_cocoa_create_child_view(void* parent_window, int x, int y, int width, int height) {
+    __block MacWIView* view = nil;
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        NSView* parent_view = (__bridge NSView*)parent_window;
+        NSRect parent_frame = [parent_view frame];
+        // Cocoa uses bottom-left origin, Win32 uses top-left origin
+        NSRect frame = NSMakeRect(x, parent_frame.size.height - y - height, width, height);
+        view = [[MacWIView alloc] initWithFrame:frame];
+        [parent_view addSubview:view];
+    });
+    return (void*)view;
 }
 
 void macwi_cocoa_show_window(void* window_ptr) {
     dispatch_async(dispatch_get_main_queue(), ^{
-        NSWindow* window = (__bridge NSWindow*)window_ptr;
-        [window makeKeyAndOrderFront:nil];
+        NSView* view = (__bridge NSView*)window_ptr;
+        [[view window] makeKeyAndOrderFront:nil];
         [NSApp activateIgnoringOtherApps:YES];
     });
 }
@@ -249,8 +262,7 @@ void macwi_cocoa_end_paint(void) {
 
 void macwi_cocoa_fill_rect(void* window_ptr, int x, int y, int w, int h, uint32_t argb) {
     void (^drawBlock)(void) = ^{
-        NSWindow* window = (__bridge NSWindow*)window_ptr;
-        NSView* view = [window contentView];
+        NSView* view = (__bridge NSView*)window_ptr;
         
         NSRect viewRect = [view bounds];
         NSRect rect = NSMakeRect(x, viewRect.size.height - y - h, w, h);
@@ -284,8 +296,7 @@ void macwi_cocoa_fill_rect(void* window_ptr, int x, int y, int w, int h, uint32_
 
 void macwi_cocoa_draw_text(void* window_ptr, int x, int y, const char* text, uint32_t argb) {
     void (^drawBlock)(void) = ^{
-        NSWindow* window = (__bridge NSWindow*)window_ptr;
-        NSView* view = [window contentView];
+        NSView* view = (__bridge NSView*)window_ptr;
         
         NSString* str = [NSString stringWithUTF8String:text];
         
@@ -326,8 +337,8 @@ void macwi_cocoa_draw_text(void* window_ptr, int x, int y, const char* text, uin
 void macwi_cocoa_get_client_rect(void* window_ptr, int* out_w, int* out_h) {
     if (!window_ptr) return;
     dispatch_sync(dispatch_get_main_queue(), ^{
-        NSWindow* window = (__bridge NSWindow*)window_ptr;
-        NSRect rect = [[window contentView] bounds];
+        NSView* view = (__bridge NSView*)window_ptr;
+        NSRect rect = [view bounds];
         if (out_w) *out_w = (int)rect.size.width;
         if (out_h) *out_h = (int)rect.size.height;
     });
@@ -336,8 +347,8 @@ void macwi_cocoa_get_client_rect(void* window_ptr, int* out_w, int* out_h) {
 void macwi_cocoa_get_window_rect(void* window_ptr, int* out_x, int* out_y, int* out_w, int* out_h) {
     if (!window_ptr) return;
     dispatch_sync(dispatch_get_main_queue(), ^{
-        NSWindow* window = (__bridge NSWindow*)window_ptr;
-        NSRect rect = [window frame];
+        NSView* view = (__bridge NSView*)window_ptr;
+        NSRect rect = [view frame];
         if (out_x) *out_x = (int)rect.origin.x;
         // Mac coordinates are bottom-left, Windows are top-left, approximate for now
         if (out_y) *out_y = (int)([[NSScreen mainScreen] frame].size.height - rect.origin.y - rect.size.height);
@@ -349,16 +360,23 @@ void macwi_cocoa_get_window_rect(void* window_ptr, int* out_x, int* out_y, int* 
 void macwi_cocoa_set_text(void* window_ptr, const char* text) {
     if (!window_ptr || !text) return;
     dispatch_async(dispatch_get_main_queue(), ^{
-        NSWindow* window = (__bridge NSWindow*)window_ptr;
-        [window setTitle:[NSString stringWithUTF8String:text]];
+        NSView* view = (__bridge NSView*)window_ptr;
+        if ([[view window] contentView] == view) {
+            [[view window] setTitle:[NSString stringWithUTF8String:text]];
+        }
+        // TODO: Handle setting text on child views (e.g. Buttons, Edits) if they are Native Cocoa controls.
+        // But we are drawing them with GDI, so no need for now.
     });
 }
 
 void macwi_cocoa_get_text(void* window_ptr, char* out_text, int max_len) {
-    if (!window_ptr || !out_text || max_len <= 0) return;
+    if (!window_ptr || !out_text) return;
     dispatch_sync(dispatch_get_main_queue(), ^{
-        NSWindow* window = (__bridge NSWindow*)window_ptr;
-        NSString* title = [window title];
+        NSView* view = (__bridge NSView*)window_ptr;
+        NSString* title = [[view window] title];
+        if ([[view window] contentView] != view) {
+            title = @""; // Child views don't have titles in Cocoa unless they are NSTextField/NSButton
+        }
         strncpy(out_text, [title UTF8String], max_len - 1);
         out_text[max_len - 1] = '\0';
     });
@@ -385,7 +403,8 @@ int macwi_cocoa_message_box(void* window_ptr, const char* text, const char* capt
         }
         
         if (window_ptr) {
-            NSWindow* window = (__bridge NSWindow*)window_ptr;
+            NSView* view = (__bridge NSView*)window_ptr;
+            NSWindow* window = [view window];
             [alert beginSheetModalForWindow:window completionHandler:^(NSModalResponse res) {
                 // Not ideal since it's async, we actually need blocking here for Win32 semantics
             }];

@@ -33,6 +33,9 @@ void macwi_cocoa_init(void);
 // Create a Native macOS Window
 void* macwi_cocoa_create_window(const char* title, int width, int height);
 
+// Create a Child View
+void* macwi_cocoa_create_child_view(void* parent_window, int x, int y, int width, int height);
+
 // Show the Window
 void macwi_cocoa_show_window(void* window);
 

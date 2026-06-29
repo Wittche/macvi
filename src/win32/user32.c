@@ -20,6 +20,11 @@ static int g_class_count = 0;
 typedef struct {
     void* cocoa_win;
     WNDPROC32 wnd_proc;
+    uint32_t user_data;
+    uint32_t style;
+    uint32_t ex_style;
+    uint32_t id;
+    uint32_t parent_hwnd;
 } MACWI_WINDOW_OBJ;
 
 static void win32_RegisterClassExA(EMU_CONTEXT* ctx) {
@@ -79,7 +84,15 @@ static void win32_CreateWindowExA(EMU_CONTEXT* ctx) {
     if (nWidth == (int32_t)0x80000000) nWidth = 800;
     if (nHeight == (int32_t)0x80000000) nHeight = 600;
 
-    void* cocoa_win = macwi_cocoa_create_window(window_name, nWidth, nHeight);
+    void* cocoa_win = NULL;
+    if ((dwStyle & 0x40000000) != 0) { // WS_CHILD
+        MACWI_WINDOW_OBJ* parent_obj = NULL;
+        if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hWndParent, HANDLE_TYPE_EVENT, (void**)&parent_obj) == MACWI_SUCCESS) {
+            cocoa_win = macwi_cocoa_create_child_view(parent_obj->cocoa_win, X, Y, nWidth, nHeight);
+        }
+    } else {
+        cocoa_win = macwi_cocoa_create_window(window_name, nWidth, nHeight);
+    }
     if (!cocoa_win) {
         macwi_emu_reg_write_32(ctx, 0, 0);
         macwi_thunk_stdcall_return(ctx, 12);
@@ -89,6 +102,11 @@ static void win32_CreateWindowExA(EMU_CONTEXT* ctx) {
     MACWI_WINDOW_OBJ* win_obj = malloc(sizeof(MACWI_WINDOW_OBJ));
     win_obj->cocoa_win = cocoa_win;
     win_obj->wnd_proc = 0;
+    win_obj->user_data = 0;
+    win_obj->style = dwStyle;
+    win_obj->ex_style = dwExStyle;
+    win_obj->id = (uint32_t)hMenu; // hMenu is used as child ID if child window
+    win_obj->parent_hwnd = hWndParent;
     
     printf("[macwi:user32] CreateWindowExA searching for class: '%s'\n", class_name);
     fflush(stdout);
@@ -128,6 +146,57 @@ static void win32_ShowWindow(EMU_CONTEXT* ctx) {
 static void win32_UpdateWindow(EMU_CONTEXT* ctx) {
     macwi_emu_reg_write_32(ctx, 0, 1);
     macwi_thunk_stdcall_return(ctx, 1);
+}
+
+#define GWL_WNDPROC -4
+#define GWL_USERDATA -21
+#define GWL_STYLE -16
+#define GWL_EXSTYLE -20
+#define GWL_ID -12
+
+static void win32_GetWindowLongA(EMU_CONTEXT* ctx) {
+    uint32_t hWnd;
+    int32_t nIndex;
+    macwi_thunk_read_param_32(ctx, 0, &hWnd);
+    macwi_thunk_read_param_32(ctx, 1, (uint32_t*)&nIndex);
+    
+    MACWI_WINDOW_OBJ* win_obj = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hWnd, HANDLE_TYPE_EVENT, (void**)&win_obj) == MACWI_SUCCESS) {
+        uint32_t val = 0;
+        if (nIndex == GWL_WNDPROC) val = win_obj->wnd_proc;
+        else if (nIndex == GWL_USERDATA) val = win_obj->user_data;
+        else if (nIndex == GWL_STYLE) val = win_obj->style;
+        else if (nIndex == GWL_EXSTYLE) val = win_obj->ex_style;
+        else if (nIndex == GWL_ID) val = win_obj->id;
+        
+        macwi_emu_reg_write_32(ctx, 0, val);
+    } else {
+        macwi_emu_reg_write_32(ctx, 0, 0); // Error
+    }
+    macwi_thunk_stdcall_return(ctx, 2);
+}
+
+static void win32_SetWindowLongA(EMU_CONTEXT* ctx) {
+    uint32_t hWnd, dwNewLong;
+    int32_t nIndex;
+    macwi_thunk_read_param_32(ctx, 0, &hWnd);
+    macwi_thunk_read_param_32(ctx, 1, (uint32_t*)&nIndex);
+    macwi_thunk_read_param_32(ctx, 2, &dwNewLong);
+    
+    MACWI_WINDOW_OBJ* win_obj = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hWnd, HANDLE_TYPE_EVENT, (void**)&win_obj) == MACWI_SUCCESS) {
+        uint32_t old_val = 0;
+        if (nIndex == GWL_WNDPROC) { old_val = win_obj->wnd_proc; win_obj->wnd_proc = dwNewLong; }
+        else if (nIndex == GWL_USERDATA) { old_val = win_obj->user_data; win_obj->user_data = dwNewLong; }
+        else if (nIndex == GWL_STYLE) { old_val = win_obj->style; win_obj->style = dwNewLong; }
+        else if (nIndex == GWL_EXSTYLE) { old_val = win_obj->ex_style; win_obj->ex_style = dwNewLong; }
+        else if (nIndex == GWL_ID) { old_val = win_obj->id; win_obj->id = dwNewLong; }
+        
+        macwi_emu_reg_write_32(ctx, 0, old_val);
+    } else {
+        macwi_emu_reg_write_32(ctx, 0, 0); // Error
+    }
+    macwi_thunk_stdcall_return(ctx, 3);
 }
 
 static void win32_DefWindowProcA(EMU_CONTEXT* ctx) {
@@ -218,6 +287,57 @@ static void win32_TranslateMessage(EMU_CONTEXT* ctx) {
     macwi_thunk_stdcall_return(ctx, 1);
 }
 
+#define BUILTIN_WNDPROC_BUTTON 0xFFFFFFF1
+#define BUILTIN_WNDPROC_STATIC 0xFFFFFFF2
+#define BUILTIN_WNDPROC_EDIT   0xFFFFFFF3
+#define WM_COMMAND 0x0111
+
+static void handle_builtin_wndproc(EMU_CONTEXT* ctx, MACWI_WINDOW_OBJ* win, MSG_32* msg) {
+    if (msg->message == WM_PAINT) {
+        int w, h;
+        macwi_cocoa_get_client_rect(win->cocoa_win, &w, &h);
+        
+        if (win->wnd_proc == BUILTIN_WNDPROC_BUTTON) {
+            // Draw Button
+            macwi_cocoa_fill_rect(win->cocoa_win, 0, 0, w, h, 0xFFE0E0E0); // Light Gray
+            macwi_cocoa_draw_text(win->cocoa_win, 5, 5, "Button", 0xFF000000); // Black text
+        } else if (win->wnd_proc == BUILTIN_WNDPROC_STATIC) {
+            macwi_cocoa_fill_rect(win->cocoa_win, 0, 0, w, h, 0xFFF0F0F0); // System background
+            macwi_cocoa_draw_text(win->cocoa_win, 0, 0, "Static", 0xFF000000);
+        } else if (win->wnd_proc == BUILTIN_WNDPROC_EDIT) {
+            macwi_cocoa_fill_rect(win->cocoa_win, 0, 0, w, h, 0xFFFFFFFF); // White background
+            macwi_cocoa_draw_text(win->cocoa_win, 2, 2, "Edit", 0xFF000000);
+        }
+        
+        // Mark paint as finished
+        macwi_cocoa_end_paint();
+        macwi_emu_reg_write_32(ctx, 0, 0);
+        macwi_thunk_stdcall_return(ctx, 1);
+        return;
+    }
+    
+    if (win->wnd_proc == BUILTIN_WNDPROC_BUTTON) {
+        if (msg->message == WM_LBUTTONDOWN) {
+            MACWI_WINDOW_OBJ* parent = NULL;
+            if (win->parent_hwnd && macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)win->parent_hwnd, HANDLE_TYPE_EVENT, (void**)&parent) == MACWI_SUCCESS) {
+                printf("[macwi:user32] BUTTON clicked! id=%d\n", win->id);
+                fflush(stdout);
+                
+                // Invoke parent's wnd_proc with WM_COMMAND
+                uint32_t args[4] = { win->parent_hwnd, WM_COMMAND, (win->id & 0xFFFF), (uint32_t)msg->hwnd };
+                macwi_status_t st = macwi_thunk_invoke_callback(ctx, parent->wnd_proc, 4, args, 4, NULL);
+                if (st == MACWI_SUCCESS) {
+                    // Return without stdcall_return since we modified PC
+                    return;
+                }
+            }
+        }
+    }
+    // For all built-ins, return 0 (DefWindowProc)
+    macwi_emu_reg_write_32(ctx, 0, 0);
+    macwi_thunk_stdcall_return(ctx, 1);
+}
+
 static void win32_DispatchMessageA(EMU_CONTEXT* ctx) {
     uint32_t lpMsg;
     macwi_thunk_read_param_32(ctx, 0, &lpMsg);
@@ -230,7 +350,10 @@ static void win32_DispatchMessageA(EMU_CONTEXT* ctx) {
 
     MACWI_WINDOW_OBJ* win_obj = NULL;
     if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)msg.hwnd, HANDLE_TYPE_EVENT, (void**)&win_obj) == MACWI_SUCCESS) {
-        if (win_obj->wnd_proc != 0) {
+        if (win_obj->wnd_proc >= 0xFFFFFFF0) {
+            handle_builtin_wndproc(ctx, win_obj, &msg);
+            return;
+        } else if (win_obj->wnd_proc != 0) {
             printf("[macwi:user32] DispatchMessageA: invoking WindowProc %x with msg %x\n", win_obj->wnd_proc, msg.message);
             fflush(stdout);
             
@@ -245,6 +368,57 @@ static void win32_DispatchMessageA(EMU_CONTEXT* ctx) {
     
     macwi_emu_reg_write_32(ctx, 0, 0);
     macwi_thunk_stdcall_return(ctx, 1);
+}
+
+#define SM_CXSCREEN 0
+#define SM_CYSCREEN 1
+#define SM_CXSIZEFRAME 32
+#define SM_CYSIZEFRAME 33
+#define SM_CYCAPTION 4
+
+static void win32_GetSystemMetrics(EMU_CONTEXT* ctx) {
+    int32_t nIndex;
+    macwi_thunk_read_param_32(ctx, 0, (uint32_t*)&nIndex);
+    
+    int val = 0;
+    if (nIndex == SM_CXSCREEN) val = 1920; // Hardcode for now, or get from Cocoa
+    else if (nIndex == SM_CYSCREEN) val = 1080;
+    else if (nIndex == SM_CXSIZEFRAME || nIndex == SM_CYSIZEFRAME) val = 4;
+    else if (nIndex == SM_CYCAPTION) val = 22;
+    
+    macwi_emu_reg_write_32(ctx, 0, val);
+    macwi_thunk_stdcall_return(ctx, 1);
+}
+
+#define COLOR_BTNFACE 15
+#define COLOR_WINDOW 5
+#define COLOR_BTNTEXT 18
+#define COLOR_WINDOWTEXT 8
+
+static void win32_GetSysColor(EMU_CONTEXT* ctx) {
+    int32_t nIndex;
+    macwi_thunk_read_param_32(ctx, 0, (uint32_t*)&nIndex);
+    
+    uint32_t color = 0; // RGB
+    if (nIndex == COLOR_BTNFACE) color = 0xF0F0F0;
+    else if (nIndex == COLOR_WINDOW) color = 0xFFFFFF;
+    else if (nIndex == COLOR_BTNTEXT) color = 0x000000;
+    else if (nIndex == COLOR_WINDOWTEXT) color = 0x000000;
+    
+    macwi_emu_reg_write_32(ctx, 0, color);
+    macwi_thunk_stdcall_return(ctx, 1);
+}
+
+static void win32_SetWindowPos(EMU_CONTEXT* ctx) {
+    // HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags
+    macwi_emu_reg_write_32(ctx, 0, 1); // Success
+    macwi_thunk_stdcall_return(ctx, 7);
+}
+
+static void win32_MoveWindow(EMU_CONTEXT* ctx) {
+    // HWND hWnd, int X, int Y, int nWidth, int nHeight, BOOL bRepaint
+    macwi_emu_reg_write_32(ctx, 0, 1); // Success
+    macwi_thunk_stdcall_return(ctx, 6);
 }
 
 static void win32_GetClientRect(EMU_CONTEXT* ctx) {
@@ -348,6 +522,25 @@ static void win32_MessageBoxA(EMU_CONTEXT* ctx) {
 }
 
 void macwi_user32_register_apis(void) {
+    // Register builtin classes
+    strncpy(g_classes[g_class_count].class_name, "BUTTON", 128);
+    g_classes[g_class_count].wnd_proc = BUILTIN_WNDPROC_BUTTON;
+    g_class_count++;
+    
+    strncpy(g_classes[g_class_count].class_name, "STATIC", 128);
+    g_classes[g_class_count].wnd_proc = BUILTIN_WNDPROC_STATIC;
+    g_class_count++;
+    
+    strncpy(g_classes[g_class_count].class_name, "EDIT", 128);
+    g_classes[g_class_count].wnd_proc = BUILTIN_WNDPROC_EDIT;
+    g_class_count++;
+
+    macwi_thunk_register_api("user32.dll", "GetSystemMetrics", win32_GetSystemMetrics, 1);
+    macwi_thunk_register_api("user32.dll", "GetSysColor", win32_GetSysColor, 1);
+    macwi_thunk_register_api("user32.dll", "GetWindowLongA", win32_GetWindowLongA, 2);
+    macwi_thunk_register_api("user32.dll", "SetWindowLongA", win32_SetWindowLongA, 3);
+    macwi_thunk_register_api("user32.dll", "SetWindowPos", win32_SetWindowPos, 7);
+    macwi_thunk_register_api("user32.dll", "MoveWindow", win32_MoveWindow, 6);
     macwi_thunk_register_api("user32.dll", "RegisterClassExA", win32_RegisterClassExA, 1);
     macwi_thunk_register_api("user32.dll", "CreateWindowExA", win32_CreateWindowExA, 12);
     macwi_thunk_register_api("user32.dll", "ShowWindow", win32_ShowWindow, 2);
