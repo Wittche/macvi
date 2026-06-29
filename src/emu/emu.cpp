@@ -52,10 +52,20 @@ private:
     EMU_CONTEXT* m_ctx;
 };
 
+#include <FEXCore/Config/Config.h>
+
 extern "C" {
 
 macwi_status_t macwi_emu_init(EMU_CONTEXT** out_ctx) {
     if (!out_ctx) return MACWI_ERROR_INVALID_PARAM;
+
+    FEXCore::Config::Initialize();
+    
+    // 2. SMC & JIT Cache Koruması: Track and invalidate JIT code on self-modification
+    // FEXCore::Config::Set(FEXCore::Config::CONFIG_SMCCHECKS, "full");
+    
+    // 3. Apple Silicon TSO: Enable x86 strict memory ordering
+    // FEXCore::Config::Set(FEXCore::Config::CONFIG_TSOENABLED, "1");
 
     int init_flags = FEX_INIT_ENABLE_JIT;
     if (FEX_Initialize(init_flags) != FEX_SUCCESS) {

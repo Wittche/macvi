@@ -28,6 +28,9 @@
 #include <unistd.h>
 #include <inttypes.h>
 #include <pthread.h>
+#include <signal.h>
+#define _XOPEN_SOURCE 700
+#include <ucontext.h>
 
 HANDLE_TABLE g_macwi_handle_table;
 
@@ -42,8 +45,48 @@ typedef struct {
     PE_IMAGE image;
 } EmuThreadArgs;
 
+static EMU_CONTEXT* g_current_emu_ctx = NULL;
+
+static void host_signal_handler(int sig, siginfo_t* info, void* ucontext) {
+    fprintf(stderr, "\n=========================================\n");
+    fprintf(stderr, "[macwi] FATAL: Host received signal %d (Address: %p)\n", sig, info->si_addr);
+    
+    if (g_current_emu_ctx) {
+        uint64_t rip = macwi_emu_get_pc(g_current_emu_ctx);
+        fprintf(stderr, "[macwi] Guest RIP at time of crash: 0x%016llX\n", rip);
+    } else {
+        fprintf(stderr, "[macwi] Emulator context not available.\n");
+    }
+    
+#if defined(__aarch64__) || defined(_M_ARM_64)
+    ucontext_t* uc = (ucontext_t*)ucontext;
+#ifdef __APPLE__
+    uintptr_t pc = uc->uc_mcontext->__ss.__pc;
+#else
+    uintptr_t pc = uc->uc_mcontext.pc;
+#endif
+    fprintf(stderr, "[macwi] Host PC at time of crash: 0x%016llX\n", (uint64_t)pc);
+#endif
+
+    fprintf(stderr, "=========================================\n\n");
+    exit(1);
+}
+
+static void setup_signals() {
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_sigaction = host_signal_handler;
+    sa.sa_flags = SA_SIGINFO | SA_NODEFER;
+    sigaction(SIGSEGV, &sa, NULL);
+    sigaction(SIGILL, &sa, NULL);
+    sigaction(SIGBUS, &sa, NULL);
+    sigaction(SIGTRAP, &sa, NULL);
+    sigaction(SIGFPE, &sa, NULL);
+}
+
 static void* emu_thread_func(void* arg) {
     EmuThreadArgs* args = (EmuThreadArgs*)arg;
+    g_current_emu_ctx = args->ctx;
     
     printf("\n>>> Starting execution at RIP = 0x%016llX <<<\n\n", args->entry_point);
     fflush(stdout);
@@ -107,6 +150,8 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Usage: %s <path-to-exe>\n", argv[0]);
         return EXIT_FAILURE;
     }
+
+    setup_signals();
 
     const char* exe_path = argv[1];
     PE_IMAGE image;
