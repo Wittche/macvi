@@ -6,20 +6,26 @@
 
 extern HANDLE_TABLE g_macwi_handle_table;
 
+#include <stdio.h>
+#include <stdlib.h>
+
 static void win32_BeginPaint(EMU_CONTEXT* ctx) {
     uint32_t hWnd, lpPaint;
     macwi_thunk_read_param_32(ctx, 0, &hWnd);
     macwi_thunk_read_param_32(ctx, 1, &lpPaint);
 
-    void* cocoa_win = NULL;
-    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hWnd, HANDLE_TYPE_EVENT, &cocoa_win) == MACWI_SUCCESS) {
+    void** win_obj = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hWnd, HANDLE_TYPE_EVENT, (void**)&win_obj) == MACWI_SUCCESS) {
         
         MACWI_HDC_OBJ* hdc_obj = (MACWI_HDC_OBJ*)calloc(1, sizeof(MACWI_HDC_OBJ));
-        hdc_obj->cocoa_window = cocoa_win;
+        hdc_obj->cocoa_window = win_obj[0]; // cocoa_win is first element of MACWI_WINDOW_OBJ
         hdc_obj->text_color = 0xFF000000; // default black
         hdc_obj->bk_color = 0xFFFFFFFF; // default white
         
         HANDLE hHdc = macwi_handle_create(&g_macwi_handle_table, HANDLE_TYPE_HDC, hdc_obj);
+        
+        printf("[macwi:gdi32] BeginPaint called hWnd=%x, returned HDC=%x\n", hWnd, (uint32_t)(uintptr_t)hHdc);
+        fflush(stdout);
         
         PAINTSTRUCT_32 ps;
         ps.hdc = (uint32_t)(uintptr_t)hHdc;
@@ -27,10 +33,12 @@ static void win32_BeginPaint(EMU_CONTEXT* ctx) {
         ps.rcPaint_left = 0;
         ps.rcPaint_top = 0;
         
-        int w = 0, h = 0;
-        macwi_cocoa_get_client_rect(cocoa_win, &w, &h);
-        ps.rcPaint_right = w;
-        ps.rcPaint_bottom = h;
+        // Use hardcoded defaults to avoid dispatch_sync deadlock.
+        // drawRect blocks the main thread waiting for EndPaint, so calling
+        // macwi_cocoa_get_client_rect (which dispatch_syncs to main) here
+        // would deadlock.
+        ps.rcPaint_right = 800;
+        ps.rcPaint_bottom = 600;
         
         macwi_emu_write_memory(ctx, lpPaint, &ps, sizeof(ps));
         macwi_emu_reg_write_32(ctx, 0, ps.hdc);
@@ -54,6 +62,9 @@ static void win32_EndPaint(EMU_CONTEXT* ctx) {
     if (macwi_handle_get_object(&g_macwi_handle_table, hHdc, HANDLE_TYPE_HDC, (void**)&hdc_obj) == MACWI_SUCCESS) {
         free(hdc_obj);
         macwi_handle_close(&g_macwi_handle_table, hHdc);
+        
+        printf("[macwi:gdi32] EndPaint called hWnd=%x\n", hWnd);
+        fflush(stdout);
         
         // Unblock UI Thread
         macwi_cocoa_end_paint();
@@ -155,7 +166,8 @@ static void win32_FillRect(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_32(ctx, 0, &hDC);
     macwi_thunk_read_param_32(ctx, 1, &lprc);
     macwi_thunk_read_param_32(ctx, 2, &hbr);
-
+    printf("[macwi:gdi32] FillRect called hDC=%u, lprc=%x, hbr=%u\n", hDC, lprc, hbr); fflush(stdout);
+    
     MACWI_HDC_OBJ* hdc_obj = NULL;
     if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hDC, HANDLE_TYPE_HDC, (void**)&hdc_obj) == MACWI_SUCCESS) {
         RECT_32 rect;

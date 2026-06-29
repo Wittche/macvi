@@ -434,6 +434,8 @@ ContextImpl::CreateThread(uint64_t InitialRIP, uint64_t StackPointer, const FEXC
   FEXCore::Core::InternalThreadState* Thread = new FEXCore::Core::InternalThreadState {
     .CTX = this,
   };
+  const_cast<FEXCore::Core::CpuStateFrame*&>(Thread->CurrentFrame) = &Thread->BaseFrameState;
+  
   FEXCore::Allocator::VirtualName("FEXMem_ThreadState", Thread, sizeof(*Thread));
 
   Thread->CurrentFrame->State.gregs[X86State::REG_RSP] = StackPointer;

@@ -73,7 +73,7 @@ typedef struct {
 /**
  * @brief Invoke a guest callback function from a host syscall handler.
  */
-macwi_status_t macwi_thunk_invoke_callback(EMU_CONTEXT* ctx, uint32_t target_addr, uint32_t arg_count, const uint32_t* args, MACWI_CALLBACK_STATE* out_state);
+macwi_status_t macwi_thunk_invoke_callback(EMU_CONTEXT* ctx, uint32_t target_addr, uint32_t arg_count, const uint32_t* args, uint32_t caller_pop_bytes, MACWI_CALLBACK_STATE* out_state);
 
 /**
  * @brief Initialize callback infrastructure.

@@ -21,6 +21,9 @@ void print_int(int val) {
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    print_out("[Guest] WindowProc called with uMsg: ");
+    print_int(uMsg);
+    
     if (uMsg == WM_PAINT) {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);

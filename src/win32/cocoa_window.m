@@ -10,6 +10,7 @@ static pthread_mutex_t g_event_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t g_paint_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t g_paint_cond = PTHREAD_COND_INITIALIZER;
 static CGContextRef g_current_cg_context = NULL;
+static bool g_in_draw_rect = false;
 
 @interface MacWIWindowDelegate : NSObject <NSWindowDelegate>
 @end
@@ -119,11 +120,13 @@ static CGContextRef g_current_cg_context = NULL;
     [super drawRect:dirtyRect];
     
     g_current_cg_context = [[NSGraphicsContext currentContext] CGContext];
+    g_in_draw_rect = true;
     
     pthread_mutex_lock(&g_event_mutex);
     if (!g_eventQueue) {
         pthread_mutex_unlock(&g_event_mutex);
         g_current_cg_context = NULL;
+        g_in_draw_rect = false;
         return;
     }
     
@@ -145,6 +148,7 @@ static CGContextRef g_current_cg_context = NULL;
     pthread_mutex_unlock(&g_paint_mutex);
     
     g_current_cg_context = NULL;
+    g_in_draw_rect = false;
 }
 
 @end
@@ -207,16 +211,10 @@ int macwi_cocoa_poll_event(macwi_event_t* out_event) {
     
     if (result) return 1;
     
-    // 2. Poll Cocoa events (non-blocking) on main thread
-    dispatch_sync(dispatch_get_main_queue(), ^{
-        NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny
-                                            untilDate:[NSDate distantPast]
-                                               inMode:NSDefaultRunLoopMode
-                                              dequeue:YES];
-        if (event) {
-            [NSApp sendEvent:event];
-        }
-    });
+    // Cocoa events are already processed by [NSApp run] on the main thread,
+    // which then pushes them to g_eventQueue via our delegate methods.
+    // There is no need to manually poll Cocoa events here, and doing so via
+    // dispatch_sync causes deadlocks with drawRect:.
     
     // Check custom queue again
     pthread_mutex_lock(&g_event_mutex);

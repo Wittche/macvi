@@ -26,6 +26,9 @@ static void win32_RegisterClassExA(EMU_CONTEXT* ctx) {
     uint32_t lpwcx;
     macwi_thunk_read_param_32(ctx, 0, &lpwcx);
 
+    printf("[macwi:user32] RegisterClassExA called with lpwcx=%x\n", lpwcx);
+    fflush(stdout);
+
     WNDCLASSEXA_32 wcx;
     macwi_emu_read_memory(ctx, lpwcx, &wcx, sizeof(wcx));
 
@@ -35,6 +38,8 @@ static void win32_RegisterClassExA(EMU_CONTEXT* ctx) {
     if (g_class_count < MAX_CLASSES) {
         strncpy(g_classes[g_class_count].class_name, class_name, 127);
         g_classes[g_class_count].wnd_proc = wcx.lpfnWndProc;
+        printf("[macwi:user32] Registered class: '%s' with wnd_proc: %x\n", class_name, wcx.lpfnWndProc);
+        fflush(stdout);
         g_class_count++;
         macwi_emu_reg_write_32(ctx, 0, 1);
     } else {
@@ -85,9 +90,14 @@ static void win32_CreateWindowExA(EMU_CONTEXT* ctx) {
     win_obj->cocoa_win = cocoa_win;
     win_obj->wnd_proc = 0;
     
+    printf("[macwi:user32] CreateWindowExA searching for class: '%s'\n", class_name);
+    fflush(stdout);
+
     for (int i=0; i<g_class_count; i++) {
         if (strcmp(g_classes[i].class_name, class_name) == 0) {
             win_obj->wnd_proc = g_classes[i].wnd_proc;
+            printf("[macwi:user32] CreateWindowExA found class! wnd_proc: %x\n", win_obj->wnd_proc);
+            fflush(stdout);
             break;
         }
     }
@@ -104,10 +114,10 @@ static void win32_ShowWindow(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_32(ctx, 1, &nCmdShow);
     
     MACWI_WINDOW_OBJ* win_obj = NULL;
+    printf("[macwi:user32] ShowWindow called with hwnd=%u, nCmdShow=%u\n", hWnd, nCmdShow);
+    fflush(stdout);
     if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hWnd, HANDLE_TYPE_EVENT, (void**)&win_obj) == MACWI_SUCCESS) {
-        if (nCmdShow == SW_SHOW || nCmdShow == SW_SHOWNORMAL) {
-            macwi_cocoa_show_window(win_obj->cocoa_win);
-        }
+        macwi_cocoa_show_window(win_obj->cocoa_win);
         macwi_emu_reg_write_32(ctx, 0, 1);
     } else {
         macwi_emu_reg_write_32(ctx, 0, 0);
@@ -138,62 +148,69 @@ static void win32_GetMessageA(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_32(ctx, 3, &wMsgFilterMax);
 
     macwi_event_t event;
-    int got_event = macwi_cocoa_poll_event(&event);
-    
-    if (got_event) {
-        MSG_32 msg;
-        memset(&msg, 0, sizeof(msg));
+    while (1) {
+        int got_event = macwi_cocoa_poll_event(&event);
         
-        // Find HWND
-        HANDLE found_hwnd = 0;
-        for (int i=0; i<g_macwi_handle_table.capacity; i++) {
-            if (g_macwi_handle_table.entries[i].type == HANDLE_TYPE_EVENT && g_macwi_handle_table.entries[i].object) {
-                MACWI_WINDOW_OBJ* obj = (MACWI_WINDOW_OBJ*)g_macwi_handle_table.entries[i].object;
-                if (obj->cocoa_win == event.window) {
-                    found_hwnd = (HANDLE)(uintptr_t)((i << 16) | g_macwi_handle_table.entries[i].generation);
-                    break;
+        if (got_event) {
+            MSG_32 msg;
+            memset(&msg, 0, sizeof(msg));
+            
+            // Find HWND
+            HANDLE found_hwnd = 0;
+            for (uint32_t i=0; i<g_macwi_handle_table.capacity; i++) {
+                if (g_macwi_handle_table.entries[i].type == HANDLE_TYPE_EVENT && g_macwi_handle_table.entries[i].object) {
+                    MACWI_WINDOW_OBJ* obj = (MACWI_WINDOW_OBJ*)g_macwi_handle_table.entries[i].object;
+                    if (obj->cocoa_win == event.window) {
+                        found_hwnd = (HANDLE)(uintptr_t)(((uintptr_t)g_macwi_handle_table.entries[i].generation << 16) | i);
+                        break;
+                    }
                 }
             }
+            
+            msg.hwnd = (uint32_t)(uintptr_t)found_hwnd;
+            
+            if (event.type == MACWI_EVENT_CLOSE) {
+                msg.message = WM_CLOSE;
+            } else if (event.type == MACWI_EVENT_PAINT) {
+                msg.message = WM_PAINT;
+            } else if (event.type == MACWI_EVENT_KEYDOWN) {
+                msg.message = WM_KEYDOWN;
+                msg.wParam = event.key_code;
+            } else if (event.type == MACWI_EVENT_KEYUP) {
+                msg.message = WM_KEYUP;
+                msg.wParam = event.key_code;
+            } else if (event.type == MACWI_EVENT_MOUSEDOWN) {
+                msg.message = WM_LBUTTONDOWN;
+                msg.lParam = (event.mouse_y << 16) | (event.mouse_x & 0xFFFF);
+            } else if (event.type == MACWI_EVENT_MOUSEUP) {
+                msg.message = WM_LBUTTONUP;
+                msg.lParam = (event.mouse_y << 16) | (event.mouse_x & 0xFFFF);
+            } else {
+                msg.message = 0;
+            }
+            
+            printf("[macwi:user32] GetMessageA retrieved event type=%d, HWND=%x, msg=%x\n", event.type, msg.hwnd, msg.message);
+            fflush(stdout);
+            
+            macwi_emu_write_memory(ctx, lpMsg, &msg, sizeof(msg));
+            macwi_emu_reg_write_32(ctx, 0, (msg.message != WM_QUIT) ? 1 : 0);
+            macwi_thunk_stdcall_return(ctx, 4);
+            return;
         }
         
-        msg.hwnd = (uint32_t)(uintptr_t)found_hwnd;
-        
-        if (event.type == MACWI_EVENT_CLOSE) {
-            msg.message = WM_CLOSE;
-        } else if (event.type == MACWI_EVENT_PAINT) {
-            msg.message = WM_PAINT;
-        } else if (event.type == MACWI_EVENT_KEYDOWN) {
-            msg.message = WM_KEYDOWN;
-            msg.wParam = event.key_code;
-        } else if (event.type == MACWI_EVENT_KEYUP) {
-            msg.message = WM_KEYUP;
-            msg.wParam = event.key_code;
-        } else if (event.type == MACWI_EVENT_MOUSEDOWN) {
-            msg.message = WM_LBUTTONDOWN;
-            msg.lParam = (event.mouse_y << 16) | (event.mouse_x & 0xFFFF);
-        } else if (event.type == MACWI_EVENT_MOUSEUP) {
-            msg.message = WM_LBUTTONUP;
-            msg.lParam = (event.mouse_y << 16) | (event.mouse_x & 0xFFFF);
-        } else {
-            msg.message = 0;
-        }
-        
-        macwi_emu_write_memory(ctx, lpMsg, &msg, sizeof(msg));
-        macwi_emu_reg_write_32(ctx, 0, (msg.message != WM_QUIT) ? 1 : 0);
-    } else {
-        struct timespec ts = {0, 10000000};
+        // Wait briefly for events
+        struct timespec ts = {0, 5000000}; // 5ms
         nanosleep(&ts, NULL);
-        
-        MSG_32 msg;
-        memset(&msg, 0, sizeof(msg));
-        msg.message = 0;
-        macwi_emu_write_memory(ctx, lpMsg, &msg, sizeof(msg));
-        macwi_emu_reg_write_32(ctx, 0, 1);
     }
-    macwi_thunk_stdcall_return(ctx, 4);
 }
 
 static void win32_TranslateMessage(EMU_CONTEXT* ctx) {
+    uint32_t lpMsg;
+    macwi_thunk_read_param_32(ctx, 0, &lpMsg);
+    
+    printf("[macwi:user32] TranslateMessage called with lpMsg=%x\n", lpMsg);
+    fflush(stdout);
+
     macwi_emu_reg_write_32(ctx, 0, 1);
     macwi_thunk_stdcall_return(ctx, 1);
 }
@@ -205,11 +222,17 @@ static void win32_DispatchMessageA(EMU_CONTEXT* ctx) {
     MSG_32 msg;
     macwi_emu_read_memory(ctx, lpMsg, &msg, sizeof(msg));
     
+    printf("[macwi:user32] DispatchMessageA called with hwnd=%x, msg=%x\n", msg.hwnd, msg.message);
+    fflush(stdout);
+
     MACWI_WINDOW_OBJ* win_obj = NULL;
     if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)msg.hwnd, HANDLE_TYPE_EVENT, (void**)&win_obj) == MACWI_SUCCESS) {
         if (win_obj->wnd_proc != 0) {
+            printf("[macwi:user32] DispatchMessageA: invoking WindowProc %x with msg %x\n", win_obj->wnd_proc, msg.message);
+            fflush(stdout);
+            
             uint32_t args[4] = { msg.hwnd, msg.message, msg.wParam, msg.lParam };
-            macwi_status_t st = macwi_thunk_invoke_callback(ctx, win_obj->wnd_proc, 4, args, NULL);
+            macwi_status_t st = macwi_thunk_invoke_callback(ctx, win_obj->wnd_proc, 4, args, 4, NULL);
             if (st == MACWI_SUCCESS) {
                 // Return without doing stdcall_return since we modified the stack and PC to run the callback
                 return;
@@ -225,15 +248,18 @@ static void win32_GetClientRect(EMU_CONTEXT* ctx) {
     uint32_t hWnd, lpRect;
     macwi_thunk_read_param_32(ctx, 0, &hWnd);
     macwi_thunk_read_param_32(ctx, 1, &lpRect);
+    printf("[macwi:user32] GetClientRect called for hWnd=%u\n", hWnd); fflush(stdout);
     
     MACWI_WINDOW_OBJ* win_obj = NULL;
     if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hWnd, HANDLE_TYPE_EVENT, (void**)&win_obj) == MACWI_SUCCESS) {
-        int w = 0, h = 0;
-        macwi_cocoa_get_client_rect(win_obj->cocoa_win, &w, &h);
+        int w = 800, h = 600; // Hardcoded default for now
+        // TODO: Get actual cached width and height from win_obj when implemented
         uint32_t rect[4] = {0, 0, w, h};
         macwi_emu_write_memory(ctx, lpRect, rect, sizeof(rect));
         macwi_emu_reg_write_32(ctx, 0, 1);
+        printf("[macwi:user32] GetClientRect SUCCESS\n"); fflush(stdout);
     } else {
+        printf("[macwi:user32] GetClientRect FAILED to find window\n"); fflush(stdout);
         macwi_emu_reg_write_32(ctx, 0, 0);
     }
     macwi_thunk_stdcall_return(ctx, 2);
@@ -246,8 +272,8 @@ static void win32_GetWindowRect(EMU_CONTEXT* ctx) {
     
     MACWI_WINDOW_OBJ* win_obj = NULL;
     if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hWnd, HANDLE_TYPE_EVENT, (void**)&win_obj) == MACWI_SUCCESS) {
-        int x = 0, y = 0, w = 0, h = 0;
-        macwi_cocoa_get_window_rect(win_obj->cocoa_win, &x, &y, &w, &h);
+        int x = 0, y = 0, w = 800, h = 600; // Hardcoded default for now
+        // TODO: Get actual cached rect from win_obj when implemented
         uint32_t rect[4] = {x, y, x + w, y + h};
         macwi_emu_write_memory(ctx, lpRect, rect, sizeof(rect));
         macwi_emu_reg_write_32(ctx, 0, 1);

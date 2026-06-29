@@ -203,9 +203,24 @@ static void internal_CallbackReturn(EMU_CONTEXT* ctx) {
     // Restore CPU state to exactly before the syscall that triggered the callback
     macwi_emu_restore_state(ctx, state->cpu_state);
     macwi_emu_free_state(state->cpu_state);
-    
+
     // Simulate the return value of the API that triggered the callback (e.g., DispatchMessage)
     macwi_emu_reg_write_32(ctx, 0, ret_val);
+    
+    // WORKAROUND FOR FEXCore:
+    // FEXCore's int 0x80 implementation unconditionally sets RIP = PC + 2 (the instruction after int 0x80).
+    // Because we are currently inside an int 0x80 triggered by the CallbackReturn trampoline, 
+    // FEXCore will overwrite our restored RIP and jump to the instruction AFTER CallbackReturn's int 0x80.
+    // The instruction after CallbackReturn's int 0x80 is 'ret'.
+    // To make this 'ret' jump to the CORRECT original trampoline (where we actually want to resume execution),
+    // we must push the desired target RIP (original trampoline's int 0x80 + 2) onto the guest stack.
+    
+    uint32_t target_rip = (uint32_t)macwi_emu_get_pc(ctx) + 2; // Original trampoline's int 0x80 + 2 (which is 'ret' or 'ret N')
+    uint32_t guest_sp = (uint32_t)macwi_emu_get_sp(ctx);
+    guest_sp -= 4; // Push 32-bit address
+    
+    macwi_emu_write_memory(ctx, guest_sp, &target_rip, 4);
+    macwi_emu_set_sp(ctx, guest_sp);
 }
 
 macwi_status_t macwi_thunk_init_callbacks(EMU_CONTEXT* ctx) {
@@ -215,7 +230,7 @@ macwi_status_t macwi_thunk_init_callbacks(EMU_CONTEXT* ctx) {
     return MACWI_SUCCESS;
 }
 
-macwi_status_t macwi_thunk_invoke_callback(EMU_CONTEXT* ctx, uint32_t target_addr, uint32_t arg_count, const uint32_t* args, MACWI_CALLBACK_STATE* out_state) {
+macwi_status_t macwi_thunk_invoke_callback(EMU_CONTEXT* ctx, uint32_t target_addr, uint32_t arg_count, const uint32_t* args, uint32_t caller_pop_bytes, MACWI_CALLBACK_STATE* out_state) {
     if (g_callback_depth >= MAX_CALLBACK_DEPTH) return MACWI_ERROR_MEMORY;
     if (g_callback_trampoline_va == 0) return MACWI_ERROR_INVALID_PARAM;
     
@@ -224,20 +239,55 @@ macwi_status_t macwi_thunk_invoke_callback(EMU_CONTEXT* ctx, uint32_t target_add
     if (out_state) *out_state = *state;
     
     uint64_t sp = macwi_emu_get_sp(ctx);
+    uint64_t orig_sp = sp;
     
-    // Push args right-to-left
+    // Build the callback stack frame for the thunk stub's `ret <caller_pop_bytes>`.
+    //
+    // After HandleSyscall returns, FEXCore restores all guest registers
+    // (including ESP) from CpuStateFrame via FillStaticRegs, then executes
+    // the next x86 instruction: `ret <caller_pop_bytes>`.
+    //
+    // x86 `ret N` does:
+    //   1. EIP = pop dword [ESP]    (ESP += 4)
+    //   2. ESP += N                  (stdcall param cleanup)
+    //
+    // We set up the stack so ret N:
+    //   - Pops target_addr into EIP (jumps to callback)
+    //   - Skips caller_pop_bytes of zero-initialized padding
+    //   - Leaves ESP pointing at the callback's frame:
+    //     [ESP] = trampoline return addr
+    //     [ESP+4] = arg0, [ESP+8] = arg1, ...
+    
+    // Push callback arguments right-to-left (stdcall convention)
     for (int i = arg_count - 1; i >= 0; i--) {
         sp -= 4;
         macwi_emu_write_memory(ctx, sp, &args[i], 4);
     }
     
-    // Push trampoline as return address
+    // Push CallbackReturn trampoline as the callback's return address
     sp -= 4;
     uint32_t ret_addr = (uint32_t)g_callback_trampoline_va;
     macwi_emu_write_memory(ctx, sp, &ret_addr, 4);
     
+    // Zero-initialize padding for the thunk's `ret N` ESP adjustment.
+    // Previously this was uninitialised, which could cause JIT to read
+    // garbage values and crash.
+    uint32_t zero = 0;
+    for (uint32_t i = 0; i < caller_pop_bytes; i += 4) {
+        sp -= 4;
+        macwi_emu_write_memory(ctx, sp, &zero, 4);
+    }
+    
+    // Push target_addr for the `ret N` EIP pop
+    sp -= 4;
+    macwi_emu_write_memory(ctx, sp, &target_addr, 4);
+    
     macwi_emu_set_sp(ctx, sp);
-    macwi_emu_set_pc(ctx, target_addr);
+    
+    printf("[macwi:thunk] invoke_callback: target=%x, orig_sp=%llx, new_sp=%llx, ret=%x, pop=%u\n",
+           target_addr, orig_sp, sp, ret_addr, caller_pop_bytes);
+    fflush(stdout);
     
     return MACWI_SUCCESS;
 }
+

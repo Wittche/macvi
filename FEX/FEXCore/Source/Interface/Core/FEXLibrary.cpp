@@ -1196,15 +1196,20 @@ FEX_DEFAULT_VISIBILITY FEX_Result FEX_InitWindowsEnvironment(FEX_Context* Ctx, F
         }
 
         if (g_Is32Bit) {
-            Thread->Thread->CurrentFrame->State.fs_cached = ta;
-            Thread->Thread->CurrentFrame->State.fs_idx = (5 << 3) | 3;
+            Thread->Thread->BaseFrameState.State.fs_cached = ta;
+            Thread->Thread->BaseFrameState.State.gs_cached = ta;
+            Thread->Thread->BaseFrameState.State.fs_idx = (5 << 3) | 3;
             // Map 32-bit registers to correct entry values
-            Thread->Thread->CurrentFrame->State.gregs[2] = ta; // EDX = TEB
-            Thread->Thread->CurrentFrame->State.gregs[3] = (uint64_t)(ta + 0x8000); // EBX = PEB
+            Thread->Thread->BaseFrameState.State.gregs[2] = ta; // EDX = TEB
+            Thread->Thread->BaseFrameState.State.gregs[4] = 0x24000; // ESP
+            Thread->Thread->BaseFrameState.State.gregs[8] = 0x24000; // EBP
+            
+            // PEB is at TEB + 0x30
+            Thread->Thread->BaseFrameState.State.gregs[3] = ta + 0x30; // EBX = PEB
         } else {
-            Thread->Thread->CurrentFrame->State.gs_cached = ta;
-            Thread->Thread->CurrentFrame->State.gregs[2] = ta; 
-            Thread->Thread->CurrentFrame->State.gregs[3] = (uint64_t)(ta + 0x8000); 
+            Thread->Thread->BaseFrameState.State.gs_cached = ta;
+            Thread->Thread->BaseFrameState.State.gregs[2] = ta; 
+            Thread->Thread->BaseFrameState.State.gregs[3] = (uint64_t)(ta + 0x8000); 
         }
 
         fprintf(stderr, "[FEXWindows] Ready. TEB: 0x%llx (Is32Bit: %d)\n", (unsigned long long)ta, (int)g_Is32Bit);
