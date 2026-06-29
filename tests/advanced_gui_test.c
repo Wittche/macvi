@@ -23,6 +23,19 @@ void print_int(int val) {
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     if (uMsg == WM_PAINT) {
         print_out("[WindowProc] Received WM_PAINT!\n");
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hwnd, &ps);
+        
+        RECT rect;
+        rect.left = 0;
+        rect.top = 0;
+        rect.right = 800;
+        rect.bottom = 600;
+        HBRUSH hBrush = (HBRUSH)1;
+        FillRect(hdc, &rect, hBrush);
+        TextOutA(hdc, 50, 50, "MacWI Phase 15 - Callbacks Active!", 34);
+        
+        EndPaint(hwnd, &ps);
         return 0;
     } else if (uMsg == WM_CLOSE) {
         print_out("[WindowProc] Received WM_CLOSE!\n");

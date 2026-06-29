@@ -200,8 +200,32 @@ static void win32_SetWindowLongA(EMU_CONTEXT* ctx) {
 }
 
 static void win32_DefWindowProcA(EMU_CONTEXT* ctx) {
+    uint32_t hWnd, Msg, wParam, lParam;
+    macwi_thunk_read_param_32(ctx, 0, &hWnd);
+    macwi_thunk_read_param_32(ctx, 1, &Msg);
+    
+    if (Msg == WM_PAINT) {
+        macwi_cocoa_end_paint();
+    }
     macwi_emu_reg_write_32(ctx, 0, 0);
     macwi_thunk_stdcall_return(ctx, 4);
+}
+
+static void win32_BeginPaint(EMU_CONTEXT* ctx) {
+    uint32_t hWnd, lpPaint;
+    macwi_thunk_read_param_32(ctx, 0, &hWnd);
+    macwi_thunk_read_param_32(ctx, 1, &lpPaint);
+    
+    // We should fill PAINTSTRUCT, but for now we just return a dummy HDC
+    // A real implementation would create a MACWI_HDC_OBJ
+    macwi_emu_reg_write_32(ctx, 0, 0xFFFFFFF1); // Dummy HDC
+    macwi_thunk_stdcall_return(ctx, 2);
+}
+
+static void win32_EndPaint(EMU_CONTEXT* ctx) {
+    macwi_cocoa_end_paint();
+    macwi_emu_reg_write_32(ctx, 0, 1);
+    macwi_thunk_stdcall_return(ctx, 2);
 }
 
 static void win32_PostQuitMessage(EMU_CONTEXT* ctx) {
@@ -555,4 +579,6 @@ void macwi_user32_register_apis(void) {
     macwi_thunk_register_api("user32.dll", "SetWindowTextA", win32_SetWindowTextA, 2);
     macwi_thunk_register_api("user32.dll", "GetWindowTextA", win32_GetWindowTextA, 3);
     macwi_thunk_register_api("user32.dll", "MessageBoxA", win32_MessageBoxA, 4);
+    macwi_thunk_register_api("user32.dll", "BeginPaint", win32_BeginPaint, 2);
+    macwi_thunk_register_api("user32.dll", "EndPaint", win32_EndPaint, 2);
 }
