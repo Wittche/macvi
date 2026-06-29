@@ -79,9 +79,6 @@ void _start(void) {
     // Test SetWindowTextA
     SetWindowTextA(hwnd, "MacWI Phase 15 - Callbacks Active!");
     
-    // Test MessageBoxA
-    MessageBoxA(NULL, "Welcome to the MacWI Advanced GUI Test.\nThe window will now show.", "Welcome", 0);
-    
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
     

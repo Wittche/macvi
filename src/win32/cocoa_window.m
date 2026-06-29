@@ -404,13 +404,10 @@ int macwi_cocoa_message_box(void* window_ptr, const char* text, const char* capt
         
         if (window_ptr) {
             NSView* view = (__bridge NSView*)window_ptr;
-            NSWindow* window = [view window];
-            [alert beginSheetModalForWindow:window completionHandler:^(NSModalResponse res) {
-                // Not ideal since it's async, we actually need blocking here for Win32 semantics
-            }];
-        } else {
-            response = [alert runModal];
+            [[view window] makeKeyAndOrderFront:nil];
         }
+        [NSApp activateIgnoringOtherApps:YES];
+        response = [alert runModal];
     });
     
     // For blocking behavior with window, runModal is needed
