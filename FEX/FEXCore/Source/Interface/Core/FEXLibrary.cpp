@@ -1157,7 +1157,7 @@ FEX_DEFAULT_VISIBILITY FEX_Result FEX_SetThreadTLSBase(FEX_Thread* Thread, uint6
 
 FEX_DEFAULT_VISIBILITY FEX_Result FEX_InitWindowsEnvironment(FEX_Context* Ctx, FEX_Thread* Thread, uint64_t ImageBase, int argc, char** argv) {
     g_image_base = ImageBase;
-    uintptr_t ta = (uintptr_t)FEX_MapMemory(Ctx, 0x40000000, 0x20000, FEX_MEM_READ | FEX_MEM_WRITE);
+    uintptr_t ta = (uintptr_t)FEX_MapMemory(Ctx, 0x7F000000, 0x20000, FEX_MEM_READ | FEX_MEM_WRITE);
     if (!ta) ta = (uintptr_t)FEX_MapMemory(Ctx, 0, 0x20000, FEX_MEM_READ | FEX_MEM_WRITE);
 
     if (ta) {

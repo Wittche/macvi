@@ -15,7 +15,8 @@ typedef enum {
     MACWI_EVENT_KEYDOWN = 3,
     MACWI_EVENT_KEYUP = 4,
     MACWI_EVENT_MOUSEDOWN = 5,
-    MACWI_EVENT_MOUSEUP = 6
+    MACWI_EVENT_MOUSEUP = 6,
+    MACWI_EVENT_QUIT = 7
 } macwi_event_type_t;
 
 typedef struct {
@@ -51,6 +52,7 @@ void macwi_cocoa_set_text(void* window, const char* text);
 void macwi_cocoa_get_text(void* window, char* out_text, int max_len);
 int macwi_cocoa_message_box(void* window, const char* text, const char* caption, uint32_t type);
 void macwi_cocoa_end_paint(void);
+void macwi_cocoa_post_quit_message(void);
 
 #ifdef __cplusplus
 }

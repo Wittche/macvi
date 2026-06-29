@@ -6,10 +6,13 @@
 # --as-needed  : Only includes libraries that are actually needed in the final output.
 
 macro(LinkerGC target)
-  if (CMAKE_BUILD_TYPE MATCHES "RELEASE")
+  if (CMAKE_BUILD_TYPE MATCHES "RELEASE" AND NOT APPLE)
     target_link_options(${target} PRIVATE
       "LINKER:--gc-sections"
       "LINKER:--strip-all"
       "LINKER:--as-needed")
+  elseif (CMAKE_BUILD_TYPE MATCHES "RELEASE" AND APPLE)
+    target_link_options(${target} PRIVATE
+      "LINKER:-dead_strip")
   endif()
 endmacro()

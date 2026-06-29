@@ -196,6 +196,18 @@ void macwi_cocoa_show_window(void* window_ptr) {
     });
 }
 
+void macwi_cocoa_post_quit_message(void) {
+    pthread_mutex_lock(&g_event_mutex);
+    if (g_eventQueue) {
+        macwi_event_t event;
+        event.type = MACWI_EVENT_QUIT;
+        event.window = NULL;
+        NSValue* eventVal = [NSValue valueWithBytes:&event objCType:@encode(macwi_event_t)];
+        [g_eventQueue addObject:eventVal];
+    }
+    pthread_mutex_unlock(&g_event_mutex);
+}
+
 int macwi_cocoa_poll_event(macwi_event_t* out_event) {
     int result = 0;
     

@@ -136,6 +136,7 @@ static void win32_DefWindowProcA(EMU_CONTEXT* ctx) {
 }
 
 static void win32_PostQuitMessage(EMU_CONTEXT* ctx) {
+    macwi_cocoa_post_quit_message();
     macwi_emu_reg_write_32(ctx, 0, 0);
     macwi_thunk_stdcall_return(ctx, 1);
 }
@@ -185,6 +186,8 @@ static void win32_GetMessageA(EMU_CONTEXT* ctx) {
             } else if (event.type == MACWI_EVENT_MOUSEUP) {
                 msg.message = WM_LBUTTONUP;
                 msg.lParam = (event.mouse_y << 16) | (event.mouse_x & 0xFFFF);
+            } else if (event.type == MACWI_EVENT_QUIT) {
+                msg.message = WM_QUIT;
             } else {
                 msg.message = 0;
             }
