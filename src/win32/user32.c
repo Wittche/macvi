@@ -139,26 +139,19 @@ static void win32_CreateWindowExA(EMU_CONTEXT* ctx) {
     macwi_thunk_stdcall_return(ctx, 12);
 }
 
-static void win32_ShowWindow(EMU_CONTEXT* ctx) {
-    uint32_t hWnd, nCmdShow;
-    macwi_thunk_read_param_32(ctx, 0, &hWnd);
-    macwi_thunk_read_param_32(ctx, 1, &nCmdShow);
-    
+uint32_t host_ShowWindow(EMU_CONTEXT* ctx, uint32_t hWnd, uint32_t nCmdShow) {
     MACWI_WINDOW_OBJ* win_obj = NULL;
-    printf("[macwi:user32] ShowWindow called with hwnd=%u, nCmdShow=%u\n", hWnd, nCmdShow);
+    printf("[macwi:user32] host_ShowWindow called with hwnd=%u, nCmdShow=%u\n", hWnd, nCmdShow);
     fflush(stdout);
     if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hWnd, HANDLE_TYPE_EVENT, (void**)&win_obj) == MACWI_SUCCESS) {
         macwi_cocoa_show_window(win_obj->cocoa_win);
-        macwi_emu_reg_write_32(ctx, 0, 1);
-    } else {
-        macwi_emu_reg_write_32(ctx, 0, 0);
+        return 1;
     }
-    macwi_thunk_stdcall_return(ctx, 2);
+    return 0;
 }
 
-static void win32_UpdateWindow(EMU_CONTEXT* ctx) {
-    macwi_emu_reg_write_32(ctx, 0, 1);
-    macwi_thunk_stdcall_return(ctx, 1);
+uint32_t host_UpdateWindow(EMU_CONTEXT* ctx, uint32_t hWnd) {
+    return 1;
 }
 
 #define GWL_WNDPROC -4
@@ -609,6 +602,8 @@ static void win32_MessageBoxA(EMU_CONTEXT* ctx) {
     macwi_thunk_stdcall_return(ctx, 4);
 }
 
+extern void fexi_register_user32(void);
+
 void macwi_user32_register_apis(void) {
     // Register builtin classes
     strncpy(g_classes[g_class_count].class_name, "BUTTON", 128);
@@ -623,6 +618,9 @@ void macwi_user32_register_apis(void) {
     g_classes[g_class_count].wnd_proc = BUILTIN_WNDPROC_EDIT;
     g_class_count++;
 
+    // Call Fexi-generated auto registrations
+    fexi_register_user32();
+
     macwi_thunk_register_api("user32.dll", "GetSystemMetrics", win32_GetSystemMetrics, 1);
     macwi_thunk_register_api("user32.dll", "GetSysColor", win32_GetSysColor, 1);
     macwi_thunk_register_api("user32.dll", "GetWindowLongA", win32_GetWindowLongA, 2);
@@ -631,8 +629,6 @@ void macwi_user32_register_apis(void) {
     macwi_thunk_register_api("user32.dll", "MoveWindow", win32_MoveWindow, 6);
     macwi_thunk_register_api("user32.dll", "RegisterClassExA", win32_RegisterClassExA, 1);
     macwi_thunk_register_api("user32.dll", "CreateWindowExA", win32_CreateWindowExA, 12);
-    macwi_thunk_register_api("user32.dll", "ShowWindow", win32_ShowWindow, 2);
-    macwi_thunk_register_api("user32.dll", "UpdateWindow", win32_UpdateWindow, 1);
     macwi_thunk_register_api("user32.dll", "DefWindowProcA", win32_DefWindowProcA, 4);
     macwi_thunk_register_api("user32.dll", "PostQuitMessage", win32_PostQuitMessage, 1);
     macwi_thunk_register_api("user32.dll", "GetMessageA", win32_GetMessageA, 4);

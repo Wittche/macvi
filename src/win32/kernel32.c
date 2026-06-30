@@ -150,9 +150,7 @@ static void win32_CreateFileA(EMU_CONTEXT* ctx) {
     macwi_thunk_stdcall_return(ctx, 7);
 }
 
-static void win32_DeleteFileA(EMU_CONTEXT* ctx) {
-    uint64_t lpFileName;
-    macwi_thunk_read_param_64(ctx, 0, &lpFileName);
+uint32_t host_DeleteFileA(EMU_CONTEXT* ctx, uint64_t lpFileName) {
     char filename[256];
     macwi_thunk_read_guest_string(ctx, lpFileName, filename, sizeof(filename));
     
@@ -161,17 +159,14 @@ static void win32_DeleteFileA(EMU_CONTEXT* ctx) {
     STUB_LOG("DeleteFileA(\"%s\")", filename);
     
     if (unlink(unix_path) == 0) {
-        macwi_emu_reg_write_64(ctx, 0, 1);
+        return 1;
     } else {
         set_last_error(2); // ERROR_FILE_NOT_FOUND
-        macwi_emu_reg_write_64(ctx, 0, 0);
+        return 0;
     }
-    macwi_thunk_stdcall_return(ctx, 1);
 }
 
-static void win32_GetFileAttributesA(EMU_CONTEXT* ctx) {
-    uint64_t lpFileName;
-    macwi_thunk_read_param_64(ctx, 0, &lpFileName);
+uint32_t host_GetFileAttributesA(EMU_CONTEXT* ctx, uint64_t lpFileName) {
     char filename[256];
     macwi_thunk_read_guest_string(ctx, lpFileName, filename, sizeof(filename));
     
@@ -183,58 +178,43 @@ static void win32_GetFileAttributesA(EMU_CONTEXT* ctx) {
     if (stat(unix_path, &st) == 0) {
         uint32_t attr = 0x80; // FILE_ATTRIBUTE_NORMAL
         if (S_ISDIR(st.st_mode)) attr = 0x10; // FILE_ATTRIBUTE_DIRECTORY
-        macwi_emu_reg_write_64(ctx, 0, attr);
+        return attr;
     } else {
         set_last_error(2); // ERROR_FILE_NOT_FOUND
-        macwi_emu_reg_write_64(ctx, 0, 0xFFFFFFFF); // INVALID_FILE_ATTRIBUTES
+        return 0xFFFFFFFF; // INVALID_FILE_ATTRIBUTES
     }
-    macwi_thunk_stdcall_return(ctx, 1);
 }
 
-static void win32_SetFileAttributesA(EMU_CONTEXT* ctx) {
-    uint64_t lpFileName, dwFileAttributes;
-    macwi_thunk_read_param_64(ctx, 0, &lpFileName);
-    macwi_thunk_read_param_64(ctx, 1, &dwFileAttributes);
+uint32_t host_SetFileAttributesA(EMU_CONTEXT* ctx, uint64_t lpFileName, uint32_t dwFileAttributes) {
     STUB_LOG("SetFileAttributesA()");
     // Stub implementation
-    macwi_emu_reg_write_64(ctx, 0, 1); // TRUE
-    macwi_thunk_stdcall_return(ctx, 2);
+    return 1; // TRUE
 }
 
-static void win32_GetSystemDirectoryA(EMU_CONTEXT* ctx) {
-    uint64_t lpBuffer, uSize;
-    macwi_thunk_read_param_64(ctx, 0, &lpBuffer);
-    macwi_thunk_read_param_64(ctx, 1, &uSize);
-    
+uint32_t host_GetSystemDirectoryA(EMU_CONTEXT* ctx, uint64_t lpBuffer, uint32_t uSize) {
     const char* sysdir = "C:\\Windows\\System32";
     size_t len = strlen(sysdir);
     
     STUB_LOG("GetSystemDirectoryA()");
     if (uSize > len) {
         macwi_emu_write_memory(ctx, lpBuffer, sysdir, len + 1);
-        macwi_emu_reg_write_64(ctx, 0, len);
+        return len;
     } else {
-        macwi_emu_reg_write_64(ctx, 0, len + 1);
+        return len + 1;
     }
-    macwi_thunk_stdcall_return(ctx, 2);
 }
 
-static void win32_GetWindowsDirectoryA(EMU_CONTEXT* ctx) {
-    uint64_t lpBuffer, uSize;
-    macwi_thunk_read_param_64(ctx, 0, &lpBuffer);
-    macwi_thunk_read_param_64(ctx, 1, &uSize);
-    
+uint32_t host_GetWindowsDirectoryA(EMU_CONTEXT* ctx, uint64_t lpBuffer, uint32_t uSize) {
     const char* windir = "C:\\Windows";
     size_t len = strlen(windir);
     
     STUB_LOG("GetWindowsDirectoryA()");
     if (uSize > len) {
         macwi_emu_write_memory(ctx, lpBuffer, windir, len + 1);
-        macwi_emu_reg_write_64(ctx, 0, len);
+        return len;
     } else {
-        macwi_emu_reg_write_64(ctx, 0, len + 1);
+        return len + 1;
     }
-    macwi_thunk_stdcall_return(ctx, 2);
 }
 
 // WIN32_FIND_DATAA structure
@@ -735,7 +715,11 @@ static void win32_ReleaseMutex(EMU_CONTEXT* ctx) {
  * Registration
  * ============================================================================ */
 
+extern void fexi_register_kernel32(void);
+
 void macwi_kernel32_register_apis(void) {
+    fexi_register_kernel32();
+
     macwi_thunk_register_api("kernel32.dll", "GetLastError",       win32_GetLastError, 0);
     macwi_thunk_register_api("kernel32.dll", "SetLastError",       win32_SetLastError, 1);
     macwi_thunk_register_api("kernel32.dll", "GetModuleHandleA",   win32_GetModuleHandleA, 1);
@@ -745,11 +729,6 @@ void macwi_kernel32_register_apis(void) {
     macwi_thunk_register_api("kernel32.dll", "lstrlenA",           win32_lstrlenA, 1);
     macwi_thunk_register_api("kernel32.dll", "GetStdHandle",       win32_GetStdHandle, 1);
     macwi_thunk_register_api("kernel32.dll", "CreateFileA",        win32_CreateFileA, 7);
-    macwi_thunk_register_api("kernel32.dll", "DeleteFileA",        win32_DeleteFileA, 1);
-    macwi_thunk_register_api("kernel32.dll", "GetFileAttributesA", win32_GetFileAttributesA, 1);
-    macwi_thunk_register_api("kernel32.dll", "SetFileAttributesA", win32_SetFileAttributesA, 2);
-    macwi_thunk_register_api("kernel32.dll", "GetSystemDirectoryA",win32_GetSystemDirectoryA, 2);
-    macwi_thunk_register_api("kernel32.dll", "GetWindowsDirectoryA",win32_GetWindowsDirectoryA, 2);
     macwi_thunk_register_api("kernel32.dll", "FindFirstFileA",     win32_FindFirstFileA, 2);
     macwi_thunk_register_api("kernel32.dll", "FindNextFileA",      win32_FindNextFileA, 2);
     macwi_thunk_register_api("kernel32.dll", "FindClose",          win32_FindClose, 1);

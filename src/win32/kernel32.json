@@ -1,0 +1,43 @@
+{
+  "dll_name": "kernel32.dll",
+  "apis": [
+    {
+      "name": "DeleteFileA",
+      "args": [
+        {"name": "lpFileName", "type": "uint64_t"}
+      ],
+      "ret": "uint32_t"
+    },
+    {
+      "name": "GetFileAttributesA",
+      "args": [
+        {"name": "lpFileName", "type": "uint64_t"}
+      ],
+      "ret": "uint32_t"
+    },
+    {
+      "name": "SetFileAttributesA",
+      "args": [
+        {"name": "lpFileName", "type": "uint64_t"},
+        {"name": "dwFileAttributes", "type": "uint32_t"}
+      ],
+      "ret": "uint32_t"
+    },
+    {
+      "name": "GetSystemDirectoryA",
+      "args": [
+        {"name": "lpBuffer", "type": "uint64_t"},
+        {"name": "uSize", "type": "uint32_t"}
+      ],
+      "ret": "uint32_t"
+    },
+    {
+      "name": "GetWindowsDirectoryA",
+      "args": [
+        {"name": "lpBuffer", "type": "uint64_t"},
+        {"name": "uSize", "type": "uint32_t"}
+      ],
+      "ret": "uint32_t"
+    }
+  ]
+}

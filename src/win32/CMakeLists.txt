@@ -5,11 +5,13 @@
 
 add_library(macwi_win32 STATIC
     kernel32.c
+    fexi_kernel32.c
     ntdll.c
     advapi32.c
     user32.c
-    timer.c
+    fexi_user32.c
     gdi32.c
+    timer.c
     cocoa_window.m
 )
 

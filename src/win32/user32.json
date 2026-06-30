@@ -1,0 +1,20 @@
+{
+  "dll_name": "user32.dll",
+  "apis": [
+    {
+      "name": "ShowWindow",
+      "args": [
+        {"name": "hWnd", "type": "uint32_t"},
+        {"name": "nCmdShow", "type": "uint32_t"}
+      ],
+      "ret": "uint32_t"
+    },
+    {
+      "name": "UpdateWindow",
+      "args": [
+        {"name": "hWnd", "type": "uint32_t"}
+      ],
+      "ret": "uint32_t"
+    }
+  ]
+}
