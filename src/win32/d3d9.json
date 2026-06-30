@@ -1,0 +1,12 @@
+{
+  "dll_name": "d3d9.dll",
+  "apis": [
+    {
+      "name": "Direct3DCreate9",
+      "args": [
+        {"name": "SDKVersion", "type": "uint32_t"}
+      ],
+      "ret": "uint64_t"
+    }
+  ]
+}

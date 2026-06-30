@@ -7,10 +7,14 @@ add_library(macwi_win32 STATIC
     kernel32.c
     fexi_kernel32.c
     ntdll.c
+    fexi_ntdll.c
     advapi32.c
     user32.c
     fexi_user32.c
     gdi32.c
+    fexi_gdi32.c
+    d3d9.c
+    fexi_d3d9.c
     timer.c
     cocoa_window.m
 )

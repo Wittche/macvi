@@ -19,30 +19,24 @@
 #define STATUS_INVALID_PARAMETER     0xC000000D
 #define STATUS_NOT_IMPLEMENTED       0xC0000002
 
-static void ntdll_NtCreateFile(EMU_CONTEXT* ctx) {
+uint32_t host_NtCreateFile(EMU_CONTEXT* ctx, uint64_t FileHandle, uint32_t DesiredAccess, uint64_t ObjectAttributes, uint64_t IoStatusBlock, uint64_t AllocationSize, uint32_t FileAttributes, uint32_t ShareAccess, uint32_t CreateDisposition, uint32_t CreateOptions, uint64_t EaBuffer, uint32_t EaLength) {
     NT_STUB_LOG("NtCreateFile stubbed");
-    macwi_emu_reg_write_64(ctx, 0, STATUS_NOT_IMPLEMENTED);
-    macwi_thunk_stdcall_return(ctx, 11);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
-static void ntdll_NtClose(EMU_CONTEXT* ctx) {
-    uint64_t handle;
-    macwi_thunk_read_param_64(ctx, 0, &handle);
-    NT_STUB_LOG("NtClose(0x%llX) stubbed", handle);
-    macwi_emu_reg_write_64(ctx, 0, STATUS_SUCCESS);
-    macwi_thunk_stdcall_return(ctx, 1);
+uint32_t host_NtClose(EMU_CONTEXT* ctx, uint64_t Handle) {
+    NT_STUB_LOG("NtClose(0x%llX) stubbed", Handle);
+    return STATUS_SUCCESS;
 }
 
-static void ntdll_NtReadFile(EMU_CONTEXT* ctx) {
+uint32_t host_NtReadFile(EMU_CONTEXT* ctx, uint64_t FileHandle, uint64_t Event, uint64_t ApcRoutine, uint64_t ApcContext, uint64_t IoStatusBlock, uint64_t Buffer, uint32_t Length, uint64_t ByteOffset, uint64_t Key) {
     NT_STUB_LOG("NtReadFile stubbed");
-    macwi_emu_reg_write_64(ctx, 0, STATUS_NOT_IMPLEMENTED);
-    macwi_thunk_stdcall_return(ctx, 9);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
-static void ntdll_NtWriteFile(EMU_CONTEXT* ctx) {
+uint32_t host_NtWriteFile(EMU_CONTEXT* ctx, uint64_t FileHandle, uint64_t Event, uint64_t ApcRoutine, uint64_t ApcContext, uint64_t IoStatusBlock, uint64_t Buffer, uint32_t Length, uint64_t ByteOffset, uint64_t Key) {
     NT_STUB_LOG("NtWriteFile stubbed");
-    macwi_emu_reg_write_64(ctx, 0, STATUS_NOT_IMPLEMENTED);
-    macwi_thunk_stdcall_return(ctx, 9);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 static void ntdll_NtAllocateVirtualMemory(EMU_CONTEXT* ctx) {
@@ -94,11 +88,11 @@ static void ntdll_KiUserExceptionDispatcher(EMU_CONTEXT* ctx) {
  * API Registration
  * ============================================================================ */
 
+extern void fexi_register_ntdll(void);
+
 void macwi_ntdll_register_apis(void) {
-    macwi_thunk_register_api("ntdll.dll", "NtCreateFile", ntdll_NtCreateFile, 11);
-    macwi_thunk_register_api("ntdll.dll", "NtClose", ntdll_NtClose, 1);
-    macwi_thunk_register_api("ntdll.dll", "NtReadFile", ntdll_NtReadFile, 9);
-    macwi_thunk_register_api("ntdll.dll", "NtWriteFile", ntdll_NtWriteFile, 9);
+    fexi_register_ntdll();
+    
     macwi_thunk_register_api("ntdll.dll", "NtAllocateVirtualMemory", ntdll_NtAllocateVirtualMemory, 6);
     macwi_thunk_register_api("ntdll.dll", "NtFreeVirtualMemory", ntdll_NtFreeVirtualMemory, 4);
     macwi_thunk_register_api("ntdll.dll", "RtlInitUnicodeString", ntdll_RtlInitUnicodeString, 2);

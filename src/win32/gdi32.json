@@ -1,0 +1,32 @@
+{
+  "dll_name": "gdi32.dll",
+  "apis": [
+    {
+      "name": "CreateDIBSection",
+      "args": [
+        {"name": "hdc", "type": "uint64_t"},
+        {"name": "pbmi", "type": "uint64_t"},
+        {"name": "usage", "type": "uint32_t"},
+        {"name": "ppvBits", "type": "uint64_t"},
+        {"name": "hSection", "type": "uint64_t"},
+        {"name": "offset", "type": "uint32_t"}
+      ],
+      "ret": "uint64_t"
+    },
+    {
+      "name": "BitBlt",
+      "args": [
+        {"name": "hdcDest", "type": "uint64_t"},
+        {"name": "nXDest", "type": "uint32_t"},
+        {"name": "nYDest", "type": "uint32_t"},
+        {"name": "nWidth", "type": "uint32_t"},
+        {"name": "nHeight", "type": "uint32_t"},
+        {"name": "hdcSrc", "type": "uint64_t"},
+        {"name": "nXSrc", "type": "uint32_t"},
+        {"name": "nYSrc", "type": "uint32_t"},
+        {"name": "dwRop", "type": "uint32_t"}
+      ],
+      "ret": "uint32_t"
+    }
+  ]
+}

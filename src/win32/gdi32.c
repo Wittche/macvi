@@ -221,6 +221,70 @@ static void win32_FillRect(EMU_CONTEXT* ctx) {
     macwi_thunk_stdcall_return(ctx, 3);
 }
 
+uint64_t host_CreateDIBSection(EMU_CONTEXT* ctx, uint64_t hdc, uint64_t pbmi, uint32_t usage, uint64_t ppvBits, uint64_t hSection, uint32_t offset) {
+    printf("[macwi:gdi32] CreateDIBSection called\n");
+    
+    // Simplistic stub: Just allocate some memory for the bits and return a fake HBITMAP
+    // A real implementation would parse BITMAPINFO from `pbmi` to get width/height and allocate width*height*4 bytes.
+    uint32_t width = 800;
+    uint32_t height = 600;
+    uint32_t size = width * height * 4;
+    
+    // Allocate memory in the guest for the bits
+    // We would need a way to allocate guest memory here, or we can just malloc and return it if we are hacking it.
+    // For now, let's just write 0 to ppvBits to indicate no memory is mapped, but return a fake handle.
+    if (ppvBits) {
+        macwi_emu_write_memory(ctx, ppvBits, &size, 4); // Write some fake address
+    }
+    
+    MACWI_GDI_OBJ* obj = (MACWI_GDI_OBJ*)calloc(1, sizeof(MACWI_GDI_OBJ));
+    obj->type = GDI_OBJ_BITMAP;
+    
+    HANDLE hObj = macwi_handle_create(&g_macwi_handle_table, HANDLE_TYPE_GDI_OBJ, obj);
+    return (uint64_t)hObj;
+}
+
+uint32_t host_BitBlt(EMU_CONTEXT* ctx, uint64_t hdcDest, uint32_t nXDest, uint32_t nYDest, uint32_t nWidth, uint32_t nHeight, uint64_t hdcSrc, uint32_t nXSrc, uint32_t nYSrc, uint32_t dwRop) {
+    printf("[macwi:gdi32] BitBlt called\n");
+    return 1;
+}
+
+static void win32_SetTextColor(EMU_CONTEXT* ctx) {
+    uint32_t hdc, color;
+    macwi_thunk_read_param_32(ctx, 0, &hdc);
+    macwi_thunk_read_param_32(ctx, 1, &color);
+    
+    MACWI_HDC_OBJ* hdc_obj = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hdc, HANDLE_TYPE_HDC, (void**)&hdc_obj) == MACWI_SUCCESS) {
+        uint32_t old_color = hdc_obj->text_color;
+        // BGR to RGB (or ARGB)
+        uint32_t r = color & 0xFF;
+        uint32_t g = (color >> 8) & 0xFF;
+        uint32_t b = (color >> 16) & 0xFF;
+        hdc_obj->text_color = (0xFF000000) | (r << 16) | (g << 8) | b;
+        macwi_emu_reg_write_32(ctx, 0, old_color);
+    } else {
+        macwi_emu_reg_write_32(ctx, 0, 0xFFFFFFFF);
+    }
+    macwi_thunk_stdcall_return(ctx, 2);
+}
+
+static void win32_SetBkMode(EMU_CONTEXT* ctx) {
+    uint32_t hdc, mode;
+    macwi_thunk_read_param_32(ctx, 0, &hdc);
+    macwi_thunk_read_param_32(ctx, 1, &mode);
+    
+    MACWI_HDC_OBJ* hdc_obj = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hdc, HANDLE_TYPE_HDC, (void**)&hdc_obj) == MACWI_SUCCESS) {
+        uint32_t old_mode = hdc_obj->bk_mode;
+        hdc_obj->bk_mode = mode;
+        macwi_emu_reg_write_32(ctx, 0, old_mode);
+    } else {
+        macwi_emu_reg_write_32(ctx, 0, 0);
+    }
+    macwi_thunk_stdcall_return(ctx, 2);
+}
+
 static void win32_Rectangle(EMU_CONTEXT* ctx) {
     uint32_t hdc;
     int32_t left, top, right, bottom;
@@ -284,7 +348,11 @@ static void win32_TextOutA(EMU_CONTEXT* ctx) {
     macwi_thunk_stdcall_return(ctx, 5);
 }
 
+extern void fexi_register_gdi32(void);
+
 void macwi_gdi32_register_apis(void) {
+    fexi_register_gdi32();
+
     macwi_thunk_register_api("user32.dll", "BeginPaint", win32_BeginPaint, 2);
     macwi_thunk_register_api("user32.dll", "EndPaint", win32_EndPaint, 2);
     macwi_thunk_register_api("user32.dll", "FillRect", win32_FillRect, 3);
@@ -292,8 +360,10 @@ void macwi_gdi32_register_apis(void) {
     macwi_thunk_register_api("gdi32.dll", "GetStockObject", win32_GetStockObject, 1);
     macwi_thunk_register_api("gdi32.dll", "SelectObject", win32_SelectObject, 2);
     macwi_thunk_register_api("gdi32.dll", "CreateSolidBrush", win32_CreateSolidBrush, 1);
-    macwi_thunk_register_api("gdi32.dll", "DeleteObject", win32_DeleteObject, 1);
-    macwi_thunk_register_api("gdi32.dll", "Rectangle", win32_Rectangle, 5);
-    macwi_thunk_register_api("gdi32.dll", "TextOutA", win32_TextOutA, 5);
     macwi_thunk_register_api("gdi32.dll", "CreateFontA", win32_CreateFontA, 14);
+    macwi_thunk_register_api("gdi32.dll", "SetTextColor", win32_SetTextColor, 2);
+    macwi_thunk_register_api("gdi32.dll", "SetBkMode", win32_SetBkMode, 2);
+    macwi_thunk_register_api("gdi32.dll", "TextOutA", win32_TextOutA, 5);
+    macwi_thunk_register_api("gdi32.dll", "Rectangle", win32_Rectangle, 5);
+    macwi_thunk_register_api("gdi32.dll", "DeleteObject", win32_DeleteObject, 1);
 }

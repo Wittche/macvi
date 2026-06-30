@@ -1,0 +1,59 @@
+{
+  "dll_name": "ntdll.dll",
+  "apis": [
+    {
+      "name": "NtCreateFile",
+      "args": [
+        {"name": "FileHandle", "type": "uint64_t"},
+        {"name": "DesiredAccess", "type": "uint32_t"},
+        {"name": "ObjectAttributes", "type": "uint64_t"},
+        {"name": "IoStatusBlock", "type": "uint64_t"},
+        {"name": "AllocationSize", "type": "uint64_t"},
+        {"name": "FileAttributes", "type": "uint32_t"},
+        {"name": "ShareAccess", "type": "uint32_t"},
+        {"name": "CreateDisposition", "type": "uint32_t"},
+        {"name": "CreateOptions", "type": "uint32_t"},
+        {"name": "EaBuffer", "type": "uint64_t"},
+        {"name": "EaLength", "type": "uint32_t"}
+      ],
+      "ret": "uint32_t"
+    },
+    {
+      "name": "NtClose",
+      "args": [
+        {"name": "Handle", "type": "uint64_t"}
+      ],
+      "ret": "uint32_t"
+    },
+    {
+      "name": "NtReadFile",
+      "args": [
+        {"name": "FileHandle", "type": "uint64_t"},
+        {"name": "Event", "type": "uint64_t"},
+        {"name": "ApcRoutine", "type": "uint64_t"},
+        {"name": "ApcContext", "type": "uint64_t"},
+        {"name": "IoStatusBlock", "type": "uint64_t"},
+        {"name": "Buffer", "type": "uint64_t"},
+        {"name": "Length", "type": "uint32_t"},
+        {"name": "ByteOffset", "type": "uint64_t"},
+        {"name": "Key", "type": "uint64_t"}
+      ],
+      "ret": "uint32_t"
+    },
+    {
+      "name": "NtWriteFile",
+      "args": [
+        {"name": "FileHandle", "type": "uint64_t"},
+        {"name": "Event", "type": "uint64_t"},
+        {"name": "ApcRoutine", "type": "uint64_t"},
+        {"name": "ApcContext", "type": "uint64_t"},
+        {"name": "IoStatusBlock", "type": "uint64_t"},
+        {"name": "Buffer", "type": "uint64_t"},
+        {"name": "Length", "type": "uint32_t"},
+        {"name": "ByteOffset", "type": "uint64_t"},
+        {"name": "Key", "type": "uint64_t"}
+      ],
+      "ret": "uint32_t"
+    }
+  ]
+}

@@ -305,6 +305,8 @@ int main(int argc, char** argv) {
     macwi_gdi32_register_apis();
     macwi_ntdll_register_apis();
     macwi_advapi32_register_apis();
+    extern void macwi_d3d9_register_apis(void);
+    macwi_d3d9_register_apis();
     macwi_thunk_init_dispatcher(ctx);
     macwi_thunk_init_callbacks(ctx);
     

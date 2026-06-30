@@ -20,7 +20,8 @@ void macwi_gdi32_register_apis(void);
 typedef enum {
     GDI_OBJ_BRUSH = 1,
     GDI_OBJ_FONT  = 2,
-    GDI_OBJ_PEN   = 3
+    GDI_OBJ_PEN   = 3,
+    GDI_OBJ_BITMAP = 4
 } MACWI_GDI_OBJ_TYPE;
 
 typedef struct {
@@ -37,6 +38,7 @@ typedef struct {
     HANDLE current_font;
     uint32_t text_color;
     uint32_t bk_color;
+    uint32_t bk_mode;
 } MACWI_HDC_OBJ;
 
 typedef uint32_t HDC32;
