@@ -8,6 +8,7 @@ extern HANDLE_TABLE g_macwi_handle_table;
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 static void win32_BeginPaint(EMU_CONTEXT* ctx) {
     uint32_t hWnd, lpPaint;
@@ -146,6 +147,35 @@ static void win32_CreateSolidBrush(EMU_CONTEXT* ctx) {
     macwi_thunk_stdcall_return(ctx, 1);
 }
 
+static void win32_CreateFontA(EMU_CONTEXT* ctx) {
+    int32_t cHeight;
+    uint32_t pszFaceName;
+    macwi_thunk_read_param_32(ctx, 0, (uint32_t*)&cHeight);
+    macwi_thunk_read_param_32(ctx, 13, &pszFaceName); // pszFaceName is the 14th argument (index 13)
+
+    MACWI_GDI_OBJ* obj = (MACWI_GDI_OBJ*)calloc(1, sizeof(MACWI_GDI_OBJ));
+    obj->type = GDI_OBJ_FONT;
+    
+    // Windows fonts use negative heights for point sizes, usually.
+    if (cHeight < 0) cHeight = -cHeight;
+    if (cHeight == 0) cHeight = 12; // Default size
+    obj->font_size = cHeight;
+    
+    if (pszFaceName != 0) {
+        macwi_thunk_read_guest_string(ctx, pszFaceName, obj->font_name, sizeof(obj->font_name));
+    } else {
+        strcpy(obj->font_name, "Arial");
+    }
+    
+    printf("[macwi:gdi32] CreateFontA height=%d, face='%s'\n", cHeight, obj->font_name);
+    fflush(stdout);
+
+    HANDLE hObj = macwi_handle_create(&g_macwi_handle_table, HANDLE_TYPE_GDI_OBJ, obj);
+    macwi_emu_reg_write_32(ctx, 0, (uint32_t)(uintptr_t)hObj);
+    macwi_thunk_stdcall_return(ctx, 14);
+}
+
+
 static void win32_DeleteObject(EMU_CONTEXT* ctx) {
     uint32_t hObject;
     macwi_thunk_read_param_32(ctx, 0, &hObject);
@@ -236,7 +266,17 @@ static void win32_TextOutA(EMU_CONTEXT* ctx) {
         macwi_thunk_read_guest_string(ctx, lpString, text, sizeof(text));
         if (c < 256) text[c] = '\0';
         
-        macwi_cocoa_draw_text(hdc_obj->cocoa_window, x, y, text, hdc_obj->text_color);
+        const char* f_name = NULL;
+        int f_size = 0;
+        if (hdc_obj->current_font) {
+            MACWI_GDI_OBJ* font = NULL;
+            if (macwi_handle_get_object(&g_macwi_handle_table, hdc_obj->current_font, HANDLE_TYPE_GDI_OBJ, (void**)&font) == MACWI_SUCCESS) {
+                f_name = font->font_name;
+                f_size = font->font_size;
+            }
+        }
+        
+        macwi_cocoa_draw_text(hdc_obj->cocoa_window, x, y, text, hdc_obj->text_color, f_name, f_size);
         macwi_emu_reg_write_32(ctx, 0, 1);
     } else {
         macwi_emu_reg_write_32(ctx, 0, 0);
@@ -255,4 +295,5 @@ void macwi_gdi32_register_apis(void) {
     macwi_thunk_register_api("gdi32.dll", "DeleteObject", win32_DeleteObject, 1);
     macwi_thunk_register_api("gdi32.dll", "Rectangle", win32_Rectangle, 5);
     macwi_thunk_register_api("gdi32.dll", "TextOutA", win32_TextOutA, 5);
+    macwi_thunk_register_api("gdi32.dll", "CreateFontA", win32_CreateFontA, 14);
 }

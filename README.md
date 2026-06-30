@@ -124,8 +124,8 @@ macwi/
 - [x] x86 instruction emulation (via FEXCore JIT Engine)
 - [x] Full kernel32 implementation (file I/O, memory, sync, threading, VFS)
 - [x] GDI32 / USER32 stubs for basic GUI support (Windows, Message Loops, Painting)
-- [ ] Advanced GUI controls, Timers, and GDI Bitmaps
-
+- [x] Advanced GUI controls (Button/Static/Edit), Timers, and GDI Fonts
+- [ ] GDI Bitmaps and advanced graphics
 ## License
 
 MIT License

@@ -78,11 +78,17 @@ Projenin yol haritasında %100 başarıyla tamamlanan aşamalar şunlardır:
   * `BeginPaint` / `EndPaint` altyapısı kurularak `drawRect:` (Cocoa) ve Emülatör (x86) thread'leri arası deadlock yapmayan senkronize çizim mantığı başarıyla uygulandı (`FillRect`, `TextOutA` testleri geçti).
   * `advanced_gui_test.exe` uygulaması ekrana eksiksiz bir pencere çizerek ve üzerine basılan tuşları algılayarak testleri başarıyla geçti.
 
+* **Faz 15 (Gelişmiş GDI, Zamanlayıcılar ve UI Kontrolleri) (Güncel Başarı):**
+  * `CreateFontA` ile macOS CoreText altyapısı üzerinden metinler (font adı, boyutu) render edilebilir hale getirildi.
+  * `SetTimer` ve `KillTimer` altyapısı uygulanarak `WM_TIMER` asenkron mesajları JIT döngüsüne entegre edildi.
+  * `BUTTON`, `STATIC` ve `EDIT` window sınıfları (Common Controls) için yerleşik (builtin) Window Proc yazıldı. Butonlar native arayüzde çizilebilir hale geldi.
+  * `advanced_gui_test.exe` üzerinde testler başarıyla çalıştı.
+
 ## 5. Sıradaki Hedefler (Gelecek Aşamalar)
 
-Şu anki mimari Windows sisteminin kalbini (Dosya sistemi, Threading, Senkronizasyon, Memory, Registry) ve temel arayüzünü (GUI Window, Paint, Event Loop) güvenilir şekilde çalıştırmaktadır. Önümüzdeki en büyük hedef gelişmiş arayüz elementleri ve kontrolleridir:
+Şu anki mimari Windows sisteminin kalbini (Dosya sistemi, Threading, Senkronizasyon, Memory, Registry) ve arayüzünü (GUI Window, Paint, Event Loop, Timers, Buttons) güvenilir şekilde çalıştırmaktadır. Önümüzdeki en büyük hedef gelişmiş arayüz elementleri, bitmapler ve performans optimizasyonlarıdır:
 
-* **Faz 15 (Gelişmiş GDI, Zamanlayıcılar ve UI Kontrolleri):** Özel fontların (CreateFont) yüklenmesi, Timer (`SetTimer`) yapısının entegrasyonu ve Buton/Listbox gibi yerleşik kontrollerin (Common Controls) emüle edilmesi.
+* **Faz 16 (Gelişmiş GDI Çizimleri ve Bitmapler):** Görüntü (Bitmap) kopyalama, Alpha blending ve cihazdan bağımsız DIB (Device Independent Bitmap) desteğinin eklenmesi.
 
 ---
-*Bu belge, projenin geldiği en güncel noktayı (Faz 14 sonu) ve teknik temelini yansıtmaktadır.*
+*Bu belge, projenin geldiği en güncel noktayı (Faz 15 sonu) ve teknik temelini yansıtmaktadır.*

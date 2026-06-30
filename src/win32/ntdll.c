@@ -69,6 +69,27 @@ static void ntdll_RtlFreeUnicodeString(EMU_CONTEXT* ctx) {
     macwi_thunk_stdcall_return(ctx, 1);
 }
 
+static void ntdll_KiUserExceptionDispatcher(EMU_CONTEXT* ctx) {
+    NT_STUB_LOG("KiUserExceptionDispatcher called!");
+    // In a real OS, this would call RtlDispatchException.
+    // For now, we just print the exception record and terminate.
+    
+    // The exception record and context are passed on the stack in x86/x64,
+    // or we can just extract them. Since we are stubbing it, we can just print and exit.
+    uint64_t exception_record_ptr;
+    // Assuming we pushed it to the stack or passed it in RCX (param 0)
+    macwi_thunk_read_param_64(ctx, 0, &exception_record_ptr);
+    
+    if (exception_record_ptr) {
+        uint32_t exception_code;
+        macwi_emu_read_memory(ctx, exception_record_ptr, &exception_code, 4);
+        NT_STUB_LOG("Unhandled Exception Code: 0x%08X", exception_code);
+    }
+    
+    // Terminate Process
+    exit(1337);
+}
+
 /* ============================================================================
  * API Registration
  * ============================================================================ */
@@ -82,4 +103,5 @@ void macwi_ntdll_register_apis(void) {
     macwi_thunk_register_api("ntdll.dll", "NtFreeVirtualMemory", ntdll_NtFreeVirtualMemory, 4);
     macwi_thunk_register_api("ntdll.dll", "RtlInitUnicodeString", ntdll_RtlInitUnicodeString, 2);
     macwi_thunk_register_api("ntdll.dll", "RtlFreeUnicodeString", ntdll_RtlFreeUnicodeString, 1);
+    macwi_thunk_register_api("ntdll.dll", "KiUserExceptionDispatcher", ntdll_KiUserExceptionDispatcher, 2);
 }

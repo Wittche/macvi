@@ -25,6 +25,7 @@ typedef struct {
     uint32_t ex_style;
     uint32_t id;
     uint32_t parent_hwnd;
+    char window_text[256];
 } MACWI_WINDOW_OBJ;
 
 static void win32_RegisterClassExA(EMU_CONTEXT* ctx) {
@@ -107,16 +108,28 @@ static void win32_CreateWindowExA(EMU_CONTEXT* ctx) {
     win_obj->ex_style = dwExStyle;
     win_obj->id = (uint32_t)hMenu; // hMenu is used as child ID if child window
     win_obj->parent_hwnd = hWndParent;
+    strncpy(win_obj->window_text, window_name, sizeof(win_obj->window_text) - 1);
+    win_obj->window_text[sizeof(win_obj->window_text) - 1] = '\0';
     
     printf("[macwi:user32] CreateWindowExA searching for class: '%s'\n", class_name);
     fflush(stdout);
 
     for (int i=0; i<g_class_count; i++) {
-        if (strcmp(g_classes[i].class_name, class_name) == 0) {
+        if (strcasecmp(g_classes[i].class_name, class_name) == 0) {
             win_obj->wnd_proc = g_classes[i].wnd_proc;
             printf("[macwi:user32] CreateWindowExA found class! wnd_proc: %x\n", win_obj->wnd_proc);
             fflush(stdout);
             break;
+        }
+    }
+    
+    if (win_obj->wnd_proc == 0) {
+        if (strcasecmp(class_name, "BUTTON") == 0) {
+            win_obj->wnd_proc = 0xFFFFFFF1; // BUILTIN_WNDPROC_BUTTON
+        } else if (strcasecmp(class_name, "STATIC") == 0) {
+            win_obj->wnd_proc = 0xFFFFFFF2; // BUILTIN_WNDPROC_STATIC
+        } else if (strcasecmp(class_name, "EDIT") == 0) {
+            win_obj->wnd_proc = 0xFFFFFFF3; // BUILTIN_WNDPROC_EDIT
         }
     }
 
@@ -217,6 +230,39 @@ static void win32_PostQuitMessage(EMU_CONTEXT* ctx) {
     macwi_thunk_stdcall_return(ctx, 1);
 }
 
+#include "timer.h"
+
+static void win32_SetTimer(EMU_CONTEXT* ctx) {
+    uint32_t hWnd, nIDEvent, uElapse, lpTimerFunc;
+    macwi_thunk_read_param_32(ctx, 0, &hWnd);
+    macwi_thunk_read_param_32(ctx, 1, &nIDEvent);
+    macwi_thunk_read_param_32(ctx, 2, &uElapse);
+    macwi_thunk_read_param_32(ctx, 3, &lpTimerFunc);
+
+    uint32_t timer_id = macwi_timer_set(hWnd, nIDEvent, uElapse, lpTimerFunc);
+    
+    printf("[macwi:user32] SetTimer hWnd=%x, id=%d, elapse=%d, func=%x -> assigned_id=%d\n", hWnd, nIDEvent, uElapse, lpTimerFunc, timer_id);
+    fflush(stdout);
+
+    macwi_emu_reg_write_32(ctx, 0, timer_id);
+    macwi_thunk_stdcall_return(ctx, 4);
+}
+
+static void win32_KillTimer(EMU_CONTEXT* ctx) {
+    uint32_t hWnd, uIDEvent;
+    macwi_thunk_read_param_32(ctx, 0, &hWnd);
+    macwi_thunk_read_param_32(ctx, 1, &uIDEvent);
+
+    int res = macwi_timer_kill(hWnd, uIDEvent);
+    
+    printf("[macwi:user32] KillTimer hWnd=%x, id=%d -> res=%d\n", hWnd, uIDEvent, res);
+    fflush(stdout);
+
+    macwi_emu_reg_write_32(ctx, 0, res ? 1 : 0);
+    macwi_thunk_stdcall_return(ctx, 2);
+}
+
+
 static void win32_GetMessageA(EMU_CONTEXT* ctx) {
     uint32_t lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax;
     macwi_thunk_read_param_32(ctx, 0, &lpMsg);
@@ -277,6 +323,25 @@ static void win32_GetMessageA(EMU_CONTEXT* ctx) {
             return;
         }
         
+        // Check Timers
+        uint32_t t_hwnd = 0, t_id = 0, t_func = 0;
+        if (macwi_timer_check(&t_hwnd, &t_id, &t_func)) {
+            MSG_32 msg;
+            memset(&msg, 0, sizeof(msg));
+            msg.hwnd = t_hwnd;
+            msg.message = 0x0113; // WM_TIMER
+            msg.wParam = t_id;
+            msg.lParam = t_func;
+            
+            // printf("[macwi:user32] GetMessageA generated WM_TIMER hwnd=%x id=%d\n", t_hwnd, t_id);
+            // fflush(stdout);
+            
+            macwi_emu_write_memory(ctx, lpMsg, &msg, sizeof(msg));
+            macwi_emu_reg_write_32(ctx, 0, 1);
+            macwi_thunk_stdcall_return(ctx, 4);
+            return;
+        }
+        
         // Wait briefly for events
         struct timespec ts = {0, 5000000}; // 5ms
         nanosleep(&ts, NULL);
@@ -307,13 +372,16 @@ static void handle_builtin_wndproc(EMU_CONTEXT* ctx, MACWI_WINDOW_OBJ* win, MSG_
         if (win->wnd_proc == BUILTIN_WNDPROC_BUTTON) {
             // Draw Button
             macwi_cocoa_fill_rect(win->cocoa_win, 0, 0, w, h, 0xFFE0E0E0); // Light Gray
-            macwi_cocoa_draw_text(win->cocoa_win, 5, 5, "Button", 0xFF000000); // Black text
+            const char* label = (strlen(win->window_text) > 0) ? win->window_text : "Button";
+            macwi_cocoa_draw_text(win->cocoa_win, 5, 5, label, 0xFF000000, NULL, 0); // Black text
         } else if (win->wnd_proc == BUILTIN_WNDPROC_STATIC) {
             macwi_cocoa_fill_rect(win->cocoa_win, 0, 0, w, h, 0xFFF0F0F0); // System background
-            macwi_cocoa_draw_text(win->cocoa_win, 0, 0, "Static", 0xFF000000);
+            const char* label = (strlen(win->window_text) > 0) ? win->window_text : "Static";
+            macwi_cocoa_draw_text(win->cocoa_win, 0, 0, label, 0xFF000000, NULL, 0);
         } else if (win->wnd_proc == BUILTIN_WNDPROC_EDIT) {
             macwi_cocoa_fill_rect(win->cocoa_win, 0, 0, w, h, 0xFFFFFFFF); // White background
-            macwi_cocoa_draw_text(win->cocoa_win, 2, 2, "Edit", 0xFF000000);
+            const char* label = (strlen(win->window_text) > 0) ? win->window_text : "Edit";
+            macwi_cocoa_draw_text(win->cocoa_win, 2, 2, label, 0xFF000000, NULL, 0);
         }
         
         // Mark paint as finished
@@ -354,6 +422,16 @@ static void win32_DispatchMessageA(EMU_CONTEXT* ctx) {
     
     printf("[macwi:user32] DispatchMessageA called with hwnd=%x, msg=%x\n", msg.hwnd, msg.message);
     fflush(stdout);
+
+    if (msg.message == 0x0113 /* WM_TIMER */ && msg.lParam != 0) {
+        printf("[macwi:user32] DispatchMessageA: invoking TimerProc %x\n", msg.lParam);
+        fflush(stdout);
+        
+        uint32_t args[4] = { msg.hwnd, msg.message, msg.wParam, macwi_timer_get_sys_time() }; 
+        // For simplicity, passing 0 as time, but better to implement GetTickCount
+        macwi_status_t st = macwi_thunk_invoke_callback(ctx, msg.lParam, 4, args, 4, NULL);
+        if (st == MACWI_SUCCESS) return;
+    }
 
     MACWI_WINDOW_OBJ* win_obj = NULL;
     if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)msg.hwnd, HANDLE_TYPE_EVENT, (void**)&win_obj) == MACWI_SUCCESS) {
@@ -476,6 +554,10 @@ static void win32_SetWindowTextA(EMU_CONTEXT* ctx) {
     if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hWnd, HANDLE_TYPE_EVENT, (void**)&win_obj) == MACWI_SUCCESS) {
         char text[256];
         macwi_thunk_read_guest_string(ctx, lpString, text, sizeof(text));
+        
+        strncpy(win_obj->window_text, text, sizeof(win_obj->window_text) - 1);
+        win_obj->window_text[sizeof(win_obj->window_text) - 1] = '\0';
+        
         macwi_cocoa_set_text(win_obj->cocoa_win, text);
         macwi_emu_reg_write_32(ctx, 0, 1);
     } else {
@@ -493,9 +575,8 @@ static void win32_GetWindowTextA(EMU_CONTEXT* ctx) {
     MACWI_WINDOW_OBJ* win_obj = NULL;
     if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hWnd, HANDLE_TYPE_EVENT, (void**)&win_obj) == MACWI_SUCCESS) {
         char text[256] = {0};
-        macwi_cocoa_get_text(win_obj->cocoa_win, text, sizeof(text));
-        macwi_thunk_string_out(ctx, lpString, text, nMaxCount);
-        macwi_emu_reg_write_32(ctx, 0, strlen(text));
+        macwi_thunk_string_out(ctx, lpString, win_obj->window_text, nMaxCount);
+        macwi_emu_reg_write_32(ctx, 0, strlen(win_obj->window_text));
     } else {
         macwi_emu_reg_write_32(ctx, 0, 0);
     }
@@ -562,4 +643,6 @@ void macwi_user32_register_apis(void) {
     macwi_thunk_register_api("user32.dll", "SetWindowTextA", win32_SetWindowTextA, 2);
     macwi_thunk_register_api("user32.dll", "GetWindowTextA", win32_GetWindowTextA, 3);
     macwi_thunk_register_api("user32.dll", "MessageBoxA", win32_MessageBoxA, 4);
+    macwi_thunk_register_api("user32.dll", "SetTimer", win32_SetTimer, 4);
+    macwi_thunk_register_api("user32.dll", "KillTimer", win32_KillTimer, 2);
 }

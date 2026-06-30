@@ -25,7 +25,9 @@ typedef enum {
 
 typedef struct {
     MACWI_GDI_OBJ_TYPE type;
-    uint32_t argb;
+    uint32_t argb; // For brushes/pens
+    char font_name[64]; // For fonts
+    int font_size;      // For fonts
 } MACWI_GDI_OBJ;
 
 typedef struct {

@@ -46,7 +46,7 @@ int macwi_cocoa_poll_event(macwi_event_t* out_event);
 void macwi_cocoa_fill_rect(void* window, int x, int y, int w, int h, uint32_t argb);
 
 // Draw text in the current context
-void macwi_cocoa_draw_text(void* window, int x, int y, const char* text, uint32_t argb);
+void macwi_cocoa_draw_text(void* window, int x, int y, const char* text, uint32_t argb, const char* font_name, int font_size);
 
 // Advanced GUI APIs
 void macwi_cocoa_get_client_rect(void* window, int* out_w, int* out_h);

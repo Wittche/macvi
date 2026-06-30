@@ -1142,8 +1142,20 @@ FEX_DEFAULT_VISIBILITY FEX_Result FEX_ThreadSetReg(FEX_Thread* Thread, const cha
 FEX_DEFAULT_VISIBILITY FEX_Result FEX_ThreadGetReg(FEX_Thread* Thread, const char* RegName, uint64_t* OutValue) {
   auto& State = Thread->Thread->CurrentFrame->State;
   if (strcmp(RegName, "rax") == 0) *OutValue = State.gregs[0];
+  else if (strcmp(RegName, "rcx") == 0) *OutValue = State.gregs[1];
+  else if (strcmp(RegName, "rdx") == 0) *OutValue = State.gregs[2];
+  else if (strcmp(RegName, "rbx") == 0) *OutValue = State.gregs[3];
+  else if (strcmp(RegName, "rsp") == 0) *OutValue = State.gregs[4];
+  else if (strcmp(RegName, "rbp") == 0) *OutValue = State.gregs[5];
+  else if (strcmp(RegName, "rsi") == 0) *OutValue = State.gregs[6];
+  else if (strcmp(RegName, "rdi") == 0) *OutValue = State.gregs[7];
   else if (strcmp(RegName, "rip") == 0) *OutValue = State.rip;
   return FEX_SUCCESS;
+}
+
+FEX_DEFAULT_VISIBILITY uint64_t FEX_ThreadGetDispatcherLoop(FEX_Thread* Thread) {
+    if (!Thread || !Thread->Thread || !Thread->Thread->CurrentFrame) return 0;
+    return Thread->Thread->CurrentFrame->Pointers.DispatcherLoopTop;
 }
 
 FEX_DEFAULT_VISIBILITY FEX_Result FEX_ThreadSetTLSBase(FEX_Thread* Thread, uint64_t Base) {
@@ -1242,22 +1254,23 @@ FEX_DEFAULT_VISIBILITY uint64_t FEX_MapMemory(FEX_Context* Ctx, uint64_t GuestAd
           // Convert guest candidate to host hint address
           uint64_t hostHint = guestCandidate + FEXCore::Utils::GlobalMemoryBase;
           
-          int flags = MAP_PRIVATE | MAP_ANONYMOUS;
+          int native_prot = prot;
 #if defined(__APPLE__) && defined(__aarch64__)
-          if (prot & PROT_EXEC) flags |= MAP_JIT;
+          native_prot &= ~PROT_EXEC;
 #endif
-          void* res = FEXCore::Allocator::mmap((void*)hostHint, Size, prot, flags, -1, 0);
+          // Use native ::mmap to overwrite the PROT_NONE guard region
+          void* res = ::mmap((void*)hostHint, Size, native_prot, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
           if (res != MAP_FAILED) {
               uint64_t hostAddr = (uint64_t)res;
               uint64_t guestAddr = hostAddr - FEXCore::Utils::GlobalMemoryBase;
-              if (hostAddr == hostHint && guestAddr + Size <= 0xFFFF0000ULL) {
+              if (guestAddr + Size <= 0xFFFF0000ULL) {
                   s_32BitGuestAllocator = ((guestAddr + Size + 0xFFFF) & ~0xFFFFULL);
                   fprintf(stderr, "[FEX-MapMem] 32-bit alloc: guest=0x%llx host=0x%llx size=0x%llx\n",
                           (unsigned long long)guestAddr, (unsigned long long)hostAddr, (unsigned long long)Size);
                   return guestAddr;
               }
-              // Got a different address, unmap and try next slot
-              FEXCore::Allocator::munmap(res, Size);
+              // Unmap the successfully mapped region but put the guard back
+              ::mmap((void*)hostHint, Size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED | MAP_NORESERVE, -1, 0);
           }
           s_32BitGuestAllocator += 0x1000000; // Skip 16MB ahead
       }
@@ -1279,8 +1292,8 @@ FEX_DEFAULT_VISIBILITY uint64_t FEX_MapMemory(FEX_Context* Ctx, uint64_t GuestAd
       native_prot &= ~PROT_EXEC;
 #endif
 
-      // Use native ::mmap because FEXCore::Allocator::mmap might return Linux error codes instead of MAP_FAILED
-      void* res = ::mmap((void*)hostHint, Size, native_prot, flags, -1, 0);
+      // Use native ::mmap to overwrite the PROT_NONE guard region
+      void* res = ::mmap((void*)hostHint, Size, native_prot, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
       if (res != MAP_FAILED) {
           fprintf(stderr, "[FEX-MapMem] fixed alloc: guest=0x%llx host=0x%llx size=0x%llx\n",
                   (unsigned long long)GuestAddr, (unsigned long long)(uint64_t)res, (unsigned long long)Size);

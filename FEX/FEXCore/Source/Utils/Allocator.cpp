@@ -222,7 +222,7 @@ fextl::vector<MemoryRegion> Setup48BitAllocatorIfExists(size_t PageSize) {
       fprintf(stderr, "FEXDBG: DetermineVASize returned %zu, which is < 47! Failing!\n", Bits);
       return {};
   }
-  uintptr_t Begin48BitVA = 0x0'0001'0000'0000ULL; // 4GB
+  uintptr_t Begin48BitVA = 0x0'0001'1000'0000ULL; // 4GB + 256MB (Avoids macwi executable ASLR overlap)
   uintptr_t End48BitVA = 0x0'4000'0000'0000ULL; // 64TB (fits in 47-bit)
   auto Regions = StealMemoryRegion(Begin48BitVA, End48BitVA);
   if (Regions.empty()) {

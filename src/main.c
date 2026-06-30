@@ -52,8 +52,86 @@ static void host_signal_handler(int sig, siginfo_t* info, void* ucontext) {
     fprintf(stderr, "[macwi] FATAL: Host received signal %d (Address: %p)\n", sig, info->si_addr);
     
     if (g_current_emu_ctx) {
+        uint64_t global_base = macwi_emu_get_global_memory_base();
+        
+#if defined(__aarch64__) || defined(_M_ARM_64)
+        ucontext_t* uc = (ucontext_t*)ucontext;
+#ifdef __APPLE__
+        uintptr_t host_pc = uc->uc_mcontext->__ss.__pc;
+#else
+        uintptr_t host_pc = uc->uc_mcontext.pc;
+#endif
+#endif
+
+        // In FEXCore JIT, host_pc doesn't neatly map to Guest RIP directly,
+        // but we know that if we had an actual exception, FEXCore pushes it to info->si_addr.
+        // Or if it was a direct native crash in jitted code, si_addr might be the faulting address.
+        // We will just read macwi_emu_get_pc safely if possible, or fallback.
+        // Actually, FEXCore's ThreadSetReg is safe to call if we don't access CurrentFrame.
         uint64_t rip = macwi_emu_get_pc(g_current_emu_ctx);
-        fprintf(stderr, "[macwi] Guest RIP at time of crash: 0x%016llX\n", rip);
+        uint64_t fault_addr = (uint64_t)info->si_addr;
+        if (fault_addr >= global_base) {
+            fault_addr -= global_base;
+        }
+
+        fprintf(stderr, "[macwi] Guest RIP at time of crash: 0x%016llX (Fault addr: 0x%llX)\n", rip, fault_addr);
+        
+        // Full SEH: Construct EXCEPTION_RECORD on the guest stack and redirect to KiUserExceptionDispatcher
+        uint64_t rsp = macwi_emu_get_sp(g_current_emu_ctx);
+        
+        // Allocate 80 bytes for 32-bit EXCEPTION_RECORD
+        rsp -= 80;
+        uint32_t rec_ptr = (uint32_t)rsp;
+        
+        uint32_t exception_code = 0xC0000005; // STATUS_ACCESS_VIOLATION
+        if (sig == SIGILL) exception_code = 0xC000001D; // STATUS_ILLEGAL_INSTRUCTION
+        
+        macwi_emu_write_memory(g_current_emu_ctx, rec_ptr, &exception_code, 4);
+        
+        uint32_t flags = 0;
+        macwi_emu_write_memory(g_current_emu_ctx, rec_ptr + 4, &flags, 4);
+        
+        uint32_t next_record = 0;
+        macwi_emu_write_memory(g_current_emu_ctx, rec_ptr + 8, &next_record, 4);
+        
+        uint32_t ex_fault_addr = (uint32_t)fault_addr; // Store the actual faulting address
+        macwi_emu_write_memory(g_current_emu_ctx, rec_ptr + 12, &ex_fault_addr, 4);
+        
+        uint32_t num_params = 0;
+        macwi_emu_write_memory(g_current_emu_ctx, rec_ptr + 16, &num_params, 4);
+        
+        // Push arguments for KiUserExceptionDispatcher(PEXCEPTION_RECORD, PCONTEXT)
+        rsp -= 4;
+        uint32_t context_ptr = 0; // Null CONTEXT for now
+        macwi_emu_write_memory(g_current_emu_ctx, rsp, &context_ptr, 4);
+        
+        rsp -= 4;
+        macwi_emu_write_memory(g_current_emu_ctx, rsp, &rec_ptr, 4);
+        
+        rsp -= 4;
+        uint32_t dummy_ret = 0;
+        macwi_emu_write_memory(g_current_emu_ctx, rsp, &dummy_ret, 4);
+        
+        macwi_emu_set_sp(g_current_emu_ctx, rsp);
+        
+        uint64_t ki_user_disp = macwi_thunk_get_trampoline(g_current_emu_ctx, "ntdll.dll", "KiUserExceptionDispatcher");
+        macwi_emu_set_pc(g_current_emu_ctx, ki_user_disp);
+        
+        uint64_t disp_loop = macwi_emu_get_dispatcher_loop(g_current_emu_ctx);
+        
+        fprintf(stderr, "[macwi] Redirecting Guest PC to KiUserExceptionDispatcher (0x%llX)...\n", ki_user_disp);
+        
+        if (disp_loop) {
+#if defined(__aarch64__) || defined(_M_ARM_64)
+            ucontext_t* uc = (ucontext_t*)ucontext;
+#ifdef __APPLE__
+            uc->uc_mcontext->__ss.__pc = disp_loop;
+#else
+            uc->uc_mcontext.pc = disp_loop;
+#endif
+#endif
+            return; // Return from signal handler to resume at Dispatcher Loop
+        }
     } else {
         fprintf(stderr, "[macwi] Emulator context not available.\n");
     }
@@ -69,7 +147,7 @@ static void host_signal_handler(int sig, siginfo_t* info, void* ucontext) {
 #endif
 
     fprintf(stderr, "=========================================\n\n");
-    exit(1);
+    _exit(1);
 }
 
 static void setup_signals() {
@@ -166,6 +244,9 @@ int main(int argc, char** argv) {
     printf("[macwi] Initializing Handle Table...\n");
     macwi_handle_table_init(&g_macwi_handle_table);
     
+    extern void macwi_timer_init(void);
+    macwi_timer_init();
+    
     // 2. Load PE File
     printf("[macwi] Loading PE file: %s\n", exe_path);
     macwi_status_t status = macwi_pe_load_file(exe_path, &image);
@@ -226,10 +307,15 @@ int main(int argc, char** argv) {
     macwi_advapi32_register_apis();
     macwi_thunk_init_dispatcher(ctx);
     macwi_thunk_init_callbacks(ctx);
+    
+    // Pre-generate KiUserExceptionDispatcher trampoline so we don't allocate memory in a signal handler!
+    macwi_thunk_get_trampoline(ctx, "ntdll.dll", "KiUserExceptionDispatcher");
 
     // 6. Map PE into FEXCore Memory
     printf("[macwi] Mapping PE into Emulator Memory...\n");
-    if (macwi_emu_map_memory(ctx, image.image_base, image.size_of_image, MACWI_PROT_ALL, NULL) != MACWI_SUCCESS) {
+    // Apple Silicon uses 16KB (0x4000) page size. Align the allocation size up to 16KB.
+    uint64_t map_size = (image.size_of_image + 0x3FFF) & ~0x3FFFULL;
+    if (macwi_emu_map_memory(ctx, image.image_base, map_size, MACWI_PROT_ALL, NULL) != MACWI_SUCCESS) {
         fprintf(stderr, "[macwi] Failed to map PE base memory\n");
         return EXIT_FAILURE;
     }

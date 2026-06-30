@@ -178,6 +178,7 @@ FEX_Result FEX_ThreadSetReg(FEX_Thread* Thread, const char* RegName, uint64_t Va
  */
 FEX_Result FEX_ThreadGetReg(FEX_Thread* Thread, const char* RegName, uint64_t* OutValue);
 
+uint64_t FEX_ThreadGetDispatcherLoop(FEX_Thread* Thread);
 FEX_Result FEX_ThreadSetTLSBase(FEX_Thread* Thread, uint64_t Base);
 
 /**

@@ -13,23 +13,25 @@ Artık MacWI'nin altyapısı "arkaplanda" (headless) çalışan hemen hemen tüm
 
 MacWI'yi gerçek bir "Windows uyumluluk katmanı" (Wine benzeri) yapabilmek için atılması gereken en büyük adımlardan olan **Grafik ve Kullanıcı Arayüzü (User32 ve GDI32)** entegrasyonu (Faz 12-14) başarıyla tamamlandı. Artık MacWI, ekranda native macOS pencereleri (NSWindow) oluşturabiliyor, event döngülerini (Message Loop) yönetebiliyor ve `WM_PAINT` sırasında senkronize GDI çizimlerini (`FillRect`, `TextOutA`) yapabiliyor.
 
-Bu bağlamda **Faz 15 ve Sonrası (Gelişmiş Grafik ve Kontroller)** için planımız şu şekildedir:
+## Faz 15'in Tamamlanması (Gelişmiş GDI, Timer ve Kontroller)
+Faz 15 başarıyla tamamlandı. Artık MacWI;
+- `CreateFontA` ile macOS CoreText altyapısı üzerinden metinleri render edebiliyor.
+- `BUTTON`, `STATIC` ve `EDIT` sistem sınıflarını Native Cocoa/GDI karışık bir şekilde ekranda gösterebiliyor.
+- `SetTimer` ve asenkron `WM_TIMER` entegrasyonu sayesinde frame bazlı oyun döngülerini (animasyon vb.) JIT'i bloke etmeden çalıştırabiliyor.
 
-### Adım 1: Gelişmiş GDI Çizimleri ve Fontlar
-- `gdi32.dll` thunk'larının genişletilmesi.
-- Özel Fontların (CreateFontA) CoreText üzerinden render edilmesi.
+## Bundan Sonra Nasıl İlerleyeceğiz? (Faz 16 ve Sonrası)
+
+### Adım 1: Gelişmiş GDI Çizimleri ve Bitmapler
+- Cihazdan bağımsız Bitmap (DIB Section) implementasyonu.
 - Görüntü (Bitmap) kopyalama, Alpha blending ve karmaşık GUI nesnelerinin desteklenmesi.
 
-### Adım 2: Pencere İçi Kontroller (Common Controls)
-- Buton, Textbox, Listbox, Combobox vb. klasik Windows UI bileşenlerinin (Common Controls) emüle edilmesi.
-- Bu bileşenlerin event'lerinin (Command Messages) ana pencereye yönlendirilmesi.
-
-### Adım 3: Zamanlayıcılar (Timers)
-- `SetTimer` ve `KillTimer` fonksiyonlarının implemente edilerek `WM_TIMER` event'lerinin message loop üzerinden işlenmesi. Animasyonlar ve periyodik UI güncellemeleri için şarttır.
-
-### Adım 4: Gelişmiş Mouse & Klavye İşlemleri
+### Adım 2: Gelişmiş Input (Mouse & Klavye)
 - Klavye tuşlarının (Virtual Keys) birebir çevirisi ve `WM_KEYDOWN`/`WM_KEYUP` eventlerinin zenginleştirilmesi.
 - Çoklu monitör desteği ve pencere pozisyonlama mantığının (SetWindowPos) iyileştirilmesi.
+
+### Adım 3: Thunk Katmanında Hızlandırma (Fexi Evrimi)
+- Fexi Thunk yapısının yeniden elden geçirilmesi.
+- Host tarafına sık düşen (örneğin GetMessage, çizim) fonksiyonları için Custom IR thunk'ların yazılarak (JIT içi) context-switch maliyetlerinin düşürülmesi.
 
 ## Neden Bu Yolu Seçiyoruz?
 Şu anda işletim sisteminin "kalbi" (CPU, Memory, File System, Threading) ve temel "arayüzü" (Window, Message Loop, Basic Paint) sağlıklı çalışmaktadır. Ancak karmaşık bir Windows oyunu veya programı, basit metinlerden çok daha fazlasına (zamanlayıcılar, bitmapler, input focus vb.) ihtiyaç duyar. İleri grafik ve timer yetenekleri kazandığımızda, eski nesil 32-bit oyunları ve programları macOS ekranında görsel olarak tam teşekküllü render etmeye bir adım daha yaklaşmış olacağız.

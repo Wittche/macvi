@@ -13,8 +13,10 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <dirent.h>
+#include <pthread.h>
 
 static char g_drive_c_path[MACWI_MAX_PATH];
+static pthread_mutex_t g_vfs_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void create_dir_if_not_exists(const char* path) {
     struct stat st = {0};
@@ -24,8 +26,12 @@ static void create_dir_if_not_exists(const char* path) {
 }
 
 macwi_status_t macwi_vfs_init(void) {
+    pthread_mutex_lock(&g_vfs_mutex);
     const char* home = getenv("HOME");
-    if (!home) return MACWI_ERROR_IO;
+    if (!home) {
+        pthread_mutex_unlock(&g_vfs_mutex);
+        return MACWI_ERROR_IO;
+    }
     
     // Create ~/.macwi
     snprintf(g_drive_c_path, sizeof(g_drive_c_path), "%s/.macwi", home);
@@ -43,6 +49,7 @@ macwi_status_t macwi_vfs_init(void) {
     snprintf(temp_path, sizeof(temp_path), "%s/windows/system32", g_drive_c_path);
     create_dir_if_not_exists(temp_path);
     
+    pthread_mutex_unlock(&g_vfs_mutex);
     return MACWI_SUCCESS;
 }
 
@@ -57,6 +64,8 @@ static void normalize_slashes(char* path) {
 
 macwi_status_t macwi_vfs_dos_to_unix(const char* dos_path, char* unix_path) {
     if (!dos_path || !unix_path) return MACWI_ERROR_INVALID_PARAM;
+    
+    pthread_mutex_lock(&g_vfs_mutex);
     
     char temp[MACWI_MAX_PATH];
     strncpy(temp, dos_path, sizeof(temp) - 1);
@@ -76,11 +85,13 @@ macwi_status_t macwi_vfs_dos_to_unix(const char* dos_path, char* unix_path) {
             unix_path[i] = tolower((unsigned char)unix_path[i]);
         }
         
+        pthread_mutex_unlock(&g_vfs_mutex);
         return MACWI_SUCCESS;
     }
     
     // If it's relative or another drive, fallback to host CWD (simplification)
     strncpy(unix_path, temp, MACWI_MAX_PATH - 1);
     unix_path[MACWI_MAX_PATH - 1] = '\0';
+    pthread_mutex_unlock(&g_vfs_mutex);
     return MACWI_SUCCESS;
 }

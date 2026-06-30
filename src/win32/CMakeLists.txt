@@ -8,6 +8,7 @@ add_library(macwi_win32 STATIC
     ntdll.c
     advapi32.c
     user32.c
+    timer.c
     gdi32.c
     cocoa_window.m
 )

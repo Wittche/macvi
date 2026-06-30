@@ -305,7 +305,7 @@ void macwi_cocoa_fill_rect(void* window_ptr, int x, int y, int w, int h, uint32_
     }
 }
 
-void macwi_cocoa_draw_text(void* window_ptr, int x, int y, const char* text, uint32_t argb) {
+void macwi_cocoa_draw_text(void* window_ptr, int x, int y, const char* text, uint32_t argb, const char* font_name, int font_size) {
     void (^drawBlock)(void) = ^{
         NSView* view = (__bridge NSView*)window_ptr;
         
@@ -318,8 +318,17 @@ void macwi_cocoa_draw_text(void* window_ptr, int x, int y, const char* text, uin
         if (a == 0.0) a = 1.0;
         NSColor* color = [NSColor colorWithDeviceRed:r green:g blue:b alpha:a];
         
+        NSFont* font = nil;
+        if (font_name && strlen(font_name) > 0) {
+            NSString* nsFontName = [NSString stringWithUTF8String:font_name];
+            font = [NSFont fontWithName:nsFontName size:(font_size > 0 ? font_size : 14.0)];
+        }
+        if (!font) {
+            font = [NSFont systemFontOfSize:(font_size > 0 ? font_size : 14.0)];
+        }
+        
         NSDictionary* attrs = @{
-            NSFontAttributeName: [NSFont systemFontOfSize:14.0],
+            NSFontAttributeName: font,
             NSForegroundColorAttributeName: color
         };
         

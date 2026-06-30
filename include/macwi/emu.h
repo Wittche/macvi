@@ -126,19 +126,29 @@ void macwi_emu_reg_write_64(EMU_CONTEXT* ctx, int reg_id, uint64_t value);
 void macwi_emu_set_pc(EMU_CONTEXT* ctx, uint64_t pc);
 
 /**
- * Get the Program Counter (RIP).
+ * Get the current Guest Instruction Pointer (EIP/RIP).
  */
 uint64_t macwi_emu_get_pc(EMU_CONTEXT* ctx);
 
 /**
- * Set the Stack Pointer (RSP).
+ * Set the current Guest Stack Pointer (ESP/RSP).
  */
 void macwi_emu_set_sp(EMU_CONTEXT* ctx, uint64_t sp);
 
 /**
- * Get the Stack Pointer (RSP).
+ * Get the current Guest Stack Pointer (ESP/RSP).
  */
 uint64_t macwi_emu_get_sp(EMU_CONTEXT* ctx);
+
+/**
+ * Get the FEXCore Dispatcher Loop Top.
+ */
+uint64_t macwi_emu_get_dispatcher_loop(EMU_CONTEXT* ctx);
+
+/**
+ * Get the FEXCore GlobalMemoryBase.
+ */
+uint64_t macwi_emu_get_global_memory_base(void);
 
 /**
  * Start execution from the current PC.

@@ -1,6 +1,7 @@
 #include "macwi/emu.h"
 #include <FEXCore/Core/FEXLibrary.h>
 #include <FEXCore/HLE/SyscallHandler.h>
+#include <FEXCore/Utils/TypeDefines.h>
 #include "macwi/thunk.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -346,6 +347,15 @@ uint64_t macwi_emu_get_sp(EMU_CONTEXT* ctx) {
     uint64_t val = 0;
     FEX_ThreadGetReg(ctx->fex_thread, "rsp", &val);
     return val;
+}
+
+uint64_t macwi_emu_get_dispatcher_loop(EMU_CONTEXT* ctx) {
+    if (!ctx || !ctx->fex_thread) return 0;
+    return FEX_ThreadGetDispatcherLoop(ctx->fex_thread);
+}
+
+uint64_t macwi_emu_get_global_memory_base(void) {
+    return FEXCore::Utils::GlobalMemoryBase;
 }
 
 macwi_status_t macwi_emu_start(EMU_CONTEXT* ctx) {
