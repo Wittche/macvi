@@ -62,6 +62,22 @@ static void normalize_slashes(char* path) {
     }
 }
 
+static int case_insensitive_resolve(const char* base_dir, const char* name, char* out_name) {
+    DIR* dir = opendir(base_dir);
+    if (!dir) return 0;
+    
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcasecmp(entry->d_name, name) == 0) {
+            strcpy(out_name, entry->d_name);
+            closedir(dir);
+            return 1;
+        }
+    }
+    closedir(dir);
+    return 0;
+}
+
 macwi_status_t macwi_vfs_dos_to_unix(const char* dos_path, char* unix_path) {
     if (!dos_path || !unix_path) return MACWI_ERROR_INVALID_PARAM;
     
@@ -75,23 +91,48 @@ macwi_status_t macwi_vfs_dos_to_unix(const char* dos_path, char* unix_path) {
     
     // Check if it's an absolute DOS path starting with C:
     if ((temp[0] == 'C' || temp[0] == 'c') && temp[1] == ':' && temp[2] == '/') {
-        // Simple append for now. 
-        // A true implementation needs case-insensitive directory traversal.
-        snprintf(unix_path, MACWI_MAX_PATH, "%s/%s", g_drive_c_path, temp + 3);
+        char current_path[MACWI_MAX_PATH];
+        strcpy(current_path, g_drive_c_path);
         
-        // Very basic case-insensitivity: lowercase the path
-        // (In reality, we should opendir/readdir to match the actual file casing on APFS)
-        for(size_t i = strlen(g_drive_c_path); unix_path[i]; i++) {
-            unix_path[i] = tolower((unsigned char)unix_path[i]);
+        char* token = strtok(temp + 3, "/");
+        while (token != NULL) {
+            char actual_name[256];
+            if (case_insensitive_resolve(current_path, token, actual_name)) {
+                strcat(current_path, "/");
+                strcat(current_path, actual_name);
+            } else {
+                // If not found, just append the token as is (for creating new files)
+                strcat(current_path, "/");
+                strcat(current_path, token);
+            }
+            token = strtok(NULL, "/");
         }
         
+        strcpy(unix_path, current_path);
         pthread_mutex_unlock(&g_vfs_mutex);
         return MACWI_SUCCESS;
     }
     
     // If it's relative or another drive, fallback to host CWD (simplification)
-    strncpy(unix_path, temp, MACWI_MAX_PATH - 1);
-    unix_path[MACWI_MAX_PATH - 1] = '\0';
+    char current_path[MACWI_MAX_PATH];
+    if (getcwd(current_path, sizeof(current_path)) != NULL) {
+        char* token = strtok(temp, "/");
+        while (token != NULL) {
+            char actual_name[256];
+            if (case_insensitive_resolve(current_path, token, actual_name)) {
+                strcat(current_path, "/");
+                strcat(current_path, actual_name);
+            } else {
+                strcat(current_path, "/");
+                strcat(current_path, token);
+            }
+            token = strtok(NULL, "/");
+        }
+        strcpy(unix_path, current_path);
+    } else {
+        strcpy(unix_path, temp);
+    }
+    
     pthread_mutex_unlock(&g_vfs_mutex);
     return MACWI_SUCCESS;
 }

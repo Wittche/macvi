@@ -43,7 +43,7 @@ static void win32_GetModuleHandleA(EMU_CONTEXT* ctx) {
 
 static void win32_SetLastError(EMU_CONTEXT* ctx) {
     uint64_t err;
-    macwi_thunk_read_param_64(ctx, 0, &err);
+    macwi_thunk_read_param_32(ctx, 0, &err);
     set_last_error((uint64_t)err);
     macwi_emu_reg_write_32(ctx, 0, 0);
     macwi_thunk_stdcall_return(ctx, 1);
@@ -63,7 +63,7 @@ static void win32_GetTickCount(EMU_CONTEXT* ctx) {
 
 static void win32_Sleep(EMU_CONTEXT* ctx) {
     uint64_t ms;
-    macwi_thunk_read_param_64(ctx, 0, &ms);
+    macwi_thunk_read_param_32(ctx, 0, &ms);
     STUB_LOG("Sleep(%llu ms)", ms);
     usleep(ms * 1000);
     macwi_emu_reg_write_32(ctx, 0, 0);
@@ -72,7 +72,7 @@ static void win32_Sleep(EMU_CONTEXT* ctx) {
 
 static void win32_OutputDebugStringA(EMU_CONTEXT* ctx) {
     uint64_t lpOutputString;
-    macwi_thunk_read_param_64(ctx, 0, &lpOutputString);
+    macwi_thunk_read_param_32(ctx, 0, &lpOutputString);
     char buf[1024];
     macwi_thunk_read_guest_string(ctx, lpOutputString, buf, sizeof(buf));
     STUB_LOG("OutputDebugStringA: %s", buf);
@@ -82,7 +82,7 @@ static void win32_OutputDebugStringA(EMU_CONTEXT* ctx) {
 
 static void win32_lstrlenA(EMU_CONTEXT* ctx) {
     uint64_t lpString;
-    macwi_thunk_read_param_64(ctx, 0, &lpString);
+    macwi_thunk_read_param_32(ctx, 0, &lpString);
     if (!lpString) {
         macwi_emu_reg_write_32(ctx, 0, 0);
         macwi_thunk_stdcall_return(ctx, 1);
@@ -99,16 +99,16 @@ static void win32_lstrlenA(EMU_CONTEXT* ctx) {
  * ============================================================================ */
 
 static void win32_CreateFileA(EMU_CONTEXT* ctx) {
-    uint64_t lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes;
-    uint64_t dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile;
+    uint32_t lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes;
+    uint32_t dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile;
     
-    macwi_thunk_read_param_64(ctx, 0, &lpFileName);
-    macwi_thunk_read_param_64(ctx, 1, &dwDesiredAccess);
-    macwi_thunk_read_param_64(ctx, 2, &dwShareMode);
-    macwi_thunk_read_param_64(ctx, 3, &lpSecurityAttributes);
-    macwi_thunk_read_param_64(ctx, 4, &dwCreationDisposition);
-    macwi_thunk_read_param_64(ctx, 5, &dwFlagsAndAttributes);
-    macwi_thunk_read_param_64(ctx, 6, &hTemplateFile);
+    macwi_thunk_read_param_32(ctx, 0, &lpFileName);
+    macwi_thunk_read_param_32(ctx, 1, &dwDesiredAccess);
+    macwi_thunk_read_param_32(ctx, 2, &dwShareMode);
+    macwi_thunk_read_param_32(ctx, 3, &lpSecurityAttributes);
+    macwi_thunk_read_param_32(ctx, 4, &dwCreationDisposition);
+    macwi_thunk_read_param_32(ctx, 5, &dwFlagsAndAttributes);
+    macwi_thunk_read_param_32(ctx, 6, &hTemplateFile);
 
     char filename[256];
     macwi_thunk_read_guest_string(ctx, lpFileName, filename, sizeof(filename));
@@ -237,8 +237,8 @@ struct win32_find_data_a {
 
 static void win32_FindFirstFileA(EMU_CONTEXT* ctx) {
     uint64_t lpFileName, lpFindFileData;
-    macwi_thunk_read_param_64(ctx, 0, &lpFileName);
-    macwi_thunk_read_param_64(ctx, 1, &lpFindFileData);
+    macwi_thunk_read_param_32(ctx, 0, &lpFileName);
+    macwi_thunk_read_param_32(ctx, 1, &lpFindFileData);
     
     char filename[256];
     macwi_thunk_read_guest_string(ctx, lpFileName, filename, sizeof(filename));
@@ -287,8 +287,8 @@ static void win32_FindFirstFileA(EMU_CONTEXT* ctx) {
 
 static void win32_FindNextFileA(EMU_CONTEXT* ctx) {
     uint64_t hFindFile, lpFindFileData;
-    macwi_thunk_read_param_64(ctx, 0, &hFindFile);
-    macwi_thunk_read_param_64(ctx, 1, &lpFindFileData);
+    macwi_thunk_read_param_32(ctx, 0, &hFindFile);
+    macwi_thunk_read_param_32(ctx, 1, &lpFindFileData);
     STUB_LOG("FindNextFileA()");
     
     extern HANDLE_TABLE g_macwi_handle_table;
@@ -320,7 +320,7 @@ static void win32_FindNextFileA(EMU_CONTEXT* ctx) {
 
 static void win32_FindClose(EMU_CONTEXT* ctx) {
     uint64_t hFindFile;
-    macwi_thunk_read_param_64(ctx, 0, &hFindFile);
+    macwi_thunk_read_param_32(ctx, 0, &hFindFile);
     STUB_LOG("FindClose()");
     
     extern HANDLE_TABLE g_macwi_handle_table;
@@ -439,10 +439,103 @@ static void win32_WriteFile(EMU_CONTEXT* ctx) {
     free(temp_buf);
     macwi_thunk_stdcall_return(ctx, 5);
 }
+static void win32_GetFileSize(EMU_CONTEXT* ctx) {
+    uint32_t hFile, lpFileSizeHigh;
+    macwi_thunk_read_param_32(ctx, 0, &hFile);
+    macwi_thunk_read_param_32(ctx, 1, &lpFileSizeHigh);
+    
+    STUB_LOG("GetFileSize(handle=0x%X)", hFile);
+
+    extern HANDLE_TABLE g_macwi_handle_table;
+    int* p_fd = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hFile, HANDLE_TYPE_FILE, (void**)&p_fd) != MACWI_SUCCESS) {
+        set_last_error(6); // ERROR_INVALID_HANDLE
+        macwi_emu_reg_write_32(ctx, 0, 0xFFFFFFFF);
+        macwi_thunk_stdcall_return(ctx, 2);
+        return;
+    }
+
+    struct stat st;
+    if (fstat(*p_fd, &st) == -1) {
+        set_last_error(6);
+        macwi_emu_reg_write_32(ctx, 0, 0xFFFFFFFF);
+    } else {
+        if (lpFileSizeHigh != 0) {
+            uint32_t high = (uint32_t)(st.st_size >> 32);
+            macwi_emu_write_memory(ctx, lpFileSizeHigh, &high, 4);
+        }
+        macwi_emu_reg_write_32(ctx, 0, (uint32_t)st.st_size);
+    }
+    macwi_thunk_stdcall_return(ctx, 2);
+}
+
+static void win32_SetFilePointer(EMU_CONTEXT* ctx) {
+    uint32_t hFile, lDistanceToMove, lpDistanceToMoveHigh, dwMoveMethod;
+    macwi_thunk_read_param_32(ctx, 0, &hFile);
+    macwi_thunk_read_param_32(ctx, 1, &lDistanceToMove);
+    macwi_thunk_read_param_32(ctx, 2, &lpDistanceToMoveHigh);
+    macwi_thunk_read_param_32(ctx, 3, &dwMoveMethod);
+    
+    STUB_LOG("SetFilePointer(handle=0x%X, dist=%d, method=%d)", hFile, (int)lDistanceToMove, dwMoveMethod);
+
+    extern HANDLE_TABLE g_macwi_handle_table;
+    int* p_fd = NULL;
+    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hFile, HANDLE_TYPE_FILE, (void**)&p_fd) != MACWI_SUCCESS) {
+        set_last_error(6);
+        macwi_emu_reg_write_32(ctx, 0, 0xFFFFFFFF);
+        macwi_thunk_stdcall_return(ctx, 4);
+        return;
+    }
+
+    int whence = SEEK_SET;
+    if (dwMoveMethod == 1) whence = SEEK_CUR;
+    else if (dwMoveMethod == 2) whence = SEEK_END;
+    
+    // We ignore lpDistanceToMoveHigh for now (assume <4GB files)
+    off_t res = lseek(*p_fd, (off_t)(int32_t)lDistanceToMove, whence);
+    if (res == -1) {
+        set_last_error(6);
+        macwi_emu_reg_write_32(ctx, 0, 0xFFFFFFFF);
+    } else {
+        if (lpDistanceToMoveHigh != 0) {
+            uint32_t high = (uint32_t)(res >> 32);
+            macwi_emu_write_memory(ctx, lpDistanceToMoveHigh, &high, 4);
+        }
+        macwi_emu_reg_write_32(ctx, 0, (uint32_t)res);
+    }
+    macwi_thunk_stdcall_return(ctx, 4);
+}
+
+static void win32_GetFileAttributesA(EMU_CONTEXT* ctx) {
+    uint32_t lpFileName;
+    macwi_thunk_read_param_32(ctx, 0, &lpFileName);
+    
+    char filename[256];
+    macwi_thunk_read_guest_string(ctx, lpFileName, filename, sizeof(filename));
+    
+    char unix_path[MACWI_MAX_PATH];
+    if (macwi_vfs_dos_to_unix(filename, unix_path) != MACWI_SUCCESS) {
+        set_last_error(3);
+        macwi_emu_reg_write_32(ctx, 0, 0xFFFFFFFF);
+        macwi_thunk_stdcall_return(ctx, 1);
+        return;
+    }
+    
+    struct stat st;
+    if (stat(unix_path, &st) == -1) {
+        set_last_error(2); // FILE_NOT_FOUND
+        macwi_emu_reg_write_32(ctx, 0, 0xFFFFFFFF);
+    } else {
+        uint32_t attrs = 0x80; // FILE_ATTRIBUTE_NORMAL
+        if (S_ISDIR(st.st_mode)) attrs = 0x10; // FILE_ATTRIBUTE_DIRECTORY
+        macwi_emu_reg_write_32(ctx, 0, attrs);
+    }
+    macwi_thunk_stdcall_return(ctx, 1);
+}
 
 static void win32_CloseHandle(EMU_CONTEXT* ctx) {
     uint64_t hObject;
-    macwi_thunk_read_param_64(ctx, 0, &hObject);
+    macwi_thunk_read_param_32(ctx, 0, &hObject);
     STUB_LOG("CloseHandle(0x%llX)", hObject);
 
     extern HANDLE_TABLE g_macwi_handle_table;
@@ -476,10 +569,10 @@ static void win32_CloseHandle(EMU_CONTEXT* ctx) {
 
 static void win32_VirtualAlloc(EMU_CONTEXT* ctx) {
     uint64_t lpAddress, dwSize, flAllocationType, flProtect;
-    macwi_thunk_read_param_64(ctx, 0, &lpAddress);
-    macwi_thunk_read_param_64(ctx, 1, &dwSize);
-    macwi_thunk_read_param_64(ctx, 2, &flAllocationType);
-    macwi_thunk_read_param_64(ctx, 3, &flProtect);
+    macwi_thunk_read_param_32(ctx, 0, &lpAddress);
+    macwi_thunk_read_param_32(ctx, 1, &dwSize);
+    macwi_thunk_read_param_32(ctx, 2, &flAllocationType);
+    macwi_thunk_read_param_32(ctx, 3, &flProtect);
 
     STUB_LOG("VirtualAlloc(addr=0x%llX, size=%u)", lpAddress, (uint64_t)dwSize);
     
@@ -503,9 +596,9 @@ static void win32_VirtualAlloc(EMU_CONTEXT* ctx) {
 
 static void win32_VirtualFree(EMU_CONTEXT* ctx) {
     uint64_t lpAddress, dwSize, dwFreeType;
-    macwi_thunk_read_param_64(ctx, 0, &lpAddress);
-    macwi_thunk_read_param_64(ctx, 1, &dwSize);
-    macwi_thunk_read_param_64(ctx, 2, &dwFreeType);
+    macwi_thunk_read_param_32(ctx, 0, &lpAddress);
+    macwi_thunk_read_param_32(ctx, 1, &dwSize);
+    macwi_thunk_read_param_32(ctx, 2, &dwFreeType);
 
     STUB_LOG("VirtualFree(addr=0x%llX)", lpAddress);
     
@@ -528,9 +621,9 @@ static void win32_GetProcessHeap(EMU_CONTEXT* ctx) {
 
 static void win32_HeapCreate(EMU_CONTEXT* ctx) {
     uint64_t flOptions, dwInitialSize, dwMaximumSize;
-    macwi_thunk_read_param_64(ctx, 0, &flOptions);
-    macwi_thunk_read_param_64(ctx, 1, &dwInitialSize);
-    macwi_thunk_read_param_64(ctx, 2, &dwMaximumSize);
+    macwi_thunk_read_param_32(ctx, 0, &flOptions);
+    macwi_thunk_read_param_32(ctx, 1, &dwInitialSize);
+    macwi_thunk_read_param_32(ctx, 2, &dwMaximumSize);
 
     STUB_LOG("HeapCreate(opt=0x%X, init=%u, max=%u)", (uint64_t)flOptions, (uint64_t)dwInitialSize, (uint64_t)dwMaximumSize);
     // Return a dummy heap handle
@@ -542,9 +635,9 @@ static void win32_HeapCreate(EMU_CONTEXT* ctx) {
 
 static void win32_HeapAlloc(EMU_CONTEXT* ctx) {
     uint64_t hHeap, dwFlags, dwBytes;
-    macwi_thunk_read_param_64(ctx, 0, &hHeap);
-    macwi_thunk_read_param_64(ctx, 1, &dwFlags);
-    macwi_thunk_read_param_64(ctx, 2, &dwBytes);
+    macwi_thunk_read_param_32(ctx, 0, &hHeap);
+    macwi_thunk_read_param_32(ctx, 1, &dwFlags);
+    macwi_thunk_read_param_32(ctx, 2, &dwBytes);
 
     STUB_LOG("HeapAlloc(heap=0x%X, flags=0x%X, bytes=%u)", (uint64_t)hHeap, (uint64_t)dwFlags, (uint64_t)dwBytes);
     
@@ -569,9 +662,9 @@ static void win32_HeapAlloc(EMU_CONTEXT* ctx) {
 
 static void win32_HeapFree(EMU_CONTEXT* ctx) {
     uint64_t hHeap, dwFlags, lpMem;
-    macwi_thunk_read_param_64(ctx, 0, &hHeap);
-    macwi_thunk_read_param_64(ctx, 1, &dwFlags);
-    macwi_thunk_read_param_64(ctx, 2, &lpMem);
+    macwi_thunk_read_param_32(ctx, 0, &hHeap);
+    macwi_thunk_read_param_32(ctx, 1, &dwFlags);
+    macwi_thunk_read_param_32(ctx, 2, &lpMem);
 
     STUB_LOG("HeapFree(heap=0x%X, mem=0x%llX)", (uint64_t)hHeap, lpMem);
     // Real implementation would unmap or add to free list.
@@ -618,7 +711,7 @@ static void win32_GetProcAddress(EMU_CONTEXT* ctx) {
 
 static void win32_ExitProcess(EMU_CONTEXT* ctx) {
     uint64_t dwExitCode;
-    macwi_thunk_read_param_64(ctx, 0, &dwExitCode);
+    macwi_thunk_read_param_32(ctx, 0, &dwExitCode);
     STUB_LOG("ExitProcess(%u)", (uint64_t)dwExitCode);
     macwi_emu_stop(ctx);
     exit((int)dwExitCode);
@@ -630,12 +723,12 @@ static void win32_ExitProcess(EMU_CONTEXT* ctx) {
 
 static void win32_CreateThread(EMU_CONTEXT* ctx) {
     uint64_t lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags, lpThreadId;
-    macwi_thunk_read_param_64(ctx, 0, &lpThreadAttributes);
-    macwi_thunk_read_param_64(ctx, 1, &dwStackSize);
-    macwi_thunk_read_param_64(ctx, 2, &lpStartAddress);
-    macwi_thunk_read_param_64(ctx, 3, &lpParameter);
-    macwi_thunk_read_param_64(ctx, 4, &dwCreationFlags);
-    macwi_thunk_read_param_64(ctx, 5, &lpThreadId);
+    macwi_thunk_read_param_32(ctx, 0, &lpThreadAttributes);
+    macwi_thunk_read_param_32(ctx, 1, &dwStackSize);
+    macwi_thunk_read_param_32(ctx, 2, &lpStartAddress);
+    macwi_thunk_read_param_32(ctx, 3, &lpParameter);
+    macwi_thunk_read_param_32(ctx, 4, &dwCreationFlags);
+    macwi_thunk_read_param_32(ctx, 5, &lpThreadId);
 
     STUB_LOG("CreateThread(start=0x%llX, param=0x%llX)", lpStartAddress, lpParameter);
     
@@ -665,7 +758,7 @@ static void win32_GetCurrentThreadId(EMU_CONTEXT* ctx) {
 
 static void win32_ExitThread(EMU_CONTEXT* ctx) {
     uint64_t dwExitCode;
-    macwi_thunk_read_param_64(ctx, 0, &dwExitCode);
+    macwi_thunk_read_param_32(ctx, 0, &dwExitCode);
     STUB_LOG("ExitThread(%u)", (uint64_t)dwExitCode);
     // Actually stopping the thread from within is tricky via FEX_ThreadExecute return,
     // but we can exit the pthread.
@@ -674,9 +767,9 @@ static void win32_ExitThread(EMU_CONTEXT* ctx) {
 
 static void win32_CreateMutexA(EMU_CONTEXT* ctx) {
     uint64_t lpMutexAttributes, bInitialOwner, lpName;
-    macwi_thunk_read_param_64(ctx, 0, &lpMutexAttributes);
-    macwi_thunk_read_param_64(ctx, 1, &bInitialOwner);
-    macwi_thunk_read_param_64(ctx, 2, &lpName);
+    macwi_thunk_read_param_32(ctx, 0, &lpMutexAttributes);
+    macwi_thunk_read_param_32(ctx, 1, &bInitialOwner);
+    macwi_thunk_read_param_32(ctx, 2, &lpName);
 
     STUB_LOG("CreateMutexA()");
     pthread_mutex_t* m = malloc(sizeof(pthread_mutex_t));
@@ -693,7 +786,7 @@ static void win32_CreateMutexA(EMU_CONTEXT* ctx) {
 
 static void win32_ReleaseMutex(EMU_CONTEXT* ctx) {
     uint64_t hMutex;
-    macwi_thunk_read_param_64(ctx, 0, &hMutex);
+    macwi_thunk_read_param_32(ctx, 0, &hMutex);
 
     STUB_LOG("ReleaseMutex(handle=0x%X)", (uint64_t)hMutex);
     
@@ -728,6 +821,9 @@ void macwi_kernel32_register_apis(void) {
     macwi_thunk_register_api("kernel32.dll", "lstrlenA",           win32_lstrlenA, 1);
     macwi_thunk_register_api("kernel32.dll", "GetStdHandle",       win32_GetStdHandle, 1);
     macwi_thunk_register_api("kernel32.dll", "CreateFileA",        win32_CreateFileA, 7);
+    macwi_thunk_register_api("kernel32.dll", "GetFileSize",        win32_GetFileSize, 2);
+    macwi_thunk_register_api("kernel32.dll", "SetFilePointer",     win32_SetFilePointer, 4);
+    macwi_thunk_register_api("kernel32.dll", "GetFileAttributesA", win32_GetFileAttributesA, 1);
     macwi_thunk_register_api("kernel32.dll", "FindFirstFileA",     win32_FindFirstFileA, 2);
     macwi_thunk_register_api("kernel32.dll", "FindNextFileA",      win32_FindNextFileA, 2);
     macwi_thunk_register_api("kernel32.dll", "FindClose",          win32_FindClose, 1);
