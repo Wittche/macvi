@@ -568,17 +568,18 @@ static void win32_CloseHandle(EMU_CONTEXT* ctx) {
  * ============================================================================ */
 
 static void win32_VirtualAlloc(EMU_CONTEXT* ctx) {
-    uint64_t lpAddress, dwSize, flAllocationType, flProtect;
+    uint32_t lpAddress, dwSize, flAllocationType, flProtect;
     macwi_thunk_read_param_32(ctx, 0, &lpAddress);
     macwi_thunk_read_param_32(ctx, 1, &dwSize);
     macwi_thunk_read_param_32(ctx, 2, &flAllocationType);
     macwi_thunk_read_param_32(ctx, 3, &flProtect);
 
-    STUB_LOG("VirtualAlloc(addr=0x%llX, size=%u)", lpAddress, (uint64_t)dwSize);
+    STUB_LOG("VirtualAlloc(addr=0x%X, size=%u, type=0x%X)", lpAddress, dwSize, flAllocationType);
     
-    static uint64_t next_alloc = 0x50000000ULL; // High enough
+    // We avoid 0x50000000 because we mapped DLLs there. Let's use 0x60000000.
+    static uint32_t next_alloc = 0x60000000; 
     
-    uint64_t alloc_addr = lpAddress;
+    uint32_t alloc_addr = lpAddress;
     if (alloc_addr == 0) {
         alloc_addr = next_alloc;
         next_alloc += ((dwSize + 0xFFF) & ~0xFFF); // Page align
@@ -595,20 +596,62 @@ static void win32_VirtualAlloc(EMU_CONTEXT* ctx) {
 }
 
 static void win32_VirtualFree(EMU_CONTEXT* ctx) {
-    uint64_t lpAddress, dwSize, dwFreeType;
+    uint32_t lpAddress, dwSize, dwFreeType;
     macwi_thunk_read_param_32(ctx, 0, &lpAddress);
     macwi_thunk_read_param_32(ctx, 1, &dwSize);
     macwi_thunk_read_param_32(ctx, 2, &dwFreeType);
-
-    STUB_LOG("VirtualFree(addr=0x%llX)", lpAddress);
     
-    // Check if it's MEM_RELEASE or MEM_DECOMMIT
-    // dwFreeType MEM_RELEASE = 0x8000, MEM_DECOMMIT = 0x4000
-    if (dwFreeType == 0x8000) {
-        macwi_emu_unmap_memory(ctx, lpAddress, dwSize);
+    STUB_LOG("VirtualFree(addr=0x%X, size=%u, type=0x%X)", lpAddress, dwSize, dwFreeType);
+    
+    macwi_status_t st = macwi_emu_unmap_memory(ctx, lpAddress, dwSize);
+    macwi_emu_reg_write_32(ctx, 0, st == MACWI_SUCCESS ? 1 : 0);
+    macwi_thunk_stdcall_return(ctx, 3);
+}
+
+static void win32_VirtualProtect(EMU_CONTEXT* ctx) {
+    uint32_t lpAddress, dwSize, flNewProtect, lpflOldProtect;
+    macwi_thunk_read_param_32(ctx, 0, &lpAddress);
+    macwi_thunk_read_param_32(ctx, 1, &dwSize);
+    macwi_thunk_read_param_32(ctx, 2, &flNewProtect);
+    macwi_thunk_read_param_32(ctx, 3, &lpflOldProtect);
+    
+    STUB_LOG("VirtualProtect(addr=0x%X, size=%u, new_prot=0x%X)", lpAddress, dwSize, flNewProtect);
+    
+    if (lpflOldProtect) {
+        uint32_t old_prot = 0x40; // PAGE_EXECUTE_READWRITE
+        macwi_emu_write_memory(ctx, lpflOldProtect, &old_prot, 4);
     }
     
-    macwi_emu_reg_write_32(ctx, 0, 1); // TRUE
+    // Assume success for now since we mapped memory with PROT_ALL
+    macwi_emu_reg_write_32(ctx, 0, 1);
+    macwi_thunk_stdcall_return(ctx, 4);
+}
+
+static void win32_VirtualQuery(EMU_CONTEXT* ctx) {
+    uint32_t lpAddress, lpBuffer, dwLength;
+    macwi_thunk_read_param_32(ctx, 0, &lpAddress);
+    macwi_thunk_read_param_32(ctx, 1, &lpBuffer);
+    macwi_thunk_read_param_32(ctx, 2, &dwLength);
+    
+    STUB_LOG("VirtualQuery(addr=0x%X)", lpAddress);
+    
+    // Just fake MEMORY_BASIC_INFORMATION (28 bytes in 32-bit)
+    if (dwLength >= 28) {
+        uint32_t mbi[7] = {0};
+        mbi[0] = lpAddress & ~0xFFF; // BaseAddress
+        mbi[1] = lpAddress & ~0xFFF; // AllocationBase
+        mbi[2] = 0x40;               // AllocationProtect (PAGE_EXECUTE_READWRITE)
+        mbi[3] = 0x1000;             // RegionSize (fake 4KB)
+        mbi[4] = 0x1000;             // State (MEM_COMMIT)
+        mbi[5] = 0x40;               // Protect (PAGE_EXECUTE_READWRITE)
+        mbi[6] = 0x20000;            // Type (MEM_PRIVATE)
+        
+        macwi_emu_write_memory(ctx, lpBuffer, mbi, 28);
+        macwi_emu_reg_write_32(ctx, 0, 28);
+    } else {
+        macwi_emu_reg_write_32(ctx, 0, 0);
+    }
+    
     macwi_thunk_stdcall_return(ctx, 3);
 }
 
@@ -832,6 +875,8 @@ void macwi_kernel32_register_apis(void) {
     macwi_thunk_register_api("kernel32.dll", "CloseHandle",        win32_CloseHandle, 1);
     macwi_thunk_register_api("kernel32.dll", "VirtualAlloc",       win32_VirtualAlloc, 4);
     macwi_thunk_register_api("kernel32.dll", "VirtualFree",        win32_VirtualFree, 3);
+    macwi_thunk_register_api("kernel32.dll", "VirtualProtect",     win32_VirtualProtect, 4);
+    macwi_thunk_register_api("kernel32.dll", "VirtualQuery",       win32_VirtualQuery, 3);
     macwi_thunk_register_api("kernel32.dll", "GetProcessHeap",     win32_GetProcessHeap, 0);
     macwi_thunk_register_api("kernel32.dll", "HeapCreate",         win32_HeapCreate, 3);
     macwi_thunk_register_api("kernel32.dll", "HeapAlloc",          win32_HeapAlloc, 3);
