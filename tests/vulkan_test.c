@@ -16,7 +16,7 @@ static void print(const char* str) {
 
 static void print_hex(uintptr_t val) {
     char buf[32];
-    char hex_chars[] = "0123456789ABCDEF";
+    const char* hex_chars = "0123456789ABCDEF";
     int i = 30;
     buf[31] = '\0';
     

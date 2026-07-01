@@ -134,6 +134,74 @@ macwi_status_t macwi_pe_load_file(const char* path, PE_IMAGE* out_image) {
     return macwi_pe_parse_headers((const uint8_t*)image_base, image_size, out_image);
 }
 
+macwi_status_t macwi_pe_apply_relocations(PE_IMAGE* image, uint64_t new_base) {
+    if (!image || !image->mapped_base) return MACWI_ERROR_INVALID_PARAM;
+    
+    PE_DATA_DIRECTORY* reloc_dir = NULL;
+    if (image->is_64bit) {
+        reloc_dir = (PE_DATA_DIRECTORY*)&image->optional_header.opt_64->DataDirectory[PE_DIRECTORY_ENTRY_BASERELOC];
+    } else {
+        reloc_dir = (PE_DATA_DIRECTORY*)&image->optional_header.opt_32->DataDirectory[PE_DIRECTORY_ENTRY_BASERELOC];
+    }
+    
+    if (reloc_dir->VirtualAddress == 0 || reloc_dir->Size == 0) {
+        // No relocations
+        return MACWI_SUCCESS; 
+    }
+    
+    int64_t delta = (int64_t)(new_base - image->image_base);
+    if (delta == 0) return MACWI_SUCCESS; // Already at preferred base
+    
+    uint8_t* mapped_base = (uint8_t*)image->mapped_base;
+    uint32_t reloc_offset = reloc_dir->VirtualAddress;
+    uint32_t reloc_size = reloc_dir->Size;
+    uint32_t current_offset = 0;
+    
+    while (current_offset < reloc_size) {
+        PE_BASE_RELOCATION* block = (PE_BASE_RELOCATION*)(mapped_base + reloc_offset + current_offset);
+        if (block->SizeOfBlock == 0) break; // End of table
+        
+        uint32_t page_rva = block->VirtualAddress;
+        uint32_t entry_count = (block->SizeOfBlock - sizeof(PE_BASE_RELOCATION)) / sizeof(uint16_t);
+        uint16_t* entries = (uint16_t*)((uint8_t*)block + sizeof(PE_BASE_RELOCATION));
+        
+        for (uint32_t i = 0; i < entry_count; i++) {
+            uint16_t entry = entries[i];
+            uint8_t type = entry >> 12;
+            uint16_t offset = entry & 0x0FFF;
+            
+            if (type == PE_REL_BASED_ABSOLUTE) continue;
+            
+            uint32_t target_rva = page_rva + offset;
+            if (target_rva >= image->mapped_size) continue;
+            
+            if (type == PE_REL_BASED_HIGHLOW) {
+                uint32_t* target = (uint32_t*)(mapped_base + target_rva);
+                *target = (uint32_t)(*target + delta);
+            } else if (type == PE_REL_BASED_DIR64) {
+                uint64_t* target = (uint64_t*)(mapped_base + target_rva);
+                *target = (uint64_t)(*target + delta);
+            } else {
+                fprintf(stderr, "[macwi:loader] Unsupported relocation type: %d\n", type);
+            }
+        }
+        
+        current_offset += block->SizeOfBlock;
+    }
+    
+    // Update the image_base in our struct
+    image->image_base = new_base;
+    
+    // Update entry point
+    if (image->is_64bit) {
+        image->entry_point = new_base + image->optional_header.opt_64->AddressOfEntryPoint;
+    } else {
+        image->entry_point = new_base + image->optional_header.opt_32->AddressOfEntryPoint;
+    }
+    
+    return MACWI_SUCCESS;
+}
+
 void macwi_pe_free(PE_IMAGE* image) {
     if (!image) return;
     if (image->mapped_base) {

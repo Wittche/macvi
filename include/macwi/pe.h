@@ -248,6 +248,21 @@ typedef struct __attribute__((packed)) {
 } PE_IMPORT_DESCRIPTOR;
 
 /**
+ * PE Base Relocation Block Header
+ */
+typedef struct __attribute__((packed)) {
+    DWORD VirtualAddress;
+    DWORD SizeOfBlock;
+} PE_BASE_RELOCATION;
+
+#define PE_REL_BASED_ABSOLUTE 0
+#define PE_REL_BASED_HIGH 1
+#define PE_REL_BASED_LOW 2
+#define PE_REL_BASED_HIGHLOW 3
+#define PE_REL_BASED_HIGHADJ 4
+#define PE_REL_BASED_DIR64 10
+
+/**
  * PE Export Directory — found via DataDirectory[0], describes exported symbols.
  */
 typedef struct __attribute__((packed)) {
@@ -314,6 +329,15 @@ typedef struct {
  * @return MACWI_SUCCESS on success; an error code otherwise.
  */
 macwi_status_t macwi_pe_load_file(const char* path, PE_IMAGE* out_image);
+
+/**
+ * Applies PE Base Relocations if the image is loaded at a different base address.
+ * 
+ * @param image The loaded PE image
+ * @param new_base The new base address where it will be mapped
+ * @return MACWI_SUCCESS on success
+ */
+macwi_status_t macwi_pe_apply_relocations(PE_IMAGE* image, uint64_t new_base);
 
 /**
  * Parse PE headers from a raw byte buffer (no file I/O, no section mapping).

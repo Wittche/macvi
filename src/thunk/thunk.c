@@ -16,20 +16,18 @@
 
 macwi_status_t macwi_thunk_read_param_32(EMU_CONTEXT* ctx, int param_index, uint32_t* out_val) {
     if (!ctx || !out_val || param_index < 0) return MACWI_ERROR_INVALID_PARAM;
-    // For now we assume all emulator runs are 64-bit because we are testing D3D9 64-bit.
-    // In x64 Windows ABI: RCX, RDX, R8, R9, then stack [RSP+0x28], etc.
-    uint64_t val = 0;
-    if (param_index == 0) val = macwi_emu_reg_read_64(ctx, 10); // R10 (preserved RCX)
-    else if (param_index == 1) val = macwi_emu_reg_read_64(ctx, 2); // RDX
-    else if (param_index == 2) val = macwi_emu_reg_read_64(ctx, 8); // R8
-    else if (param_index == 3) val = macwi_emu_reg_read_64(ctx, 9); // R9
-    else {
-        uint64_t rsp = macwi_emu_get_sp(ctx);
-        // shadow space = 32 bytes (0x20). return address = 8 bytes. So first stack arg is at RSP+40 (0x28).
-        uint64_t param_addr = rsp + 0x28 + ((param_index - 4) * 8);
-        macwi_emu_read_memory(ctx, param_addr, &val, 8);
+    // In 32-bit Windows ABI (stdcall or cdecl), ALL parameters are on the stack!
+    // The stack contains:
+    // [ESP]   = Return Address (4 bytes)
+    // [ESP+4] = Param 0
+    // [ESP+8] = Param 1
+    // ...
+    uint64_t rsp = macwi_emu_get_sp(ctx);
+    uint32_t val32 = 0;
+    if (macwi_emu_read_memory(ctx, rsp + 4 + (param_index * 4), &val32, 4) != MACWI_SUCCESS) {
+        return MACWI_ERROR_MEMORY;
     }
-    *out_val = (uint32_t)val;
+    *out_val = val32;
     return MACWI_SUCCESS;
 }
 
@@ -91,7 +89,7 @@ macwi_status_t macwi_thunk_string_out(EMU_CONTEXT* ctx, uint64_t guest_addr, con
 }
 
 macwi_status_t macwi_thunk_stdcall_return(EMU_CONTEXT* ctx, int param_count) {
-    // In FEXCore, the trampoline's "ret" instruction handles the return!
+    // In FEXCore 32-bit, the trampoline's "ret imm16" instruction handles the return!
     // We do NOT need to manually modify RIP/ESP here because we return to the trampoline!
     // We just return success and let the trampoline handle it.
     return MACWI_SUCCESS;
@@ -148,26 +146,29 @@ uint64_t macwi_thunk_get_trampoline(EMU_CONTEXT* ctx, const char* dll_name, cons
 
             // Generate trampoline
             printf("[macwi:thunk] Generating trampoline for %s!%s\n", dll_name, func_name);
+            // 64-bit FEXCore trampoline (but executed in 32-bit segment):
             // 49 89 CA              ; mov r10, rcx (Save RCX before syscall clobbers it!)
             // B8 <api_index+0x1000> ; mov eax, api_index+0x1000
             // 0F 05                 ; syscall
-            // C3                    ; ret (in 64-bit ABI, caller cleans stack)
+            // C2 <param_count*4> 00 ; ret imm16 (stdcall callee cleanup!) OR C3 (ret)
 
             uint8_t tramp[16];
             int t_len = 0;
-            
-            tramp[t_len++] = 0x49; // mov r10, rcx
-            tramp[t_len++] = 0x89;
-            tramp[t_len++] = 0xCA;
             
             tramp[t_len++] = 0xB8; // mov eax
             *(uint32_t*)(&tramp[t_len]) = (uint32_t)(i + 0x1000);
             t_len += 4;
             
-            tramp[t_len++] = 0x0F; // syscall
-            tramp[t_len++] = 0x05;
+            tramp[t_len++] = 0xCD; // int 0x80
+            tramp[t_len++] = 0x80;
             
-            tramp[t_len++] = 0xC3; // ret
+            if (g_apis[i].param_count > 0) {
+                tramp[t_len++] = 0xC2; // ret imm16
+                tramp[t_len++] = (uint8_t)(g_apis[i].param_count * 4);
+                tramp[t_len++] = 0x00;
+            } else {
+                tramp[t_len++] = 0xC3; // ret
+            }
             
             uint64_t addr = g_trampoline_base + g_trampoline_offset;
             macwi_emu_write_memory(ctx, addr, tramp, t_len);

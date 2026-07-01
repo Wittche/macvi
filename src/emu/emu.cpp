@@ -22,7 +22,7 @@ struct EMU_CONTEXT {
 class MacWISyscallHandler : public FEXCore::HLE::SyscallHandler {
 public:
     MacWISyscallHandler(EMU_CONTEXT* ctx) : m_ctx(ctx) {
-        OSABI = FEXCore::HLE::SyscallOSABI::OS_LINUX64;
+        OSABI = FEXCore::HLE::SyscallOSABI::OS_LINUX32;
     }
     
     virtual ~MacWISyscallHandler() = default;
@@ -69,7 +69,7 @@ macwi_status_t macwi_emu_init(EMU_CONTEXT** out_ctx) {
     if (!out_ctx) return MACWI_ERROR_INVALID_PARAM;
 
     FEXCore::Config::Initialize();
-    FEXCore::Config::Set(FEXCore::Config::CONFIG_IS64BIT_MODE, "1");
+    FEXCore::Config::Set(FEXCore::Config::CONFIG_IS64BIT_MODE, "0");
     
     // 2. SMC & JIT Cache Koruması: Track and invalidate JIT code on self-modification
     // FEXCore::Config::Set(FEXCore::Config::CONFIG_SMCCHECKS, "full");
@@ -77,7 +77,7 @@ macwi_status_t macwi_emu_init(EMU_CONTEXT** out_ctx) {
     // 3. Apple Silicon TSO: Enable x86 strict memory ordering
     // FEXCore::Config::Set(FEXCore::Config::CONFIG_TSOENABLED, "1");
 
-    int init_flags = FEX_INIT_ENABLE_JIT | FEX_INIT_64BIT_MODE;
+    int init_flags = FEX_INIT_ENABLE_JIT;
     if (FEX_Initialize(init_flags) != FEX_SUCCESS) {
         fprintf(stderr, "[macwi:emu] FEX_Initialize failed\n");
         return MACWI_ERROR_MEMORY;
@@ -112,6 +112,7 @@ void macwi_emu_free(EMU_CONTEXT* ctx) {
 
 macwi_status_t macwi_emu_map_memory(EMU_CONTEXT* ctx, uint64_t address, size_t size, int perms, uint64_t* out_address) {
     if (!ctx || !ctx->fex_ctx) return MACWI_ERROR_INVALID_PARAM;
+    
     int fex_perms = 0;
     if (perms & MACWI_PROT_READ)  fex_perms |= FEX_MEM_READ;
     if (perms & MACWI_PROT_WRITE) fex_perms |= FEX_MEM_WRITE;
@@ -137,19 +138,9 @@ macwi_status_t macwi_emu_unmap_memory(EMU_CONTEXT* ctx, uint64_t address, size_t
 
 macwi_status_t macwi_emu_write_memory(EMU_CONTEXT* ctx, uint64_t address, const void* data, size_t size) {
     if (!ctx || !ctx->fex_ctx) return MACWI_ERROR_INVALID_PARAM;
-#if defined(__APPLE__) && defined(__aarch64__)
-    pthread_jit_write_protect_np(0);
-#endif
     if (FEX_WriteMemory(ctx->fex_ctx, address, data, size) != FEX_SUCCESS) {
-#if defined(__APPLE__) && defined(__aarch64__)
-        pthread_jit_write_protect_np(1);
-#endif
         return MACWI_ERROR_MEMORY;
     }
-#if defined(__APPLE__) && defined(__aarch64__)
-    pthread_jit_write_protect_np(1);
-    sys_icache_invalidate((void*)address, size);
-#endif
     return MACWI_SUCCESS;
 }
 

@@ -334,9 +334,19 @@ int main(int argc, char** argv) {
     printf("[macwi] Mapping PE into Emulator Memory...\n");
     // Apple Silicon uses 16KB (0x4000) page size. Align the allocation size up to 16KB.
     uint64_t map_size = (image.size_of_image + 0x3FFF) & ~0x3FFFULL;
-    if (macwi_emu_map_memory(ctx, image.image_base, map_size, MACWI_PROT_ALL, NULL) != MACWI_SUCCESS) {
+    uint64_t mapped_base = 0;
+    if (macwi_emu_map_memory(ctx, 0, map_size, MACWI_PROT_ALL, &mapped_base) != MACWI_SUCCESS) {
         fprintf(stderr, "[macwi] Failed to map PE base memory\n");
         return EXIT_FAILURE;
+    }
+    
+    printf("[macwi] PE mapped to 0x%016llX (Preferred: 0x%016llX)\n", mapped_base, image.image_base);
+    if (mapped_base != image.image_base) {
+        printf("[macwi] Applying Base Relocations...\n");
+        macwi_status_t reloc_st = macwi_pe_apply_relocations(&image, mapped_base);
+        if (reloc_st != MACWI_SUCCESS) {
+            fprintf(stderr, "[macwi] Warning: Failed to apply base relocations (status = %d)\n", reloc_st);
+        }
     }
     
     printf("[macwi] Resolving Imports (IAT Patching)...\n");
