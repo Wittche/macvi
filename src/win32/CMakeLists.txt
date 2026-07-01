@@ -16,6 +16,7 @@ add_library(macwi_win32 STATIC
     d3d9.c
     fexi_d3d9.c
     sync.c
+    vulkan-1.c
     timer.c
     cocoa_window.m
     metal_renderer.m

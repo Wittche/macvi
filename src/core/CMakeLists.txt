@@ -8,6 +8,7 @@ add_library(macwi_core STATIC
     vfs.c
     registry.c
     thread.c
+    moltenvk_loader.c
 )
 
 target_include_directories(macwi_core PUBLIC

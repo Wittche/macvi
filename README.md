@@ -123,8 +123,11 @@ macwi/
 - [x] Import Address Table (IAT) resolution
 - [x] x86 instruction emulation (via FEXCore JIT Engine)
 - [x] Full kernel32 implementation (file I/O, memory, sync, threading, VFS)
+- [x] Multithreading Synchronization (Events, Mutexes, WaitForSingleObject)
 - [x] GDI32 / USER32 stubs for basic GUI support (Windows, Message Loops, Painting)
 - [x] Advanced GUI controls (Button/Static/Edit), Timers, and GDI Fonts
+- [x] Vulkan & MoltenVK Integration via `vk.xml` Auto-Generated Thunks
+- [ ] Native DLL Overriding (DXVK support)
 - [ ] GDI Bitmaps and advanced graphics
 ## License
 

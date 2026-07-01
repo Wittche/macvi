@@ -319,6 +319,8 @@ int main(int argc, char** argv) {
     macwi_advapi32_register_apis();
     extern void macwi_d3d9_register_apis(void);
     macwi_d3d9_register_apis();
+    extern void macwi_vulkan_register_apis(struct EMU_CONTEXT* ctx);
+    macwi_vulkan_register_apis(ctx);
     macwi_thunk_init_dispatcher(ctx);
     macwi_thunk_init_callbacks(ctx);
     
