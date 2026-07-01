@@ -20,17 +20,17 @@ static int g_class_count = 0;
 typedef struct {
     void* cocoa_win;
     WNDPROC32 wnd_proc;
-    uint64_t user_data;
-    uint64_t style;
-    uint64_t ex_style;
-    uint64_t id;
-    uint64_t parent_hwnd;
+    uint32_t user_data;
+    uint32_t style;
+    uint32_t ex_style;
+    uint32_t id;
+    uint32_t parent_hwnd;
     char window_text[256];
 } MACWI_WINDOW_OBJ;
 
 static void win32_RegisterClassExA(EMU_CONTEXT* ctx) {
-    uint64_t lpwcx;
-    macwi_thunk_read_param_64(ctx, 0, &lpwcx);
+    uint32_t lpwcx;
+    macwi_thunk_read_param_32(ctx, 0, &lpwcx);
 
     printf("[macwi:user32] RegisterClassExA called with lpwcx=%x\n", lpwcx);
     fflush(stdout);
@@ -55,22 +55,22 @@ static void win32_RegisterClassExA(EMU_CONTEXT* ctx) {
 }
 
 static void win32_CreateWindowExA(EMU_CONTEXT* ctx) {
-    uint64_t dwExStyle, lpClassName, lpWindowName, dwStyle;
-    uint64_t X, Y, nWidth, nHeight;
-    uint64_t hWndParent, hMenu, hInstance, lpParam;
+    uint32_t dwExStyle, lpClassName, lpWindowName, dwStyle;
+    uint32_t X, Y, nWidth, nHeight;
+    uint32_t hWndParent, hMenu, hInstance, lpParam;
     
-    macwi_thunk_read_param_64(ctx, 0, &dwExStyle);
-    macwi_thunk_read_param_64(ctx, 1, &lpClassName);
-    macwi_thunk_read_param_64(ctx, 2, &lpWindowName);
-    macwi_thunk_read_param_64(ctx, 3, &dwStyle);
-    macwi_thunk_read_param_64(ctx, 4, &X);
-    macwi_thunk_read_param_64(ctx, 5, &Y);
-    macwi_thunk_read_param_64(ctx, 6, &nWidth);
-    macwi_thunk_read_param_64(ctx, 7, &nHeight);
-    macwi_thunk_read_param_64(ctx, 8, &hWndParent);
-    macwi_thunk_read_param_64(ctx, 9, &hMenu);
-    macwi_thunk_read_param_64(ctx, 10, &hInstance);
-    macwi_thunk_read_param_64(ctx, 11, &lpParam);
+    macwi_thunk_read_param_32(ctx, 0, &dwExStyle);
+    macwi_thunk_read_param_32(ctx, 1, &lpClassName);
+    macwi_thunk_read_param_32(ctx, 2, &lpWindowName);
+    macwi_thunk_read_param_32(ctx, 3, &dwStyle);
+    macwi_thunk_read_param_32(ctx, 4, &X);
+    macwi_thunk_read_param_32(ctx, 5, &Y);
+    macwi_thunk_read_param_32(ctx, 6, &nWidth);
+    macwi_thunk_read_param_32(ctx, 7, &nHeight);
+    macwi_thunk_read_param_32(ctx, 8, &hWndParent);
+    macwi_thunk_read_param_32(ctx, 9, &hMenu);
+    macwi_thunk_read_param_32(ctx, 10, &hInstance);
+    macwi_thunk_read_param_32(ctx, 11, &lpParam);
 
     char class_name[128];
     char window_name[256];
@@ -106,7 +106,7 @@ static void win32_CreateWindowExA(EMU_CONTEXT* ctx) {
     win_obj->user_data = 0;
     win_obj->style = dwStyle;
     win_obj->ex_style = dwExStyle;
-    win_obj->id = (uint64_t)hMenu; // hMenu is used as child ID if child window
+    win_obj->id = (uint32_t)hMenu; // hMenu is used as child ID if child window
     win_obj->parent_hwnd = hWndParent;
     strncpy(win_obj->window_text, window_name, sizeof(win_obj->window_text) - 1);
     win_obj->window_text[sizeof(win_obj->window_text) - 1] = '\0';
@@ -135,11 +135,11 @@ static void win32_CreateWindowExA(EMU_CONTEXT* ctx) {
 
     HANDLE hwnd = macwi_handle_create(&g_macwi_handle_table, HANDLE_TYPE_EVENT, win_obj);
     
-    macwi_emu_reg_write_32(ctx, 0, (uint64_t)(uintptr_t)hwnd);
+    macwi_emu_reg_write_32(ctx, 0, (uint32_t)(uintptr_t)hwnd);
     macwi_thunk_stdcall_return(ctx, 12);
 }
 
-uint64_t host_ShowWindow(EMU_CONTEXT* ctx, uint64_t hWnd, uint64_t nCmdShow) {
+uint32_t host_ShowWindow(EMU_CONTEXT* ctx, uint32_t hWnd, uint32_t nCmdShow) {
     MACWI_WINDOW_OBJ* win_obj = NULL;
     printf("[macwi:user32] host_ShowWindow called with hwnd=%u, nCmdShow=%u\n", hWnd, nCmdShow);
     fflush(stdout);
@@ -150,7 +150,7 @@ uint64_t host_ShowWindow(EMU_CONTEXT* ctx, uint64_t hWnd, uint64_t nCmdShow) {
     return 0;
 }
 
-uint64_t host_UpdateWindow(EMU_CONTEXT* ctx, uint64_t hWnd) {
+uint32_t host_UpdateWindow(EMU_CONTEXT* ctx, uint32_t hWnd) {
     return 1;
 }
 
@@ -161,14 +161,14 @@ uint64_t host_UpdateWindow(EMU_CONTEXT* ctx, uint64_t hWnd) {
 #define GWL_ID -12
 
 static void win32_GetWindowLongA(EMU_CONTEXT* ctx) {
-    uint64_t hWnd;
+    uint32_t hWnd;
     int64_t nIndex;
-    macwi_thunk_read_param_64(ctx, 0, &hWnd);
-    macwi_thunk_read_param_64(ctx, 1, (uint64_t*)&nIndex);
+    macwi_thunk_read_param_32(ctx, 0, &hWnd);
+    macwi_thunk_read_param_32(ctx, 1, (uint32_t*)&nIndex);
     
     MACWI_WINDOW_OBJ* win_obj = NULL;
     if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hWnd, HANDLE_TYPE_EVENT, (void**)&win_obj) == MACWI_SUCCESS) {
-        uint64_t val = 0;
+        uint32_t val = 0;
         if (nIndex == GWL_WNDPROC) val = win_obj->wnd_proc;
         else if (nIndex == GWL_USERDATA) val = win_obj->user_data;
         else if (nIndex == GWL_STYLE) val = win_obj->style;
@@ -183,15 +183,15 @@ static void win32_GetWindowLongA(EMU_CONTEXT* ctx) {
 }
 
 static void win32_SetWindowLongA(EMU_CONTEXT* ctx) {
-    uint64_t hWnd, dwNewLong;
+    uint32_t hWnd, dwNewLong;
     int64_t nIndex;
-    macwi_thunk_read_param_64(ctx, 0, &hWnd);
-    macwi_thunk_read_param_64(ctx, 1, (uint64_t*)&nIndex);
-    macwi_thunk_read_param_64(ctx, 2, &dwNewLong);
+    macwi_thunk_read_param_32(ctx, 0, &hWnd);
+    macwi_thunk_read_param_32(ctx, 1, (uint32_t*)&nIndex);
+    macwi_thunk_read_param_32(ctx, 2, &dwNewLong);
     
     MACWI_WINDOW_OBJ* win_obj = NULL;
     if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hWnd, HANDLE_TYPE_EVENT, (void**)&win_obj) == MACWI_SUCCESS) {
-        uint64_t old_val = 0;
+        uint32_t old_val = 0;
         if (nIndex == GWL_WNDPROC) { old_val = win_obj->wnd_proc; win_obj->wnd_proc = dwNewLong; }
         else if (nIndex == GWL_USERDATA) { old_val = win_obj->user_data; win_obj->user_data = dwNewLong; }
         else if (nIndex == GWL_STYLE) { old_val = win_obj->style; win_obj->style = dwNewLong; }
@@ -206,9 +206,9 @@ static void win32_SetWindowLongA(EMU_CONTEXT* ctx) {
 }
 
 static void win32_DefWindowProcA(EMU_CONTEXT* ctx) {
-    uint64_t hWnd, Msg, wParam, lParam;
-    macwi_thunk_read_param_64(ctx, 0, &hWnd);
-    macwi_thunk_read_param_64(ctx, 1, &Msg);
+    uint32_t hWnd, Msg, wParam, lParam;
+    macwi_thunk_read_param_32(ctx, 0, &hWnd);
+    macwi_thunk_read_param_32(ctx, 1, &Msg);
     
     if (Msg == WM_PAINT) {
         macwi_cocoa_end_paint();
@@ -226,13 +226,13 @@ static void win32_PostQuitMessage(EMU_CONTEXT* ctx) {
 #include "timer.h"
 
 static void win32_SetTimer(EMU_CONTEXT* ctx) {
-    uint64_t hWnd, nIDEvent, uElapse, lpTimerFunc;
-    macwi_thunk_read_param_64(ctx, 0, &hWnd);
-    macwi_thunk_read_param_64(ctx, 1, &nIDEvent);
-    macwi_thunk_read_param_64(ctx, 2, &uElapse);
-    macwi_thunk_read_param_64(ctx, 3, &lpTimerFunc);
+    uint32_t hWnd, nIDEvent, uElapse, lpTimerFunc;
+    macwi_thunk_read_param_32(ctx, 0, &hWnd);
+    macwi_thunk_read_param_32(ctx, 1, &nIDEvent);
+    macwi_thunk_read_param_32(ctx, 2, &uElapse);
+    macwi_thunk_read_param_32(ctx, 3, &lpTimerFunc);
 
-    uint64_t timer_id = macwi_timer_set(hWnd, nIDEvent, uElapse, lpTimerFunc);
+    uint32_t timer_id = macwi_timer_set(hWnd, nIDEvent, uElapse, lpTimerFunc);
     
     printf("[macwi:user32] SetTimer hWnd=%x, id=%d, elapse=%d, func=%x -> assigned_id=%d\n", hWnd, nIDEvent, uElapse, lpTimerFunc, timer_id);
     fflush(stdout);
@@ -242,9 +242,9 @@ static void win32_SetTimer(EMU_CONTEXT* ctx) {
 }
 
 static void win32_KillTimer(EMU_CONTEXT* ctx) {
-    uint64_t hWnd, uIDEvent;
-    macwi_thunk_read_param_64(ctx, 0, &hWnd);
-    macwi_thunk_read_param_64(ctx, 1, &uIDEvent);
+    uint32_t hWnd, uIDEvent;
+    macwi_thunk_read_param_32(ctx, 0, &hWnd);
+    macwi_thunk_read_param_32(ctx, 1, &uIDEvent);
 
     int res = macwi_timer_kill(hWnd, uIDEvent);
     
@@ -255,12 +255,12 @@ static void win32_KillTimer(EMU_CONTEXT* ctx) {
     macwi_thunk_stdcall_return(ctx, 2);
 }
 static void win32_PeekMessageA(EMU_CONTEXT* ctx) {
-    uint64_t lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg;
-    macwi_thunk_read_param_64(ctx, 0, &lpMsg);
-    macwi_thunk_read_param_64(ctx, 1, &hWnd);
-    macwi_thunk_read_param_64(ctx, 2, &wMsgFilterMin);
-    macwi_thunk_read_param_64(ctx, 3, &wMsgFilterMax);
-    macwi_thunk_read_param_64(ctx, 4, &wRemoveMsg);
+    uint32_t lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg;
+    macwi_thunk_read_param_32(ctx, 0, &lpMsg);
+    macwi_thunk_read_param_32(ctx, 1, &hWnd);
+    macwi_thunk_read_param_32(ctx, 2, &wMsgFilterMin);
+    macwi_thunk_read_param_32(ctx, 3, &wMsgFilterMax);
+    macwi_thunk_read_param_32(ctx, 4, &wRemoveMsg);
 
     macwi_event_t event;
     int got_event = 0;
@@ -277,7 +277,7 @@ static void win32_PeekMessageA(EMU_CONTEXT* ctx) {
         
         // Find HWND
         HANDLE found_hwnd = 0;
-        for (uint64_t i=0; i<g_macwi_handle_table.capacity; i++) {
+        for (uint32_t i=0; i<g_macwi_handle_table.capacity; i++) {
             if (g_macwi_handle_table.entries[i].type == HANDLE_TYPE_EVENT && g_macwi_handle_table.entries[i].object) {
                 MACWI_WINDOW_OBJ* obj = (MACWI_WINDOW_OBJ*)g_macwi_handle_table.entries[i].object;
                 if (obj->cocoa_win == event.window) {
@@ -287,7 +287,7 @@ static void win32_PeekMessageA(EMU_CONTEXT* ctx) {
             }
         }
         
-        msg.hwnd = (uint64_t)(uintptr_t)found_hwnd;
+        msg.hwnd = (uint32_t)(uintptr_t)found_hwnd;
         
         if (event.type == MACWI_EVENT_CLOSE) {
             msg.message = WM_CLOSE;
@@ -315,7 +315,7 @@ static void win32_PeekMessageA(EMU_CONTEXT* ctx) {
         macwi_emu_reg_write_32(ctx, 0, 1); // TRUE
     } else {
         // Check Timers
-        uint64_t t_hwnd = 0, t_id = 0, t_func = 0;
+        uint32_t t_hwnd = 0, t_id = 0, t_func = 0;
         if (macwi_timer_check(&t_hwnd, &t_id, &t_func)) {
             MSG_32 msg;
             memset(&msg, 0, sizeof(msg));
@@ -335,11 +335,11 @@ static void win32_PeekMessageA(EMU_CONTEXT* ctx) {
 
 
 static void win32_GetMessageA(EMU_CONTEXT* ctx) {
-    uint64_t lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax;
-    macwi_thunk_read_param_64(ctx, 0, &lpMsg);
-    macwi_thunk_read_param_64(ctx, 1, &hWnd);
-    macwi_thunk_read_param_64(ctx, 2, &wMsgFilterMin);
-    macwi_thunk_read_param_64(ctx, 3, &wMsgFilterMax);
+    uint32_t lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax;
+    macwi_thunk_read_param_32(ctx, 0, &lpMsg);
+    macwi_thunk_read_param_32(ctx, 1, &hWnd);
+    macwi_thunk_read_param_32(ctx, 2, &wMsgFilterMin);
+    macwi_thunk_read_param_32(ctx, 3, &wMsgFilterMax);
 
     macwi_event_t event;
     while (1) {
@@ -351,7 +351,7 @@ static void win32_GetMessageA(EMU_CONTEXT* ctx) {
             
             // Find HWND
             HANDLE found_hwnd = 0;
-            for (uint64_t i=0; i<g_macwi_handle_table.capacity; i++) {
+            for (uint32_t i=0; i<g_macwi_handle_table.capacity; i++) {
                 if (g_macwi_handle_table.entries[i].type == HANDLE_TYPE_EVENT && g_macwi_handle_table.entries[i].object) {
                     MACWI_WINDOW_OBJ* obj = (MACWI_WINDOW_OBJ*)g_macwi_handle_table.entries[i].object;
                     if (obj->cocoa_win == event.window) {
@@ -361,7 +361,7 @@ static void win32_GetMessageA(EMU_CONTEXT* ctx) {
                 }
             }
             
-            msg.hwnd = (uint64_t)(uintptr_t)found_hwnd;
+            msg.hwnd = (uint32_t)(uintptr_t)found_hwnd;
             
             if (event.type == MACWI_EVENT_CLOSE) {
                 msg.message = WM_CLOSE;
@@ -395,7 +395,7 @@ static void win32_GetMessageA(EMU_CONTEXT* ctx) {
         }
         
         // Check Timers
-        uint64_t t_hwnd = 0, t_id = 0, t_func = 0;
+        uint32_t t_hwnd = 0, t_id = 0, t_func = 0;
         if (macwi_timer_check(&t_hwnd, &t_id, &t_func)) {
             MSG_32 msg;
             memset(&msg, 0, sizeof(msg));
@@ -420,8 +420,8 @@ static void win32_GetMessageA(EMU_CONTEXT* ctx) {
 }
 
 static void win32_TranslateMessage(EMU_CONTEXT* ctx) {
-    uint64_t lpMsg;
-    macwi_thunk_read_param_64(ctx, 0, &lpMsg);
+    uint32_t lpMsg;
+    macwi_thunk_read_param_32(ctx, 0, &lpMsg);
     
     printf("[macwi:user32] TranslateMessage called with lpMsg=%x\n", lpMsg);
     fflush(stdout);
@@ -470,7 +470,7 @@ static void handle_builtin_wndproc(EMU_CONTEXT* ctx, MACWI_WINDOW_OBJ* win, MSG_
                 fflush(stdout);
                 
                 // Invoke parent's wnd_proc with WM_COMMAND
-                uint64_t args[4] = { win->parent_hwnd, WM_COMMAND, (win->id & 0xFFFF), (uint64_t)msg->hwnd };
+                uint32_t args[4] = { win->parent_hwnd, WM_COMMAND, (win->id & 0xFFFF), (uint32_t)msg->hwnd };
                 macwi_status_t st = macwi_thunk_invoke_callback(ctx, parent->wnd_proc, 4, args, 4, NULL);
                 if (st == MACWI_SUCCESS) {
                     // Return without stdcall_return since we modified PC
@@ -485,8 +485,8 @@ static void handle_builtin_wndproc(EMU_CONTEXT* ctx, MACWI_WINDOW_OBJ* win, MSG_
 }
 
 static void win32_DispatchMessageA(EMU_CONTEXT* ctx) {
-    uint64_t lpMsg;
-    macwi_thunk_read_param_64(ctx, 0, &lpMsg);
+    uint32_t lpMsg;
+    macwi_thunk_read_param_32(ctx, 0, &lpMsg);
     
     MSG_32 msg;
     macwi_emu_read_memory(ctx, lpMsg, &msg, sizeof(msg));
@@ -498,7 +498,7 @@ static void win32_DispatchMessageA(EMU_CONTEXT* ctx) {
         printf("[macwi:user32] DispatchMessageA: invoking TimerProc %x\n", msg.lParam);
         fflush(stdout);
         
-        uint64_t args[4] = { msg.hwnd, msg.message, msg.wParam, macwi_timer_get_sys_time() }; 
+        uint32_t args[4] = { msg.hwnd, msg.message, msg.wParam, macwi_timer_get_sys_time() }; 
         // For simplicity, passing 0 as time, but better to implement GetTickCount
         macwi_status_t st = macwi_thunk_invoke_callback(ctx, msg.lParam, 4, args, 4, NULL);
         if (st == MACWI_SUCCESS) return;
@@ -513,7 +513,7 @@ static void win32_DispatchMessageA(EMU_CONTEXT* ctx) {
             printf("[macwi:user32] DispatchMessageA: invoking WindowProc %x with msg %x\n", win_obj->wnd_proc, msg.message);
             fflush(stdout);
             
-            uint64_t args[4] = { msg.hwnd, msg.message, msg.wParam, msg.lParam };
+            uint32_t args[4] = { msg.hwnd, msg.message, msg.wParam, msg.lParam };
             macwi_status_t st = macwi_thunk_invoke_callback(ctx, win_obj->wnd_proc, 4, args, 4, NULL);
             if (st == MACWI_SUCCESS) {
                 // Return without doing stdcall_return since we modified the stack and PC to run the callback
@@ -534,7 +534,7 @@ static void win32_DispatchMessageA(EMU_CONTEXT* ctx) {
 
 static void win32_GetSystemMetrics(EMU_CONTEXT* ctx) {
     int64_t nIndex;
-    macwi_thunk_read_param_64(ctx, 0, (uint64_t*)&nIndex);
+    macwi_thunk_read_param_32(ctx, 0, (uint32_t*)&nIndex);
     
     int val = 0;
     if (nIndex == SM_CXSCREEN) val = 1920; // Hardcode for now, or get from Cocoa
@@ -553,9 +553,9 @@ static void win32_GetSystemMetrics(EMU_CONTEXT* ctx) {
 
 static void win32_GetSysColor(EMU_CONTEXT* ctx) {
     int64_t nIndex;
-    macwi_thunk_read_param_64(ctx, 0, (uint64_t*)&nIndex);
+    macwi_thunk_read_param_32(ctx, 0, (uint32_t*)&nIndex);
     
-    uint64_t color = 0; // RGB
+    uint32_t color = 0; // RGB
     if (nIndex == COLOR_BTNFACE) color = 0xF0F0F0;
     else if (nIndex == COLOR_WINDOW) color = 0xFFFFFF;
     else if (nIndex == COLOR_BTNTEXT) color = 0x000000;
@@ -578,16 +578,16 @@ static void win32_MoveWindow(EMU_CONTEXT* ctx) {
 }
 
 static void win32_GetClientRect(EMU_CONTEXT* ctx) {
-    uint64_t hWnd, lpRect;
-    macwi_thunk_read_param_64(ctx, 0, &hWnd);
-    macwi_thunk_read_param_64(ctx, 1, &lpRect);
+    uint32_t hWnd, lpRect;
+    macwi_thunk_read_param_32(ctx, 0, &hWnd);
+    macwi_thunk_read_param_32(ctx, 1, &lpRect);
     printf("[macwi:user32] GetClientRect called for hWnd=%u\n", hWnd); fflush(stdout);
     
     MACWI_WINDOW_OBJ* win_obj = NULL;
     if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hWnd, HANDLE_TYPE_EVENT, (void**)&win_obj) == MACWI_SUCCESS) {
         int w = 800, h = 600; // Hardcoded default for now
         // TODO: Get actual cached width and height from win_obj when implemented
-        uint64_t rect[4] = {0, 0, w, h};
+        uint32_t rect[4] = {0, 0, w, h};
         macwi_emu_write_memory(ctx, lpRect, rect, sizeof(rect));
         macwi_emu_reg_write_32(ctx, 0, 1);
         printf("[macwi:user32] GetClientRect SUCCESS\n"); fflush(stdout);
@@ -599,15 +599,15 @@ static void win32_GetClientRect(EMU_CONTEXT* ctx) {
 }
 
 static void win32_GetWindowRect(EMU_CONTEXT* ctx) {
-    uint64_t hWnd, lpRect;
-    macwi_thunk_read_param_64(ctx, 0, &hWnd);
-    macwi_thunk_read_param_64(ctx, 1, &lpRect);
+    uint32_t hWnd, lpRect;
+    macwi_thunk_read_param_32(ctx, 0, &hWnd);
+    macwi_thunk_read_param_32(ctx, 1, &lpRect);
     
     MACWI_WINDOW_OBJ* win_obj = NULL;
     if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hWnd, HANDLE_TYPE_EVENT, (void**)&win_obj) == MACWI_SUCCESS) {
         int x = 0, y = 0, w = 800, h = 600; // Hardcoded default for now
         // TODO: Get actual cached rect from win_obj when implemented
-        uint64_t rect[4] = {x, y, x + w, y + h};
+        uint32_t rect[4] = {x, y, x + w, y + h};
         macwi_emu_write_memory(ctx, lpRect, rect, sizeof(rect));
         macwi_emu_reg_write_32(ctx, 0, 1);
     } else {
@@ -617,9 +617,9 @@ static void win32_GetWindowRect(EMU_CONTEXT* ctx) {
 }
 
 static void win32_SetWindowTextA(EMU_CONTEXT* ctx) {
-    uint64_t hWnd, lpString;
-    macwi_thunk_read_param_64(ctx, 0, &hWnd);
-    macwi_thunk_read_param_64(ctx, 1, &lpString);
+    uint32_t hWnd, lpString;
+    macwi_thunk_read_param_32(ctx, 0, &hWnd);
+    macwi_thunk_read_param_32(ctx, 1, &lpString);
     
     MACWI_WINDOW_OBJ* win_obj = NULL;
     if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hWnd, HANDLE_TYPE_EVENT, (void**)&win_obj) == MACWI_SUCCESS) {
@@ -638,10 +638,10 @@ static void win32_SetWindowTextA(EMU_CONTEXT* ctx) {
 }
 
 static void win32_GetWindowTextA(EMU_CONTEXT* ctx) {
-    uint64_t hWnd, lpString, nMaxCount;
-    macwi_thunk_read_param_64(ctx, 0, &hWnd);
-    macwi_thunk_read_param_64(ctx, 1, &lpString);
-    macwi_thunk_read_param_64(ctx, 2, &nMaxCount);
+    uint32_t hWnd, lpString, nMaxCount;
+    macwi_thunk_read_param_32(ctx, 0, &hWnd);
+    macwi_thunk_read_param_32(ctx, 1, &lpString);
+    macwi_thunk_read_param_32(ctx, 2, &nMaxCount);
     
     MACWI_WINDOW_OBJ* win_obj = NULL;
     if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hWnd, HANDLE_TYPE_EVENT, (void**)&win_obj) == MACWI_SUCCESS) {
@@ -655,11 +655,11 @@ static void win32_GetWindowTextA(EMU_CONTEXT* ctx) {
 }
 
 static void win32_MessageBoxA(EMU_CONTEXT* ctx) {
-    uint64_t hWnd, lpText, lpCaption, uType;
-    macwi_thunk_read_param_64(ctx, 0, &hWnd);
-    macwi_thunk_read_param_64(ctx, 1, &lpText);
-    macwi_thunk_read_param_64(ctx, 2, &lpCaption);
-    macwi_thunk_read_param_64(ctx, 3, &uType);
+    uint32_t hWnd, lpText, lpCaption, uType;
+    macwi_thunk_read_param_32(ctx, 0, &hWnd);
+    macwi_thunk_read_param_32(ctx, 1, &lpText);
+    macwi_thunk_read_param_32(ctx, 2, &lpCaption);
+    macwi_thunk_read_param_32(ctx, 3, &uType);
     
     char text[512] = {0};
     char caption[256] = {0};
@@ -678,6 +678,19 @@ static void win32_MessageBoxA(EMU_CONTEXT* ctx) {
     int ret = macwi_cocoa_message_box(cocoa_win, text, caption, uType);
     macwi_emu_reg_write_32(ctx, 0, ret);
     macwi_thunk_stdcall_return(ctx, 4);
+}
+
+static void win32_DestroyWindow(EMU_CONTEXT* ctx) {
+    uint32_t hWnd;
+    macwi_thunk_read_param_32(ctx, 0, &hWnd);
+    
+    printf("[macwi:user32] DestroyWindow called with hwnd=%x\n", hWnd);
+    fflush(stdout);
+
+    // For now we don't actually destroy the Cocoa window properly (TODO)
+    // We just return success.
+    macwi_emu_reg_write_32(ctx, 0, 1);
+    macwi_thunk_stdcall_return(ctx, 1);
 }
 
 extern void fexi_register_user32(void);
@@ -720,4 +733,5 @@ void macwi_user32_register_apis(void) {
     macwi_thunk_register_api("user32.dll", "MessageBoxA", win32_MessageBoxA, 4);
     macwi_thunk_register_api("user32.dll", "SetTimer", win32_SetTimer, 4);
     macwi_thunk_register_api("user32.dll", "KillTimer", win32_KillTimer, 2);
+    macwi_thunk_register_api("user32.dll", "DestroyWindow", win32_DestroyWindow, 1);
 }

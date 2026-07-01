@@ -19,6 +19,16 @@ MacWI temel olarak dört ana katmandan oluşur:
 
 MacWI, x86 -> ARM64 çevirisi için **FEXCore** (FEX-Emu projesinin çekirdek kütüphanesi) kullanır. Başlangıçta projeye Unicorn emülatörü ile başlanmış, ancak Unicorn'un yorumlayıcı (interpreter) tabanlı yapısı ve düşük performansı nedeniyle, production-ready bir JIT motoru olan FEXCore'a geçiş yapılmıştır. 
 
+## 3. Mevcut Durum (Current Status)
+
+Şu ana kadar aşağıdaki altyapılar tamamlanmıştır:
+- **Phase 22 (FEXCore Entegrasyonu):** 32-bit `__stdcall` çağrıları, stack tabanlı argüman okuma altyapısı (thunking).
+- **Phase 23 (VFS - Virtual File System):** Case-insensitive Windows DOS path yönlendirmesi ve `CreateFileA`, `ReadFile`, `WriteFile` vb. dosya fonksiyonları.
+- **Phase 24 (Memory Management):** `VirtualAlloc`, `VirtualProtect`, `VirtualQuery`, `VirtualFree` fonksiyonları FEX-MapMem köprüsüyle entegre edildi.
+
+**Aktif Aşama:**
+- **Phase 25 (USER32 / Pencere Yönetimi):** Cocoa/AppKit kullanılarak macOS yerel pencereleriyle 32-bit uygulamaların pencere açması, Event Loop (GetMessage, DispatchMessage) ve tuş vuruşları (WM_KEYDOWN) bağlantısı üzerine çalışılmaktadır.
+
 FEXCore **sadece bir çevirici** olarak kullanılır. Linux işletim sistemi emülasyonu yapan kısımları tamamen devreden çıkartılmış, kendi `SyscallHandler` yapımızla (kesme dinleyicimizle) değiştirilmiştir.
 
 ## 3. Çalışma Mantığı ve "Thunk" Süreci

@@ -294,10 +294,11 @@ typedef struct macwi_dll_module {
 
 The implementation follows a demand-driven approach:
 
-1. **Phase 1 — Bootstrapping**: `kernel32` core (file I/O, memory, heap), `ntdll` basics, `msvcrt` essentials. Enough to run simple console apps. (✅ **Completed**)
-2. **Phase 2 — Console Applications**: Full `kernel32` (Threading, Mutexes, VFS), `advapi32` registry stubs, `ws2_32` networking. (✅ **Completed**)
-3. **Phase 3 — GUI Applications**: `user32` windowing + message pump, `gdi32` basic rendering (`BeginPaint`, `FillRect`, `TextOut`). (✅ **Completed**)
-4. **Phase 4 — Rich Applications**: Advanced UI controls, Timers, COM runtime, shell integration, advanced GDI, theming. (⏳ **In Progress**)
+1. **Phase 22 — Bootstrapping & Core Translation**: FEXCore JIT execution of 32-bit `__stdcall` code, basic memory mapping, stack-based argument thunking. (✅ **Completed**)
+2. **Phase 23 — Virtual File System (VFS)**: POSIX-compliant case-insensitive redirection of Windows drives (e.g. `C:\`), `CreateFile`, `ReadFile`, `WriteFile`. (✅ **Completed**)
+3. **Phase 24 — Memory Management**: Full support for `VirtualAlloc`, `VirtualFree`, `VirtualProtect`, mapping into 32-bit guest addresses on a 64-bit host. (✅ **Completed**)
+4. **Phase 25 — GUI Applications (USER32)**: Windowing + message pump (`GetMessage`, `DispatchMessage`, `CreateWindowExA`), mapping to native Cocoa events. (⏳ **In Progress**)
+5. **Phase 26 — Graphics (D3D9)**: Real-time translation of DirectX 9 API calls to Vulkan (MoltenVK) / Metal for hardware-accelerated 3D rendering. (⏳ **Planned**)
 
 ---
 

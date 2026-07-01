@@ -146,3 +146,13 @@ add_custom_command(
     COMMENT "Building Vulkan Test 32-bit Windows PE executable with MinGW"
 )
 add_custom_target(vulkan_test ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/vulkan_test.exe)
+
+# Build user32_test.exe using MinGW
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/user32_test.exe
+    COMMAND i686-w64-mingw32-gcc ${CMAKE_CURRENT_SOURCE_DIR}/user32_test.c -o ${CMAKE_CURRENT_BINARY_DIR}/user32_test.exe -nostdlib -lkernel32 -luser32 -lgdi32 -Wl,-e,__start -Wl,--image-base,0x2D000000
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/user32_test.c
+    COMMENT "Building user32 Test 32-bit Windows PE executable with MinGW"
+)
+add_custom_target(user32_test ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/user32_test.exe)
+
