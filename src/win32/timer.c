@@ -5,7 +5,7 @@
 
 static MACWI_TIMER g_timers[MAX_TIMERS];
 static pthread_mutex_t g_timer_mutex = PTHREAD_MUTEX_INITIALIZER;
-static uint32_t g_next_timer_id = 0x1000;
+static uint64_t g_next_timer_id = 0x1000;
 
 static uint64_t get_current_time_ns() {
     struct timespec ts;
@@ -17,7 +17,7 @@ void macwi_timer_init(void) {
     memset(g_timers, 0, sizeof(g_timers));
 }
 
-uint32_t macwi_timer_set(uint32_t hwnd, uint32_t idEvent, uint32_t uElapse, uint32_t lpTimerFunc) {
+uint64_t macwi_timer_set(uint64_t hwnd, uint64_t idEvent, uint64_t uElapse, uint64_t lpTimerFunc) {
     pthread_mutex_lock(&g_timer_mutex);
     
     // Find existing timer if hwnd and idEvent match
@@ -34,7 +34,7 @@ uint32_t macwi_timer_set(uint32_t hwnd, uint32_t idEvent, uint32_t uElapse, uint
     }
     
     // Allocate new timer
-    uint32_t assigned_id = idEvent;
+    uint64_t assigned_id = idEvent;
     if (hwnd == 0) {
         assigned_id = g_next_timer_id++;
     }
@@ -56,7 +56,7 @@ uint32_t macwi_timer_set(uint32_t hwnd, uint32_t idEvent, uint32_t uElapse, uint
     return 0; // Failure
 }
 
-int macwi_timer_kill(uint32_t hwnd, uint32_t idEvent) {
+int macwi_timer_kill(uint64_t hwnd, uint64_t idEvent) {
     pthread_mutex_lock(&g_timer_mutex);
     for (int i = 0; i < MAX_TIMERS; i++) {
         if (g_timers[i].active && g_timers[i].hwnd == hwnd && g_timers[i].id == idEvent) {
@@ -69,7 +69,7 @@ int macwi_timer_kill(uint32_t hwnd, uint32_t idEvent) {
     return 0; // Not found
 }
 
-int macwi_timer_check(uint32_t* out_hwnd, uint32_t* out_idEvent, uint32_t* out_timerFunc) {
+int macwi_timer_check(uint64_t* out_hwnd, uint64_t* out_idEvent, uint64_t* out_timerFunc) {
     uint64_t now = get_current_time_ns();
     
     pthread_mutex_lock(&g_timer_mutex);
@@ -93,6 +93,6 @@ int macwi_timer_check(uint32_t* out_hwnd, uint32_t* out_idEvent, uint32_t* out_t
     return 0;
 }
 
-uint32_t macwi_timer_get_sys_time(void) {
-    return (uint32_t)(get_current_time_ns() / 1000000ULL);
+uint64_t macwi_timer_get_sys_time(void) {
+    return (uint64_t)(get_current_time_ns() / 1000000ULL);
 }

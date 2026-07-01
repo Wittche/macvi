@@ -3,35 +3,35 @@
 
 #include "macwi/thunk.h"
 
-extern uint32_t host_NtCreateFile(EMU_CONTEXT* ctx, uint64_t FileHandle, uint32_t DesiredAccess, uint64_t ObjectAttributes, uint64_t IoStatusBlock, uint64_t AllocationSize, uint32_t FileAttributes, uint32_t ShareAccess, uint32_t CreateDisposition, uint32_t CreateOptions, uint64_t EaBuffer, uint32_t EaLength);
-extern uint32_t host_NtClose(EMU_CONTEXT* ctx, uint64_t Handle);
-extern uint32_t host_NtReadFile(EMU_CONTEXT* ctx, uint64_t FileHandle, uint64_t Event, uint64_t ApcRoutine, uint64_t ApcContext, uint64_t IoStatusBlock, uint64_t Buffer, uint32_t Length, uint64_t ByteOffset, uint64_t Key);
-extern uint32_t host_NtWriteFile(EMU_CONTEXT* ctx, uint64_t FileHandle, uint64_t Event, uint64_t ApcRoutine, uint64_t ApcContext, uint64_t IoStatusBlock, uint64_t Buffer, uint32_t Length, uint64_t ByteOffset, uint64_t Key);
+extern uint64_t host_NtCreateFile(EMU_CONTEXT* ctx, uint64_t FileHandle, uint64_t DesiredAccess, uint64_t ObjectAttributes, uint64_t IoStatusBlock, uint64_t AllocationSize, uint64_t FileAttributes, uint64_t ShareAccess, uint64_t CreateDisposition, uint64_t CreateOptions, uint64_t EaBuffer, uint64_t EaLength);
+extern uint64_t host_NtClose(EMU_CONTEXT* ctx, uint64_t Handle);
+extern uint64_t host_NtReadFile(EMU_CONTEXT* ctx, uint64_t FileHandle, uint64_t Event, uint64_t ApcRoutine, uint64_t ApcContext, uint64_t IoStatusBlock, uint64_t Buffer, uint64_t Length, uint64_t ByteOffset, uint64_t Key);
+extern uint64_t host_NtWriteFile(EMU_CONTEXT* ctx, uint64_t FileHandle, uint64_t Event, uint64_t ApcRoutine, uint64_t ApcContext, uint64_t IoStatusBlock, uint64_t Buffer, uint64_t Length, uint64_t ByteOffset, uint64_t Key);
 
 static void thunk_NtCreateFile(EMU_CONTEXT* ctx) {
     uint64_t FileHandle;
     macwi_thunk_read_param_64(ctx, 0, (uint64_t*)&FileHandle);
-    uint32_t DesiredAccess;
-    macwi_thunk_read_param_32(ctx, 1, (uint32_t*)&DesiredAccess);
+    uint64_t DesiredAccess;
+    macwi_thunk_read_param_64(ctx, 1, (uint64_t*)&DesiredAccess);
     uint64_t ObjectAttributes;
     macwi_thunk_read_param_64(ctx, 2, (uint64_t*)&ObjectAttributes);
     uint64_t IoStatusBlock;
     macwi_thunk_read_param_64(ctx, 3, (uint64_t*)&IoStatusBlock);
     uint64_t AllocationSize;
     macwi_thunk_read_param_64(ctx, 4, (uint64_t*)&AllocationSize);
-    uint32_t FileAttributes;
-    macwi_thunk_read_param_32(ctx, 5, (uint32_t*)&FileAttributes);
-    uint32_t ShareAccess;
-    macwi_thunk_read_param_32(ctx, 6, (uint32_t*)&ShareAccess);
-    uint32_t CreateDisposition;
-    macwi_thunk_read_param_32(ctx, 7, (uint32_t*)&CreateDisposition);
-    uint32_t CreateOptions;
-    macwi_thunk_read_param_32(ctx, 8, (uint32_t*)&CreateOptions);
+    uint64_t FileAttributes;
+    macwi_thunk_read_param_64(ctx, 5, (uint64_t*)&FileAttributes);
+    uint64_t ShareAccess;
+    macwi_thunk_read_param_64(ctx, 6, (uint64_t*)&ShareAccess);
+    uint64_t CreateDisposition;
+    macwi_thunk_read_param_64(ctx, 7, (uint64_t*)&CreateDisposition);
+    uint64_t CreateOptions;
+    macwi_thunk_read_param_64(ctx, 8, (uint64_t*)&CreateOptions);
     uint64_t EaBuffer;
     macwi_thunk_read_param_64(ctx, 9, (uint64_t*)&EaBuffer);
-    uint32_t EaLength;
-    macwi_thunk_read_param_32(ctx, 10, (uint32_t*)&EaLength);
-    uint32_t ret = host_NtCreateFile(ctx, FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, EaBuffer, EaLength);
+    uint64_t EaLength;
+    macwi_thunk_read_param_64(ctx, 10, (uint64_t*)&EaLength);
+    uint64_t ret = host_NtCreateFile(ctx, FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, EaBuffer, EaLength);
     macwi_emu_reg_write_64(ctx, 0, (uint64_t)ret);
     macwi_thunk_stdcall_return(ctx, 11);
 }
@@ -39,7 +39,7 @@ static void thunk_NtCreateFile(EMU_CONTEXT* ctx) {
 static void thunk_NtClose(EMU_CONTEXT* ctx) {
     uint64_t Handle;
     macwi_thunk_read_param_64(ctx, 0, (uint64_t*)&Handle);
-    uint32_t ret = host_NtClose(ctx, Handle);
+    uint64_t ret = host_NtClose(ctx, Handle);
     macwi_emu_reg_write_64(ctx, 0, (uint64_t)ret);
     macwi_thunk_stdcall_return(ctx, 1);
 }
@@ -57,13 +57,13 @@ static void thunk_NtReadFile(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_64(ctx, 4, (uint64_t*)&IoStatusBlock);
     uint64_t Buffer;
     macwi_thunk_read_param_64(ctx, 5, (uint64_t*)&Buffer);
-    uint32_t Length;
-    macwi_thunk_read_param_32(ctx, 6, (uint32_t*)&Length);
+    uint64_t Length;
+    macwi_thunk_read_param_64(ctx, 6, (uint64_t*)&Length);
     uint64_t ByteOffset;
     macwi_thunk_read_param_64(ctx, 7, (uint64_t*)&ByteOffset);
     uint64_t Key;
     macwi_thunk_read_param_64(ctx, 8, (uint64_t*)&Key);
-    uint32_t ret = host_NtReadFile(ctx, FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, Key);
+    uint64_t ret = host_NtReadFile(ctx, FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, Key);
     macwi_emu_reg_write_64(ctx, 0, (uint64_t)ret);
     macwi_thunk_stdcall_return(ctx, 9);
 }
@@ -81,13 +81,13 @@ static void thunk_NtWriteFile(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_64(ctx, 4, (uint64_t*)&IoStatusBlock);
     uint64_t Buffer;
     macwi_thunk_read_param_64(ctx, 5, (uint64_t*)&Buffer);
-    uint32_t Length;
-    macwi_thunk_read_param_32(ctx, 6, (uint32_t*)&Length);
+    uint64_t Length;
+    macwi_thunk_read_param_64(ctx, 6, (uint64_t*)&Length);
     uint64_t ByteOffset;
     macwi_thunk_read_param_64(ctx, 7, (uint64_t*)&ByteOffset);
     uint64_t Key;
     macwi_thunk_read_param_64(ctx, 8, (uint64_t*)&Key);
-    uint32_t ret = host_NtWriteFile(ctx, FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, Key);
+    uint64_t ret = host_NtWriteFile(ctx, FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, Key);
     macwi_emu_reg_write_64(ctx, 0, (uint64_t)ret);
     macwi_thunk_stdcall_return(ctx, 9);
 }

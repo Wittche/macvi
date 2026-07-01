@@ -1237,10 +1237,11 @@ FEX_DEFAULT_VISIBILITY uint64_t FEX_MapMemory(FEX_Context* Ctx, uint64_t GuestAd
   if (Perms & FEX_MEM_WRITE) prot |= PROT_WRITE;
   if (Perms & FEX_MEM_EXEC) prot |= PROT_EXEC;
 
+  int native_prot = prot;
 #if defined(__APPLE__) && defined(__aarch64__)
   // Apple Silicon Hardened Runtime requires MAP_JIT for PROT_EXEC, which enforces W^X.
-  // The host CPU never executes guest memory natively, so we only need READ/WRITE permissions natively.
-  prot &= ~PROT_EXEC;
+  // The host CPU never executes guest memory natively, so we only need READ/WRITE permissions natively for fixed mmaps.
+  native_prot &= ~PROT_EXEC;
 #endif
 
   // Enforce 32-bit (under 4GB) allocations for 32-bit guest modes
@@ -1254,10 +1255,6 @@ FEX_DEFAULT_VISIBILITY uint64_t FEX_MapMemory(FEX_Context* Ctx, uint64_t GuestAd
           // Convert guest candidate to host hint address
           uint64_t hostHint = guestCandidate + FEXCore::Utils::GlobalMemoryBase;
           
-          int native_prot = prot;
-#if defined(__APPLE__) && defined(__aarch64__)
-          native_prot &= ~PROT_EXEC;
-#endif
           // Use native ::mmap to overwrite the PROT_NONE guard region
           void* res = ::mmap((void*)hostHint, Size, native_prot, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
           if (res != MAP_FAILED) {
@@ -1286,14 +1283,8 @@ FEX_DEFAULT_VISIBILITY uint64_t FEX_MapMemory(FEX_Context* Ctx, uint64_t GuestAd
       // for the native mmap call on Apple Silicon, FEX handles execution internally.
       int flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED;
       
-      int native_prot = prot;
-#if defined(__APPLE__) && defined(__aarch64__)
-      // macOS forbids MAP_FIXED + MAP_JIT and MAP_FIXED + PROT_EXEC without MAP_JIT
-      native_prot &= ~PROT_EXEC;
-#endif
-
       // Use native ::mmap to overwrite the PROT_NONE guard region
-      void* res = ::mmap((void*)hostHint, Size, native_prot, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
+      void* res = ::mmap((void*)hostHint, Size, native_prot, flags, -1, 0);
       if (res != MAP_FAILED) {
           fprintf(stderr, "[FEX-MapMem] fixed alloc: guest=0x%llx host=0x%llx size=0x%llx\n",
                   (unsigned long long)GuestAddr, (unsigned long long)(uint64_t)res, (unsigned long long)Size);
@@ -1312,7 +1303,7 @@ FEX_DEFAULT_VISIBILITY uint64_t FEX_MapMemory(FEX_Context* Ctx, uint64_t GuestAd
   if (res == MAP_FAILED) {
       return 0;
   }
-  return (uint64_t)res - FEXCore::Utils::GlobalMemoryBase; 
+  return (uint64_t)res - FEXCore::Utils::GlobalMemoryBase;
 }
 FEX_DEFAULT_VISIBILITY FEX_Result FEX_WriteMemory(FEX_Context* Ctx, uint64_t GuestAddr, const void* Data, uint64_t Size) { memcpy((void*)(GuestAddr + FEXCore::Utils::GlobalMemoryBase), Data, Size); return FEX_SUCCESS; }
 FEX_DEFAULT_VISIBILITY FEX_Result FEX_ReadMemory(FEX_Context* Ctx, uint64_t GuestAddr, void* Data, uint64_t Size) { memcpy(Data, (void*)(GuestAddr + FEXCore::Utils::GlobalMemoryBase), Size); return FEX_SUCCESS; }

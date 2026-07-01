@@ -3,22 +3,22 @@
 
 #include "macwi/thunk.h"
 
-extern uint64_t host_CreateDIBSection(EMU_CONTEXT* ctx, uint64_t hdc, uint64_t pbmi, uint32_t usage, uint64_t ppvBits, uint64_t hSection, uint32_t offset);
-extern uint32_t host_BitBlt(EMU_CONTEXT* ctx, uint64_t hdcDest, uint32_t nXDest, uint32_t nYDest, uint32_t nWidth, uint32_t nHeight, uint64_t hdcSrc, uint32_t nXSrc, uint32_t nYSrc, uint32_t dwRop);
+extern uint64_t host_CreateDIBSection(EMU_CONTEXT* ctx, uint64_t hdc, uint64_t pbmi, uint64_t usage, uint64_t ppvBits, uint64_t hSection, uint64_t offset);
+extern uint64_t host_BitBlt(EMU_CONTEXT* ctx, uint64_t hdcDest, uint64_t nXDest, uint64_t nYDest, uint64_t nWidth, uint64_t nHeight, uint64_t hdcSrc, uint64_t nXSrc, uint64_t nYSrc, uint64_t dwRop);
 
 static void thunk_CreateDIBSection(EMU_CONTEXT* ctx) {
     uint64_t hdc;
     macwi_thunk_read_param_64(ctx, 0, (uint64_t*)&hdc);
     uint64_t pbmi;
     macwi_thunk_read_param_64(ctx, 1, (uint64_t*)&pbmi);
-    uint32_t usage;
-    macwi_thunk_read_param_32(ctx, 2, (uint32_t*)&usage);
+    uint64_t usage;
+    macwi_thunk_read_param_64(ctx, 2, (uint64_t*)&usage);
     uint64_t ppvBits;
     macwi_thunk_read_param_64(ctx, 3, (uint64_t*)&ppvBits);
     uint64_t hSection;
     macwi_thunk_read_param_64(ctx, 4, (uint64_t*)&hSection);
-    uint32_t offset;
-    macwi_thunk_read_param_32(ctx, 5, (uint32_t*)&offset);
+    uint64_t offset;
+    macwi_thunk_read_param_64(ctx, 5, (uint64_t*)&offset);
     uint64_t ret = host_CreateDIBSection(ctx, hdc, pbmi, usage, ppvBits, hSection, offset);
     macwi_emu_reg_write_64(ctx, 0, (uint64_t)ret);
     macwi_thunk_stdcall_return(ctx, 6);
@@ -27,23 +27,23 @@ static void thunk_CreateDIBSection(EMU_CONTEXT* ctx) {
 static void thunk_BitBlt(EMU_CONTEXT* ctx) {
     uint64_t hdcDest;
     macwi_thunk_read_param_64(ctx, 0, (uint64_t*)&hdcDest);
-    uint32_t nXDest;
-    macwi_thunk_read_param_32(ctx, 1, (uint32_t*)&nXDest);
-    uint32_t nYDest;
-    macwi_thunk_read_param_32(ctx, 2, (uint32_t*)&nYDest);
-    uint32_t nWidth;
-    macwi_thunk_read_param_32(ctx, 3, (uint32_t*)&nWidth);
-    uint32_t nHeight;
-    macwi_thunk_read_param_32(ctx, 4, (uint32_t*)&nHeight);
+    uint64_t nXDest;
+    macwi_thunk_read_param_64(ctx, 1, (uint64_t*)&nXDest);
+    uint64_t nYDest;
+    macwi_thunk_read_param_64(ctx, 2, (uint64_t*)&nYDest);
+    uint64_t nWidth;
+    macwi_thunk_read_param_64(ctx, 3, (uint64_t*)&nWidth);
+    uint64_t nHeight;
+    macwi_thunk_read_param_64(ctx, 4, (uint64_t*)&nHeight);
     uint64_t hdcSrc;
     macwi_thunk_read_param_64(ctx, 5, (uint64_t*)&hdcSrc);
-    uint32_t nXSrc;
-    macwi_thunk_read_param_32(ctx, 6, (uint32_t*)&nXSrc);
-    uint32_t nYSrc;
-    macwi_thunk_read_param_32(ctx, 7, (uint32_t*)&nYSrc);
-    uint32_t dwRop;
-    macwi_thunk_read_param_32(ctx, 8, (uint32_t*)&dwRop);
-    uint32_t ret = host_BitBlt(ctx, hdcDest, nXDest, nYDest, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, dwRop);
+    uint64_t nXSrc;
+    macwi_thunk_read_param_64(ctx, 6, (uint64_t*)&nXSrc);
+    uint64_t nYSrc;
+    macwi_thunk_read_param_64(ctx, 7, (uint64_t*)&nYSrc);
+    uint64_t dwRop;
+    macwi_thunk_read_param_64(ctx, 8, (uint64_t*)&dwRop);
+    uint64_t ret = host_BitBlt(ctx, hdcDest, nXDest, nYDest, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, dwRop);
     macwi_emu_reg_write_64(ctx, 0, (uint64_t)ret);
     macwi_thunk_stdcall_return(ctx, 9);
 }

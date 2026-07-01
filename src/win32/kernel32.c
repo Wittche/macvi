@@ -27,9 +27,9 @@
 /* ============================================================================
  * Thread-local last-error code
  * ============================================================================ */
-static _Thread_local uint32_t tls_last_error = 0;
+static _Thread_local uint64_t tls_last_error = 0;
 
-static void set_last_error(uint32_t err) { tls_last_error = err; }
+static void set_last_error(uint64_t err) { tls_last_error = err; }
 
 static void win32_GetLastError(EMU_CONTEXT* ctx) {
     macwi_emu_reg_write_32(ctx, 0, tls_last_error);
@@ -44,7 +44,7 @@ static void win32_GetModuleHandleA(EMU_CONTEXT* ctx) {
 static void win32_SetLastError(EMU_CONTEXT* ctx) {
     uint64_t err;
     macwi_thunk_read_param_64(ctx, 0, &err);
-    set_last_error((uint32_t)err);
+    set_last_error((uint64_t)err);
     macwi_emu_reg_write_64(ctx, 0, 0);
     macwi_thunk_stdcall_return(ctx, 1);
 }
@@ -56,7 +56,7 @@ static void win32_SetLastError(EMU_CONTEXT* ctx) {
 static void win32_GetTickCount(EMU_CONTEXT* ctx) {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
-    uint32_t ticks = (uint32_t)(ts.tv_sec * 1000 + ts.tv_nsec / 1000000);
+    uint64_t ticks = (uint64_t)(ts.tv_sec * 1000 + ts.tv_nsec / 1000000);
     macwi_emu_reg_write_64(ctx, 0, ticks);
     macwi_thunk_stdcall_return(ctx, 0);
 }
@@ -64,8 +64,8 @@ static void win32_GetTickCount(EMU_CONTEXT* ctx) {
 static void win32_Sleep(EMU_CONTEXT* ctx) {
     uint64_t ms;
     macwi_thunk_read_param_64(ctx, 0, &ms);
-    STUB_LOG("Sleep(%u ms)", (uint32_t)ms);
-    usleep((uint32_t)ms * 1000);
+    STUB_LOG("Sleep(%u ms)", (uint64_t)ms);
+    usleep((uint64_t)ms * 1000);
     macwi_emu_reg_write_64(ctx, 0, 0);
     macwi_thunk_stdcall_return(ctx, 1);
 }
@@ -121,7 +121,7 @@ static void win32_CreateFileA(EMU_CONTEXT* ctx) {
         return;
     }
     
-    STUB_LOG("CreateFileA(\"%s\" -> \"%s\", access=0x%X)", filename, unix_path, (uint32_t)dwDesiredAccess);
+    STUB_LOG("CreateFileA(\"%s\" -> \"%s\", access=0x%X)", filename, unix_path, (uint64_t)dwDesiredAccess);
 
     int flags = 0;
     if ((dwDesiredAccess & 0x80000000) && (dwDesiredAccess & 0x40000000)) flags = O_RDWR;
@@ -150,7 +150,7 @@ static void win32_CreateFileA(EMU_CONTEXT* ctx) {
     macwi_thunk_stdcall_return(ctx, 7);
 }
 
-uint32_t host_DeleteFileA(EMU_CONTEXT* ctx, uint64_t lpFileName) {
+uint64_t host_DeleteFileA(EMU_CONTEXT* ctx, uint64_t lpFileName) {
     char filename[256];
     macwi_thunk_read_guest_string(ctx, lpFileName, filename, sizeof(filename));
     
@@ -166,7 +166,7 @@ uint32_t host_DeleteFileA(EMU_CONTEXT* ctx, uint64_t lpFileName) {
     }
 }
 
-uint32_t host_GetFileAttributesA(EMU_CONTEXT* ctx, uint64_t lpFileName) {
+uint64_t host_GetFileAttributesA(EMU_CONTEXT* ctx, uint64_t lpFileName) {
     char filename[256];
     macwi_thunk_read_guest_string(ctx, lpFileName, filename, sizeof(filename));
     
@@ -176,7 +176,7 @@ uint32_t host_GetFileAttributesA(EMU_CONTEXT* ctx, uint64_t lpFileName) {
     
     struct stat st;
     if (stat(unix_path, &st) == 0) {
-        uint32_t attr = 0x80; // FILE_ATTRIBUTE_NORMAL
+        uint64_t attr = 0x80; // FILE_ATTRIBUTE_NORMAL
         if (S_ISDIR(st.st_mode)) attr = 0x10; // FILE_ATTRIBUTE_DIRECTORY
         return attr;
     } else {
@@ -185,13 +185,13 @@ uint32_t host_GetFileAttributesA(EMU_CONTEXT* ctx, uint64_t lpFileName) {
     }
 }
 
-uint32_t host_SetFileAttributesA(EMU_CONTEXT* ctx, uint64_t lpFileName, uint32_t dwFileAttributes) {
+uint64_t host_SetFileAttributesA(EMU_CONTEXT* ctx, uint64_t lpFileName, uint64_t dwFileAttributes) {
     STUB_LOG("SetFileAttributesA()");
     // Stub implementation
     return 1; // TRUE
 }
 
-uint32_t host_GetSystemDirectoryA(EMU_CONTEXT* ctx, uint64_t lpBuffer, uint32_t uSize) {
+uint64_t host_GetSystemDirectoryA(EMU_CONTEXT* ctx, uint64_t lpBuffer, uint64_t uSize) {
     const char* sysdir = "C:\\Windows\\System32";
     size_t len = strlen(sysdir);
     
@@ -204,7 +204,7 @@ uint32_t host_GetSystemDirectoryA(EMU_CONTEXT* ctx, uint64_t lpBuffer, uint32_t 
     }
 }
 
-uint32_t host_GetWindowsDirectoryA(EMU_CONTEXT* ctx, uint64_t lpBuffer, uint32_t uSize) {
+uint64_t host_GetWindowsDirectoryA(EMU_CONTEXT* ctx, uint64_t lpBuffer, uint64_t uSize) {
     const char* windir = "C:\\Windows";
     size_t len = strlen(windir);
     
@@ -220,14 +220,14 @@ uint32_t host_GetWindowsDirectoryA(EMU_CONTEXT* ctx, uint64_t lpBuffer, uint32_t
 // WIN32_FIND_DATAA structure
 #pragma pack(push, 1)
 struct win32_find_data_a {
-    uint32_t dwFileAttributes;
-    uint32_t ftCreationTime[2];
-    uint32_t ftLastAccessTime[2];
-    uint32_t ftLastWriteTime[2];
-    uint32_t nFileSizeHigh;
-    uint32_t nFileSizeLow;
-    uint32_t dwReserved0;
-    uint32_t dwReserved1;
+    uint64_t dwFileAttributes;
+    uint64_t ftCreationTime[2];
+    uint64_t ftLastAccessTime[2];
+    uint64_t ftLastWriteTime[2];
+    uint64_t nFileSizeHigh;
+    uint64_t nFileSizeLow;
+    uint64_t dwReserved0;
+    uint64_t dwReserved1;
     char cFileName[260];
     char cAlternateFileName[14];
 };
@@ -340,7 +340,7 @@ static void win32_FindClose(EMU_CONTEXT* ctx) {
 static void win32_GetStdHandle(EMU_CONTEXT* ctx) {
     uint64_t nStdHandle;
     macwi_thunk_read_param_64(ctx, 0, &nStdHandle);
-    uint32_t n32 = (uint32_t)nStdHandle;
+    uint64_t n32 = (uint64_t)nStdHandle;
     
     STUB_LOG("GetStdHandle(%d)", (int)n32);
     
@@ -365,7 +365,7 @@ static void win32_ReadFile(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_64(ctx, 3, &lpNumberOfBytesRead);
     macwi_thunk_read_param_64(ctx, 4, &lpOverlapped);
 
-    STUB_LOG("ReadFile(handle=0x%X, bytes=%u)", (uint32_t)hFile, (uint32_t)nNumberOfBytesToRead);
+    STUB_LOG("ReadFile(handle=0x%X, bytes=%u)", (uint64_t)hFile, (uint64_t)nNumberOfBytesToRead);
 
     extern HANDLE_TABLE g_macwi_handle_table;
     int* p_fd = NULL;
@@ -386,7 +386,7 @@ static void win32_ReadFile(EMU_CONTEXT* ctx) {
     } else {
         macwi_emu_write_memory(ctx, lpBuffer, temp_buf, n);
         if (lpNumberOfBytesRead != 0) {
-            uint32_t n32 = (uint32_t)n;
+            uint64_t n32 = (uint64_t)n;
             macwi_emu_write_memory(ctx, lpNumberOfBytesRead, &n32, 4);
         }
         macwi_emu_reg_write_64(ctx, 0, 1); // TRUE
@@ -403,9 +403,9 @@ static void win32_WriteFile(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_64(ctx, 3, &lpNumberOfBytesWritten);
     macwi_thunk_read_param_64(ctx, 4, &lpOverlapped);
 
-    STUB_LOG("WriteFile(handle=0x%X, bytes=%u)", (uint32_t)hFile, (uint32_t)nNumberOfBytesToWrite);
+    STUB_LOG("WriteFile(handle=0x%X, bytes=%u)", (uint64_t)hFile, (uint64_t)nNumberOfBytesToWrite);
 
-    uint32_t h32 = (uint32_t)hFile;
+    uint64_t h32 = (uint64_t)hFile;
     int fd = -1;
 
     // Check pseudo-handles for console
@@ -434,7 +434,7 @@ static void win32_WriteFile(EMU_CONTEXT* ctx) {
         macwi_emu_reg_write_64(ctx, 0, 0); // FALSE
     } else {
         if (lpNumberOfBytesWritten != 0) {
-            uint32_t n32 = (uint32_t)n;
+            uint64_t n32 = (uint64_t)n;
             macwi_emu_write_memory(ctx, lpNumberOfBytesWritten, &n32, 4);
         }
         macwi_emu_reg_write_64(ctx, 0, 1); // TRUE
@@ -484,7 +484,7 @@ static void win32_VirtualAlloc(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_64(ctx, 2, &flAllocationType);
     macwi_thunk_read_param_64(ctx, 3, &flProtect);
 
-    STUB_LOG("VirtualAlloc(addr=0x%llX, size=%u)", lpAddress, (uint32_t)dwSize);
+    STUB_LOG("VirtualAlloc(addr=0x%llX, size=%u)", lpAddress, (uint64_t)dwSize);
     
     static uint64_t next_alloc = 0x50000000ULL; // High enough
     
@@ -535,9 +535,9 @@ static void win32_HeapCreate(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_64(ctx, 1, &dwInitialSize);
     macwi_thunk_read_param_64(ctx, 2, &dwMaximumSize);
 
-    STUB_LOG("HeapCreate(opt=0x%X, init=%u, max=%u)", (uint32_t)flOptions, (uint32_t)dwInitialSize, (uint32_t)dwMaximumSize);
+    STUB_LOG("HeapCreate(opt=0x%X, init=%u, max=%u)", (uint64_t)flOptions, (uint64_t)dwInitialSize, (uint64_t)dwMaximumSize);
     // Return a dummy heap handle
-    static uint32_t next_heap_handle = 0x20000000;
+    static uint64_t next_heap_handle = 0x20000000;
     macwi_emu_reg_write_64(ctx, 0, next_heap_handle);
     next_heap_handle += 0x1000;
     macwi_thunk_stdcall_return(ctx, 3);
@@ -549,12 +549,12 @@ static void win32_HeapAlloc(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_64(ctx, 1, &dwFlags);
     macwi_thunk_read_param_64(ctx, 2, &dwBytes);
 
-    STUB_LOG("HeapAlloc(heap=0x%X, flags=0x%X, bytes=%u)", (uint32_t)hHeap, (uint32_t)dwFlags, (uint32_t)dwBytes);
+    STUB_LOG("HeapAlloc(heap=0x%X, flags=0x%X, bytes=%u)", (uint64_t)hHeap, (uint64_t)dwFlags, (uint64_t)dwBytes);
     
     // Very simple linear allocator for now, just page-aligned VirtualAlloc equivalent
     static uint64_t next_alloc = 0x60000000ULL;
     uint64_t alloc_addr = next_alloc;
-    uint32_t size = (dwBytes + 0xFFF) & ~0xFFF; // Page align
+    uint64_t size = (dwBytes + 0xFFF) & ~0xFFF; // Page align
     next_alloc += size;
 
     macwi_status_t st = macwi_emu_map_memory(ctx, alloc_addr, size, MACWI_PROT_ALL, NULL);
@@ -576,7 +576,7 @@ static void win32_HeapFree(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_64(ctx, 1, &dwFlags);
     macwi_thunk_read_param_64(ctx, 2, &lpMem);
 
-    STUB_LOG("HeapFree(heap=0x%X, mem=0x%llX)", (uint32_t)hHeap, lpMem);
+    STUB_LOG("HeapFree(heap=0x%X, mem=0x%llX)", (uint64_t)hHeap, lpMem);
     // Real implementation would unmap or add to free list.
     // For our simple linear allocator, we just ignore it (leak memory).
     macwi_emu_reg_write_64(ctx, 0, 1); // TRUE
@@ -590,7 +590,7 @@ static void win32_HeapFree(EMU_CONTEXT* ctx) {
 static void win32_ExitProcess(EMU_CONTEXT* ctx) {
     uint64_t dwExitCode;
     macwi_thunk_read_param_64(ctx, 0, &dwExitCode);
-    STUB_LOG("ExitProcess(%u)", (uint32_t)dwExitCode);
+    STUB_LOG("ExitProcess(%u)", (uint64_t)dwExitCode);
     macwi_emu_stop(ctx);
     exit((int)dwExitCode);
 }
@@ -614,7 +614,7 @@ static void win32_CreateThread(EMU_CONTEXT* ctx) {
     macwi_status_t st = macwi_emu_create_thread(ctx, lpStartAddress, lpParameter, dwStackSize, &thread_id);
     if (st == MACWI_SUCCESS) {
         if (lpThreadId) {
-            uint32_t tid32 = (uint32_t)thread_id;
+            uint64_t tid32 = (uint64_t)thread_id;
             macwi_emu_write_memory(ctx, lpThreadId, &tid32, 4);
         }
         
@@ -637,7 +637,7 @@ static void win32_GetCurrentThreadId(EMU_CONTEXT* ctx) {
 static void win32_ExitThread(EMU_CONTEXT* ctx) {
     uint64_t dwExitCode;
     macwi_thunk_read_param_64(ctx, 0, &dwExitCode);
-    STUB_LOG("ExitThread(%u)", (uint32_t)dwExitCode);
+    STUB_LOG("ExitThread(%u)", (uint64_t)dwExitCode);
     // Actually stopping the thread from within is tricky via FEX_ThreadExecute return,
     // but we can exit the pthread.
     pthread_exit((void*)(uintptr_t)dwExitCode);
@@ -667,7 +667,7 @@ static void win32_WaitForSingleObject(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_64(ctx, 0, &hHandle);
     macwi_thunk_read_param_64(ctx, 1, &dwMilliseconds);
 
-    STUB_LOG("WaitForSingleObject(handle=0x%X, ms=%u)", (uint32_t)hHandle, (uint32_t)dwMilliseconds);
+    STUB_LOG("WaitForSingleObject(handle=0x%X, ms=%u)", (uint64_t)hHandle, (uint64_t)dwMilliseconds);
     
     extern HANDLE_TABLE g_macwi_handle_table;
     void* obj = NULL;
@@ -696,7 +696,7 @@ static void win32_ReleaseMutex(EMU_CONTEXT* ctx) {
     uint64_t hMutex;
     macwi_thunk_read_param_64(ctx, 0, &hMutex);
 
-    STUB_LOG("ReleaseMutex(handle=0x%X)", (uint32_t)hMutex);
+    STUB_LOG("ReleaseMutex(handle=0x%X)", (uint64_t)hMutex);
     
     extern HANDLE_TABLE g_macwi_handle_table;
     void* obj = NULL;

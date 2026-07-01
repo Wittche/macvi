@@ -3,16 +3,16 @@
 
 #include "macwi/thunk.h"
 
-extern uint32_t host_DeleteFileA(EMU_CONTEXT* ctx, uint64_t lpFileName);
-extern uint32_t host_GetFileAttributesA(EMU_CONTEXT* ctx, uint64_t lpFileName);
-extern uint32_t host_SetFileAttributesA(EMU_CONTEXT* ctx, uint64_t lpFileName, uint32_t dwFileAttributes);
-extern uint32_t host_GetSystemDirectoryA(EMU_CONTEXT* ctx, uint64_t lpBuffer, uint32_t uSize);
-extern uint32_t host_GetWindowsDirectoryA(EMU_CONTEXT* ctx, uint64_t lpBuffer, uint32_t uSize);
+extern uint64_t host_DeleteFileA(EMU_CONTEXT* ctx, uint64_t lpFileName);
+extern uint64_t host_GetFileAttributesA(EMU_CONTEXT* ctx, uint64_t lpFileName);
+extern uint64_t host_SetFileAttributesA(EMU_CONTEXT* ctx, uint64_t lpFileName, uint64_t dwFileAttributes);
+extern uint64_t host_GetSystemDirectoryA(EMU_CONTEXT* ctx, uint64_t lpBuffer, uint64_t uSize);
+extern uint64_t host_GetWindowsDirectoryA(EMU_CONTEXT* ctx, uint64_t lpBuffer, uint64_t uSize);
 
 static void thunk_DeleteFileA(EMU_CONTEXT* ctx) {
     uint64_t lpFileName;
     macwi_thunk_read_param_64(ctx, 0, (uint64_t*)&lpFileName);
-    uint32_t ret = host_DeleteFileA(ctx, lpFileName);
+    uint64_t ret = host_DeleteFileA(ctx, lpFileName);
     macwi_emu_reg_write_64(ctx, 0, (uint64_t)ret);
     macwi_thunk_stdcall_return(ctx, 1);
 }
@@ -20,7 +20,7 @@ static void thunk_DeleteFileA(EMU_CONTEXT* ctx) {
 static void thunk_GetFileAttributesA(EMU_CONTEXT* ctx) {
     uint64_t lpFileName;
     macwi_thunk_read_param_64(ctx, 0, (uint64_t*)&lpFileName);
-    uint32_t ret = host_GetFileAttributesA(ctx, lpFileName);
+    uint64_t ret = host_GetFileAttributesA(ctx, lpFileName);
     macwi_emu_reg_write_64(ctx, 0, (uint64_t)ret);
     macwi_thunk_stdcall_return(ctx, 1);
 }
@@ -28,9 +28,9 @@ static void thunk_GetFileAttributesA(EMU_CONTEXT* ctx) {
 static void thunk_SetFileAttributesA(EMU_CONTEXT* ctx) {
     uint64_t lpFileName;
     macwi_thunk_read_param_64(ctx, 0, (uint64_t*)&lpFileName);
-    uint32_t dwFileAttributes;
-    macwi_thunk_read_param_32(ctx, 1, (uint32_t*)&dwFileAttributes);
-    uint32_t ret = host_SetFileAttributesA(ctx, lpFileName, dwFileAttributes);
+    uint64_t dwFileAttributes;
+    macwi_thunk_read_param_64(ctx, 1, (uint64_t*)&dwFileAttributes);
+    uint64_t ret = host_SetFileAttributesA(ctx, lpFileName, dwFileAttributes);
     macwi_emu_reg_write_64(ctx, 0, (uint64_t)ret);
     macwi_thunk_stdcall_return(ctx, 2);
 }
@@ -38,9 +38,9 @@ static void thunk_SetFileAttributesA(EMU_CONTEXT* ctx) {
 static void thunk_GetSystemDirectoryA(EMU_CONTEXT* ctx) {
     uint64_t lpBuffer;
     macwi_thunk_read_param_64(ctx, 0, (uint64_t*)&lpBuffer);
-    uint32_t uSize;
-    macwi_thunk_read_param_32(ctx, 1, (uint32_t*)&uSize);
-    uint32_t ret = host_GetSystemDirectoryA(ctx, lpBuffer, uSize);
+    uint64_t uSize;
+    macwi_thunk_read_param_64(ctx, 1, (uint64_t*)&uSize);
+    uint64_t ret = host_GetSystemDirectoryA(ctx, lpBuffer, uSize);
     macwi_emu_reg_write_64(ctx, 0, (uint64_t)ret);
     macwi_thunk_stdcall_return(ctx, 2);
 }
@@ -48,9 +48,9 @@ static void thunk_GetSystemDirectoryA(EMU_CONTEXT* ctx) {
 static void thunk_GetWindowsDirectoryA(EMU_CONTEXT* ctx) {
     uint64_t lpBuffer;
     macwi_thunk_read_param_64(ctx, 0, (uint64_t*)&lpBuffer);
-    uint32_t uSize;
-    macwi_thunk_read_param_32(ctx, 1, (uint32_t*)&uSize);
-    uint32_t ret = host_GetWindowsDirectoryA(ctx, lpBuffer, uSize);
+    uint64_t uSize;
+    macwi_thunk_read_param_64(ctx, 1, (uint64_t*)&uSize);
+    uint64_t ret = host_GetWindowsDirectoryA(ctx, lpBuffer, uSize);
     macwi_emu_reg_write_64(ctx, 0, (uint64_t)ret);
     macwi_thunk_stdcall_return(ctx, 2);
 }

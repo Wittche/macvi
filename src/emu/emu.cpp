@@ -7,6 +7,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
+#if defined(__APPLE__)
+#include <pthread.h>
+#include <libkern/OSCacheControl.h>
+#endif
 #include <FEXCore/Core/CoreState.h>
 
 struct EMU_CONTEXT {
@@ -18,9 +22,7 @@ struct EMU_CONTEXT {
 class MacWISyscallHandler : public FEXCore::HLE::SyscallHandler {
 public:
     MacWISyscallHandler(EMU_CONTEXT* ctx) : m_ctx(ctx) {
-        // We use OS_LINUX32 so FEXCore properly parses int 0x80 syscalls 
-        // and passes the Syscall Number (EAX) into Args->Argument[0].
-        OSABI = FEXCore::HLE::SyscallOSABI::OS_LINUX32;
+        OSABI = FEXCore::HLE::SyscallOSABI::OS_LINUX64;
     }
     
     virtual ~MacWISyscallHandler() = default;
@@ -28,17 +30,23 @@ public:
     uint64_t HandleSyscall(FEXCore::Core::CpuStateFrame* Frame, FEXCore::HLE::SyscallArguments* Args) override {
         m_ctx->current_frame = Frame;
         
-        // EAX contains the API index
-        uint32_t api_index = (uint32_t)Args->Argument[0];
+        // EAX contains the API index (passed via mov eax, api_index in trampoline)
+        uint32_t api_index = (uint32_t)Frame->State.gregs[0];
         
-        // Dispatch to the native host implementation
-        macwi_thunk_handle_syscall(m_ctx, api_index);
-        
-        // The return value is typically already set in EAX by the host callback.
-        uint64_t eax = Frame->State.gregs[0];
-        
-        m_ctx->current_frame = nullptr;
-        return eax;
+        if (api_index >= 0x1000) {
+            uint32_t thunk_index = api_index - 0x1000;
+            // Dispatch to the native host implementation
+            macwi_thunk_handle_syscall(m_ctx, thunk_index);
+            // The return value is typically already set in EAX by the host callback.
+            m_ctx->current_frame = nullptr;
+            return Frame->State.gregs[0];
+        } else {
+            // This is an internal Linux syscall executed by FEXCore guest code (e.g. VDSO)
+            // Return -ENOSYS (-38) so it fails gracefully
+            // printf("[macwi:emu] Ignoring internal Linux syscall %u\n", api_index);
+            m_ctx->current_frame = nullptr;
+            return (uint64_t)-38;
+        }
     }
 
     FEXCore::HLE::ExecutableRangeInfo QueryGuestExecutableRange(FEXCore::Core::InternalThreadState* Thread, uint64_t Address) override {
@@ -61,6 +69,7 @@ macwi_status_t macwi_emu_init(EMU_CONTEXT** out_ctx) {
     if (!out_ctx) return MACWI_ERROR_INVALID_PARAM;
 
     FEXCore::Config::Initialize();
+    FEXCore::Config::Set(FEXCore::Config::CONFIG_IS64BIT_MODE, "1");
     
     // 2. SMC & JIT Cache Koruması: Track and invalidate JIT code on self-modification
     // FEXCore::Config::Set(FEXCore::Config::CONFIG_SMCCHECKS, "full");
@@ -68,7 +77,7 @@ macwi_status_t macwi_emu_init(EMU_CONTEXT** out_ctx) {
     // 3. Apple Silicon TSO: Enable x86 strict memory ordering
     // FEXCore::Config::Set(FEXCore::Config::CONFIG_TSOENABLED, "1");
 
-    int init_flags = FEX_INIT_ENABLE_JIT;
+    int init_flags = FEX_INIT_ENABLE_JIT | FEX_INIT_64BIT_MODE;
     if (FEX_Initialize(init_flags) != FEX_SUCCESS) {
         fprintf(stderr, "[macwi:emu] FEX_Initialize failed\n");
         return MACWI_ERROR_MEMORY;
@@ -128,9 +137,19 @@ macwi_status_t macwi_emu_unmap_memory(EMU_CONTEXT* ctx, uint64_t address, size_t
 
 macwi_status_t macwi_emu_write_memory(EMU_CONTEXT* ctx, uint64_t address, const void* data, size_t size) {
     if (!ctx || !ctx->fex_ctx) return MACWI_ERROR_INVALID_PARAM;
+#if defined(__APPLE__) && defined(__aarch64__)
+    pthread_jit_write_protect_np(0);
+#endif
     if (FEX_WriteMemory(ctx->fex_ctx, address, data, size) != FEX_SUCCESS) {
+#if defined(__APPLE__) && defined(__aarch64__)
+        pthread_jit_write_protect_np(1);
+#endif
         return MACWI_ERROR_MEMORY;
     }
+#if defined(__APPLE__) && defined(__aarch64__)
+    pthread_jit_write_protect_np(1);
+    sys_icache_invalidate((void*)address, size);
+#endif
     return MACWI_SUCCESS;
 }
 

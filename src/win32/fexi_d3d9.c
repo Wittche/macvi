@@ -3,11 +3,11 @@
 
 #include "macwi/thunk.h"
 
-extern uint64_t host_Direct3DCreate9(EMU_CONTEXT* ctx, uint32_t SDKVersion);
+extern uint64_t host_Direct3DCreate9(EMU_CONTEXT* ctx, uint64_t SDKVersion);
 
 static void thunk_Direct3DCreate9(EMU_CONTEXT* ctx) {
-    uint32_t SDKVersion;
-    macwi_thunk_read_param_32(ctx, 0, (uint32_t*)&SDKVersion);
+    uint64_t SDKVersion;
+    macwi_thunk_read_param_64(ctx, 0, (uint64_t*)&SDKVersion);
     uint64_t ret = host_Direct3DCreate9(ctx, SDKVersion);
     macwi_emu_reg_write_64(ctx, 0, (uint64_t)ret);
     macwi_thunk_stdcall_return(ctx, 1);

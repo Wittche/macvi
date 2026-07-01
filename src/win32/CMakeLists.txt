@@ -17,6 +17,7 @@ add_library(macwi_win32 STATIC
     fexi_d3d9.c
     timer.c
     cocoa_window.m
+    metal_renderer.m
 )
 
 target_include_directories(macwi_win32 PRIVATE 
@@ -26,7 +27,7 @@ target_include_directories(macwi_win32 PRIVATE
 )
 
 target_link_libraries(macwi_win32 PRIVATE macwi_core macwi_thunk)
-target_link_libraries(macwi_win32 PUBLIC "-framework Cocoa")
+target_link_libraries(macwi_win32 PUBLIC "-framework Cocoa" "-framework Metal" "-framework QuartzCore")
 
 # Enable Objective-C for .m files
-set_source_files_properties(cocoa_window.m PROPERTIES LANGUAGE OBJC)
+set_source_files_properties(cocoa_window.m metal_renderer.m PROPERTIES LANGUAGE OBJC)

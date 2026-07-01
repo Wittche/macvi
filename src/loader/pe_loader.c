@@ -153,10 +153,15 @@ uint64_t macwi_pe_get_entry_point(const PE_IMAGE* image) {
 macwi_status_t macwi_pe_resolve_imports(PE_IMAGE* image, struct EMU_CONTEXT* ctx) {
     if (!image || !image->mapped_base || !ctx) return MACWI_ERROR_INVALID_PARAM;
     
-    IMAGE_NT_HEADERS_32* nt_headers = (IMAGE_NT_HEADERS_32*)((uint8_t*)image->mapped_base + image->dos_header->e_lfanew);
-    PE_DATA_DIRECTORY* import_dir = &nt_headers->OptionalHeader.DataDirectory[1]; // IMAGE_DIRECTORY_ENTRY_IMPORT
+    PE_DATA_DIRECTORY* import_dir = NULL;
+    if (image->is_64bit) {
+        import_dir = (PE_DATA_DIRECTORY*)&image->optional_header.opt_64->DataDirectory[1];
+    } else {
+        import_dir = (PE_DATA_DIRECTORY*)&image->optional_header.opt_32->DataDirectory[1];
+    }
     
     if (import_dir->VirtualAddress == 0 || import_dir->Size == 0) {
+        printf("[macwi:loader] No imports found.\n");
         return MACWI_SUCCESS; // No imports
     }
     
@@ -164,28 +169,50 @@ macwi_status_t macwi_pe_resolve_imports(PE_IMAGE* image, struct EMU_CONTEXT* ctx
     
     while (import_desc->Name != 0) {
         const char* dll_name = (const char*)((uint8_t*)image->mapped_base + import_desc->Name);
+        printf("[macwi:loader] Resolving imports for %s...\n", dll_name);
         
         uint32_t thunk_rva = import_desc->FirstThunk;
         uint32_t orig_thunk_rva = import_desc->OriginalFirstThunk;
         if (orig_thunk_rva == 0) orig_thunk_rva = thunk_rva;
         
-        uint32_t* thunk = (uint32_t*)((uint8_t*)image->mapped_base + thunk_rva);
-        uint32_t* orig_thunk = (uint32_t*)((uint8_t*)image->mapped_base + orig_thunk_rva);
-        
-        while (*orig_thunk != 0) {
-            if (!(*orig_thunk & 0x80000000)) { // Not ordinal
-                uint32_t name_rva = *orig_thunk;
-                const char* func_name = (const char*)((uint8_t*)image->mapped_base + name_rva + 2);
-                
-                uint64_t tramp_va = macwi_thunk_get_trampoline(ctx, dll_name, func_name);
-                if (tramp_va != 0) {
-                    *thunk = (uint32_t)tramp_va;
-                } else {
-                    fprintf(stderr, "[macwi:loader] Warning: Unresolved import %s!%s\n", dll_name, func_name);
+        if (image->is_64bit) {
+            uint64_t* thunk = (uint64_t*)((uint8_t*)image->mapped_base + thunk_rva);
+            uint64_t* orig_thunk = (uint64_t*)((uint8_t*)image->mapped_base + orig_thunk_rva);
+            
+            while (*orig_thunk != 0) {
+                if (!(*orig_thunk & 0x8000000000000000ULL)) { // Not ordinal
+                    uint32_t name_rva = (uint32_t)(*orig_thunk & 0xFFFFFFFF);
+                    const char* func_name = (const char*)((uint8_t*)image->mapped_base + name_rva + 2);
+                    
+                    uint64_t tramp_va = macwi_thunk_get_trampoline(ctx, dll_name, func_name);
+                    if (tramp_va != 0) {
+                        *thunk = tramp_va;
+                    } else {
+                        fprintf(stderr, "[macwi:loader] Warning: Unresolved import %s!%s\n", dll_name, func_name);
+                    }
                 }
+                thunk++;
+                orig_thunk++;
             }
-            thunk++;
-            orig_thunk++;
+        } else {
+            uint32_t* thunk = (uint32_t*)((uint8_t*)image->mapped_base + thunk_rva);
+            uint32_t* orig_thunk = (uint32_t*)((uint8_t*)image->mapped_base + orig_thunk_rva);
+            
+            while (*orig_thunk != 0) {
+                if (!(*orig_thunk & 0x80000000)) { // Not ordinal
+                    uint32_t name_rva = *orig_thunk;
+                    const char* func_name = (const char*)((uint8_t*)image->mapped_base + name_rva + 2);
+                    
+                    uint64_t tramp_va = macwi_thunk_get_trampoline(ctx, dll_name, func_name);
+                    if (tramp_va != 0) {
+                        *thunk = (uint32_t)tramp_va;
+                    } else {
+                        fprintf(stderr, "[macwi:loader] Warning: Unresolved import %s!%s\n", dll_name, func_name);
+                    }
+                }
+                thunk++;
+                orig_thunk++;
+            }
         }
         import_desc++;
     }

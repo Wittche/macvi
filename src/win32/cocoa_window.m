@@ -143,8 +143,16 @@ static bool g_in_draw_rect = false;
     pthread_mutex_unlock(&g_event_mutex);
     
     // Wait until FEXCore thread finishes painting (via EndPaint)
+    // Use a timeout so we don't deadlock if the guest app doesn't pump messages!
     pthread_mutex_lock(&g_paint_mutex);
-    pthread_cond_wait(&g_paint_cond, &g_paint_mutex);
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    ts.tv_nsec += 100000000; // 100ms
+    if (ts.tv_nsec >= 1000000000) {
+        ts.tv_sec += 1;
+        ts.tv_nsec -= 1000000000;
+    }
+    pthread_cond_timedwait(&g_paint_cond, &g_paint_mutex, &ts);
     pthread_mutex_unlock(&g_paint_mutex);
     
     g_current_cg_context = NULL;
@@ -162,6 +170,8 @@ void macwi_cocoa_init(void) {
 void macwi_cocoa_run_loop(void) {
     [NSApp run];
 }
+
+void* g_main_cocoa_window = NULL;
 
 void* macwi_cocoa_create_window(const char* title, int width, int height) {
     __block NSWindow* window = nil;
@@ -184,6 +194,10 @@ void* macwi_cocoa_create_window(const char* title, int width, int height) {
         
         MacWIView* view = [[MacWIView alloc] initWithFrame:frame];
         [window setContentView:view];
+        
+        if (!g_main_cocoa_window) {
+            g_main_cocoa_window = (void*)window;
+        }
     });
     return (void*)[[window contentView] self]; // Return the view
 }

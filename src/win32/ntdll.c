@@ -19,22 +19,22 @@
 #define STATUS_INVALID_PARAMETER     0xC000000D
 #define STATUS_NOT_IMPLEMENTED       0xC0000002
 
-uint32_t host_NtCreateFile(EMU_CONTEXT* ctx, uint64_t FileHandle, uint32_t DesiredAccess, uint64_t ObjectAttributes, uint64_t IoStatusBlock, uint64_t AllocationSize, uint32_t FileAttributes, uint32_t ShareAccess, uint32_t CreateDisposition, uint32_t CreateOptions, uint64_t EaBuffer, uint32_t EaLength) {
+uint64_t host_NtCreateFile(EMU_CONTEXT* ctx, uint64_t FileHandle, uint64_t DesiredAccess, uint64_t ObjectAttributes, uint64_t IoStatusBlock, uint64_t AllocationSize, uint64_t FileAttributes, uint64_t ShareAccess, uint64_t CreateDisposition, uint64_t CreateOptions, uint64_t EaBuffer, uint64_t EaLength) {
     NT_STUB_LOG("NtCreateFile stubbed");
     return STATUS_NOT_IMPLEMENTED;
 }
 
-uint32_t host_NtClose(EMU_CONTEXT* ctx, uint64_t Handle) {
+uint64_t host_NtClose(EMU_CONTEXT* ctx, uint64_t Handle) {
     NT_STUB_LOG("NtClose(0x%llX) stubbed", Handle);
     return STATUS_SUCCESS;
 }
 
-uint32_t host_NtReadFile(EMU_CONTEXT* ctx, uint64_t FileHandle, uint64_t Event, uint64_t ApcRoutine, uint64_t ApcContext, uint64_t IoStatusBlock, uint64_t Buffer, uint32_t Length, uint64_t ByteOffset, uint64_t Key) {
+uint64_t host_NtReadFile(EMU_CONTEXT* ctx, uint64_t FileHandle, uint64_t Event, uint64_t ApcRoutine, uint64_t ApcContext, uint64_t IoStatusBlock, uint64_t Buffer, uint64_t Length, uint64_t ByteOffset, uint64_t Key) {
     NT_STUB_LOG("NtReadFile stubbed");
     return STATUS_NOT_IMPLEMENTED;
 }
 
-uint32_t host_NtWriteFile(EMU_CONTEXT* ctx, uint64_t FileHandle, uint64_t Event, uint64_t ApcRoutine, uint64_t ApcContext, uint64_t IoStatusBlock, uint64_t Buffer, uint32_t Length, uint64_t ByteOffset, uint64_t Key) {
+uint64_t host_NtWriteFile(EMU_CONTEXT* ctx, uint64_t FileHandle, uint64_t Event, uint64_t ApcRoutine, uint64_t ApcContext, uint64_t IoStatusBlock, uint64_t Buffer, uint64_t Length, uint64_t ByteOffset, uint64_t Key) {
     NT_STUB_LOG("NtWriteFile stubbed");
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -75,7 +75,7 @@ static void ntdll_KiUserExceptionDispatcher(EMU_CONTEXT* ctx) {
     macwi_thunk_read_param_64(ctx, 0, &exception_record_ptr);
     
     if (exception_record_ptr) {
-        uint32_t exception_code;
+        uint64_t exception_code;
         macwi_emu_read_memory(ctx, exception_record_ptr, &exception_code, 4);
         NT_STUB_LOG("Unhandled Exception Code: 0x%08X", exception_code);
     }

@@ -3,23 +3,23 @@
 
 #include "macwi/thunk.h"
 
-extern uint32_t host_ShowWindow(EMU_CONTEXT* ctx, uint32_t hWnd, uint32_t nCmdShow);
-extern uint32_t host_UpdateWindow(EMU_CONTEXT* ctx, uint32_t hWnd);
+extern uint64_t host_ShowWindow(EMU_CONTEXT* ctx, uint64_t hWnd, uint64_t nCmdShow);
+extern uint64_t host_UpdateWindow(EMU_CONTEXT* ctx, uint64_t hWnd);
 
 static void thunk_ShowWindow(EMU_CONTEXT* ctx) {
-    uint32_t hWnd;
-    macwi_thunk_read_param_32(ctx, 0, (uint32_t*)&hWnd);
-    uint32_t nCmdShow;
-    macwi_thunk_read_param_32(ctx, 1, (uint32_t*)&nCmdShow);
-    uint32_t ret = host_ShowWindow(ctx, hWnd, nCmdShow);
+    uint64_t hWnd;
+    macwi_thunk_read_param_64(ctx, 0, (uint64_t*)&hWnd);
+    uint64_t nCmdShow;
+    macwi_thunk_read_param_64(ctx, 1, (uint64_t*)&nCmdShow);
+    uint64_t ret = host_ShowWindow(ctx, hWnd, nCmdShow);
     macwi_emu_reg_write_64(ctx, 0, (uint64_t)ret);
     macwi_thunk_stdcall_return(ctx, 2);
 }
 
 static void thunk_UpdateWindow(EMU_CONTEXT* ctx) {
-    uint32_t hWnd;
-    macwi_thunk_read_param_32(ctx, 0, (uint32_t*)&hWnd);
-    uint32_t ret = host_UpdateWindow(ctx, hWnd);
+    uint64_t hWnd;
+    macwi_thunk_read_param_64(ctx, 0, (uint64_t*)&hWnd);
+    uint64_t ret = host_UpdateWindow(ctx, hWnd);
     macwi_emu_reg_write_64(ctx, 0, (uint64_t)ret);
     macwi_thunk_stdcall_return(ctx, 1);
 }

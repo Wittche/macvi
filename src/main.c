@@ -17,6 +17,10 @@
 #include "win32/kernel32.h"
 #include "win32/ntdll.h"
 #include "win32/advapi32.h"
+#include "win32/cocoa_window.h"
+
+void macwi_cocoa_run_loop(void);
+
 #include "macwi/vfs.h"
 #include "macwi/handle.h"
 #include "macwi/registry.h"
@@ -77,6 +81,7 @@ static void host_signal_handler(int sig, siginfo_t* info, void* ucontext) {
         fprintf(stderr, "[macwi] Guest RIP at time of crash: 0x%016llX (Fault addr: 0x%llX)\n", rip, fault_addr);
         
         // Full SEH: Construct EXCEPTION_RECORD on the guest stack and redirect to KiUserExceptionDispatcher
+        abort();
         uint64_t rsp = macwi_emu_get_sp(g_current_emu_ctx);
         
         // Allocate 80 bytes for 32-bit EXCEPTION_RECORD
@@ -119,7 +124,14 @@ static void host_signal_handler(int sig, siginfo_t* info, void* ucontext) {
         
         uint64_t disp_loop = macwi_emu_get_dispatcher_loop(g_current_emu_ctx);
         
-        fprintf(stderr, "[macwi] Redirecting Guest PC to KiUserExceptionDispatcher (0x%llX)...\n", ki_user_disp);
+        printf("[macwi] Redirecting Guest PC to KiUserExceptionDispatcher (0x%llX)...\n", ki_user_disp);
+        
+        // Prevent infinite loop if KiUserExceptionDispatcher faults
+        static int crash_count = 0;
+        if (crash_count++ > 0) {
+            printf("[macwi] FATAL: Nested crash detected in exception handler! Exiting.\n");
+            exit(1);
+        }
         
         if (disp_loop) {
 #if defined(__aarch64__) || defined(_M_ARM_64)
@@ -310,6 +322,9 @@ int main(int argc, char** argv) {
     macwi_thunk_init_dispatcher(ctx);
     macwi_thunk_init_callbacks(ctx);
     
+    extern void macwi_d3d9_init_trampolines(EMU_CONTEXT* ctx);
+    macwi_d3d9_init_trampolines(ctx);
+    
     // Pre-generate KiUserExceptionDispatcher trampoline so we don't allocate memory in a signal handler!
     macwi_thunk_get_trampoline(ctx, "ntdll.dll", "KiUserExceptionDispatcher");
 
@@ -333,13 +348,14 @@ int main(int argc, char** argv) {
     }
 
     // 7. Allocate Guest Stack (2MB)
-    uint64_t stack_base = 0x70000000ULL;
+    uint64_t stack_base = 0;
     uint32_t stack_size = 2 * 1024 * 1024;
-    printf("[macwi] Allocating Guest Stack (2MB) at 0x%016llX...\n", stack_base);
-    if (macwi_emu_map_memory(ctx, stack_base, stack_size, MACWI_PROT_READ | MACWI_PROT_WRITE, NULL) != MACWI_SUCCESS) {
+    printf("[macwi] Allocating Guest Stack (2MB)...\n");
+    if (macwi_emu_map_memory(ctx, 0, stack_size, MACWI_PROT_READ | MACWI_PROT_WRITE, &stack_base) != MACWI_SUCCESS) {
         fprintf(stderr, "[macwi] Failed to map Guest Stack\n");
         return EXIT_FAILURE;
     }
+    printf("[macwi] Guest Stack allocated at 0x%016llX\n", stack_base);
     uint64_t rsp_top = stack_base + stack_size - 0x1000; // Leave some space at the top
 
     // 8. Launch execution thread
@@ -357,15 +373,7 @@ int main(int argc, char** argv) {
     pthread_create(&thread, NULL, emu_thread_func, args);
 
     // Provide a simple loop to keep the main thread alive and optionally process GUI
-    printf("[macwi] Emulator thread detached. Main thread idling...\n");
-    fflush(stdout);
-
-    
-    // Cocoa requires the main thread to run its runloop
-    // We can't include Cocoa headers directly in main.c (it's pure C), 
-    // so we'll just implement a macwi_cocoa_run_loop() in cocoa_window.m
-    extern void macwi_cocoa_run_loop(void);
-    macwi_cocoa_run_loop();
-    
-    return 0;
+    printf("[macwi] Emulator thread detached. Main thread running Cocoa runloop...\n");
+        macwi_cocoa_run_loop();
+        return 0;
 }
