@@ -279,6 +279,20 @@ int macwi_cocoa_poll_event(macwi_event_t* out_event) {
     return result;
 }
 
+int macwi_cocoa_peek_event(macwi_event_t* out_event) {
+    int result = 0;
+    
+    pthread_mutex_lock(&g_event_mutex);
+    if (g_eventQueue && [g_eventQueue count] > 0) {
+        NSValue* val = [g_eventQueue firstObject];
+        [val getValue:out_event];
+        result = 1;
+    }
+    pthread_mutex_unlock(&g_event_mutex);
+    
+    return result;
+}
+
 void macwi_cocoa_end_paint(void) {
     pthread_mutex_lock(&g_paint_mutex);
     pthread_cond_signal(&g_paint_cond);

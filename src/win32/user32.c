@@ -254,6 +254,84 @@ static void win32_KillTimer(EMU_CONTEXT* ctx) {
     macwi_emu_reg_write_32(ctx, 0, res ? 1 : 0);
     macwi_thunk_stdcall_return(ctx, 2);
 }
+static void win32_PeekMessageA(EMU_CONTEXT* ctx) {
+    uint64_t lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg;
+    macwi_thunk_read_param_64(ctx, 0, &lpMsg);
+    macwi_thunk_read_param_64(ctx, 1, &hWnd);
+    macwi_thunk_read_param_64(ctx, 2, &wMsgFilterMin);
+    macwi_thunk_read_param_64(ctx, 3, &wMsgFilterMax);
+    macwi_thunk_read_param_64(ctx, 4, &wRemoveMsg);
+
+    macwi_event_t event;
+    int got_event = 0;
+    
+    if (wRemoveMsg & 0x0001) { // PM_REMOVE
+        got_event = macwi_cocoa_poll_event(&event);
+    } else { // PM_NOREMOVE
+        got_event = macwi_cocoa_peek_event(&event);
+    }
+    
+    if (got_event) {
+        MSG_32 msg;
+        memset(&msg, 0, sizeof(msg));
+        
+        // Find HWND
+        HANDLE found_hwnd = 0;
+        for (uint64_t i=0; i<g_macwi_handle_table.capacity; i++) {
+            if (g_macwi_handle_table.entries[i].type == HANDLE_TYPE_EVENT && g_macwi_handle_table.entries[i].object) {
+                MACWI_WINDOW_OBJ* obj = (MACWI_WINDOW_OBJ*)g_macwi_handle_table.entries[i].object;
+                if (obj->cocoa_win == event.window) {
+                    found_hwnd = (HANDLE)(uintptr_t)(((uintptr_t)g_macwi_handle_table.entries[i].generation << 16) | i);
+                    break;
+                }
+            }
+        }
+        
+        msg.hwnd = (uint64_t)(uintptr_t)found_hwnd;
+        
+        if (event.type == MACWI_EVENT_CLOSE) {
+            msg.message = WM_CLOSE;
+        } else if (event.type == MACWI_EVENT_PAINT) {
+            msg.message = WM_PAINT;
+        } else if (event.type == MACWI_EVENT_KEYDOWN) {
+            msg.message = WM_KEYDOWN;
+            msg.wParam = event.key_code;
+        } else if (event.type == MACWI_EVENT_KEYUP) {
+            msg.message = WM_KEYUP;
+            msg.wParam = event.key_code;
+        } else if (event.type == MACWI_EVENT_MOUSEDOWN) {
+            msg.message = WM_LBUTTONDOWN;
+            msg.lParam = (event.mouse_y << 16) | (event.mouse_x & 0xFFFF);
+        } else if (event.type == MACWI_EVENT_MOUSEUP) {
+            msg.message = WM_LBUTTONUP;
+            msg.lParam = (event.mouse_y << 16) | (event.mouse_x & 0xFFFF);
+        } else if (event.type == MACWI_EVENT_QUIT) {
+            msg.message = WM_QUIT;
+        } else {
+            msg.message = 0;
+        }
+        
+        macwi_emu_write_memory(ctx, lpMsg, &msg, sizeof(msg));
+        macwi_emu_reg_write_32(ctx, 0, 1); // TRUE
+    } else {
+        // Check Timers
+        uint64_t t_hwnd = 0, t_id = 0, t_func = 0;
+        if (macwi_timer_check(&t_hwnd, &t_id, &t_func)) {
+            MSG_32 msg;
+            memset(&msg, 0, sizeof(msg));
+            msg.hwnd = t_hwnd;
+            msg.message = 0x0113; // WM_TIMER
+            msg.wParam = t_id;
+            msg.lParam = t_func;
+            
+            macwi_emu_write_memory(ctx, lpMsg, &msg, sizeof(msg));
+            macwi_emu_reg_write_32(ctx, 0, 1); // TRUE
+        } else {
+            macwi_emu_reg_write_32(ctx, 0, 0); // FALSE (No message)
+        }
+    }
+    macwi_thunk_stdcall_return(ctx, 5);
+}
 
 
 static void win32_GetMessageA(EMU_CONTEXT* ctx) {
@@ -632,6 +710,7 @@ void macwi_user32_register_apis(void) {
     macwi_thunk_register_api("user32.dll", "DefWindowProcA", win32_DefWindowProcA, 4);
     macwi_thunk_register_api("user32.dll", "PostQuitMessage", win32_PostQuitMessage, 1);
     macwi_thunk_register_api("user32.dll", "GetMessageA", win32_GetMessageA, 4);
+    macwi_thunk_register_api("user32.dll", "PeekMessageA", win32_PeekMessageA, 5);
     macwi_thunk_register_api("user32.dll", "TranslateMessage", win32_TranslateMessage, 1);
     macwi_thunk_register_api("user32.dll", "DispatchMessageA", win32_DispatchMessageA, 1);
     macwi_thunk_register_api("user32.dll", "GetClientRect", win32_GetClientRect, 2);

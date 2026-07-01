@@ -41,6 +41,7 @@ void macwi_cocoa_show_window(void* window);
 
 // Process next event. Returns 1 if an event was retrieved, 0 if no events
 int macwi_cocoa_poll_event(macwi_event_t* out_event);
+int macwi_cocoa_peek_event(macwi_event_t* out_event);
 
 // Draw a filled rectangle in the current context
 void macwi_cocoa_fill_rect(void* window, int x, int y, int w, int h, uint32_t argb);

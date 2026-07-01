@@ -64,9 +64,9 @@ static void win32_GetTickCount(EMU_CONTEXT* ctx) {
 static void win32_Sleep(EMU_CONTEXT* ctx) {
     uint64_t ms;
     macwi_thunk_read_param_64(ctx, 0, &ms);
-    STUB_LOG("Sleep(%u ms)", (uint64_t)ms);
-    usleep((uint64_t)ms * 1000);
-    macwi_emu_reg_write_64(ctx, 0, 0);
+    STUB_LOG("Sleep(%llu ms)", ms);
+    usleep(ms * 1000);
+    macwi_emu_reg_write_32(ctx, 0, 0);
     macwi_thunk_stdcall_return(ctx, 1);
 }
 
@@ -662,36 +662,6 @@ static void win32_CreateMutexA(EMU_CONTEXT* ctx) {
     macwi_thunk_stdcall_return(ctx, 3);
 }
 
-static void win32_WaitForSingleObject(EMU_CONTEXT* ctx) {
-    uint64_t hHandle, dwMilliseconds;
-    macwi_thunk_read_param_64(ctx, 0, &hHandle);
-    macwi_thunk_read_param_64(ctx, 1, &dwMilliseconds);
-
-    STUB_LOG("WaitForSingleObject(handle=0x%X, ms=%u)", (uint64_t)hHandle, (uint64_t)dwMilliseconds);
-    
-    extern HANDLE_TABLE g_macwi_handle_table;
-    void* obj = NULL;
-    if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hHandle, HANDLE_TYPE_MUTEX, &obj) == MACWI_SUCCESS) {
-        pthread_mutex_t* m = (pthread_mutex_t*)obj;
-        pthread_mutex_lock(m);
-        macwi_emu_reg_write_64(ctx, 0, 0); // WAIT_OBJECT_0
-    } else if (macwi_handle_get_object(&g_macwi_handle_table, (HANDLE)(uintptr_t)hHandle, HANDLE_TYPE_THREAD, &obj) == MACWI_SUCCESS) {
-        pthread_t tid = (pthread_t)(uintptr_t)obj;
-        fprintf(stderr, "[macwi:kernel32] Joining thread with tid=%p\n", (void*)tid);
-        int ret = pthread_join(tid, NULL);
-        if (ret != 0) {
-            fprintf(stderr, "[macwi:kernel32] pthread_join failed with error %d\n", ret);
-        } else {
-            fprintf(stderr, "[macwi:kernel32] pthread_join succeeded!\n");
-        }
-        macwi_emu_reg_write_64(ctx, 0, 0); // WAIT_OBJECT_0
-    } else {
-        set_last_error(6); // ERROR_INVALID_HANDLE
-        macwi_emu_reg_write_64(ctx, 0, 0xFFFFFFFF); // WAIT_FAILED
-    }
-    macwi_thunk_stdcall_return(ctx, 2);
-}
-
 static void win32_ReleaseMutex(EMU_CONTEXT* ctx) {
     uint64_t hMutex;
     macwi_thunk_read_param_64(ctx, 0, &hMutex);
@@ -741,11 +711,16 @@ void macwi_kernel32_register_apis(void) {
     macwi_thunk_register_api("kernel32.dll", "HeapCreate",         win32_HeapCreate, 3);
     macwi_thunk_register_api("kernel32.dll", "HeapAlloc",          win32_HeapAlloc, 3);
     macwi_thunk_register_api("kernel32.dll", "HeapFree",           win32_HeapFree, 3);
+
+    // Sync primitives
+    extern void macwi_sync_register_apis(void);
+    macwi_sync_register_apis();
+    
+    // Process/Thread APIs
     macwi_thunk_register_api("kernel32.dll", "CreateThread",       win32_CreateThread, 6);
     macwi_thunk_register_api("kernel32.dll", "GetCurrentThreadId", win32_GetCurrentThreadId, 0);
     macwi_thunk_register_api("kernel32.dll", "ExitThread",         win32_ExitThread, 1);
-    macwi_thunk_register_api("kernel32.dll", "CreateMutexA",       win32_CreateMutexA, 3);
-    macwi_thunk_register_api("kernel32.dll", "WaitForSingleObject",win32_WaitForSingleObject, 2);
-    macwi_thunk_register_api("kernel32.dll", "ReleaseMutex",       win32_ReleaseMutex, 1);
     macwi_thunk_register_api("kernel32.dll", "ExitProcess",        win32_ExitProcess, 1);
+    macwi_thunk_register_api("kernel32.dll", "CreateMutexA",       win32_CreateMutexA, 3);
+    macwi_thunk_register_api("kernel32.dll", "ReleaseMutex",       win32_ReleaseMutex, 1);
 }
